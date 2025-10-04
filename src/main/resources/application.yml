@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3307/uniclub}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:huytran123}
+    driver-class-name: com.mysql.cj.jdbc.Driver  # Thêm driver này
