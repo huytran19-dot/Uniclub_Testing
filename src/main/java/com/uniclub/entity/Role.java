@@ -5,28 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
-@Entity(name = "user")
 @NoArgsConstructor
-public class User {
+@Entity
+@Table(name = "role")
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, length = 50, unique = true)
-    private String email;
+    private String name;
 
-    @Column(nullable = false, length = 255)
-    private String password;
-
-    @Column(name = "full_name", length = 255)
-    private String fullname;
-
-    // Quan hệ N-1 với Role
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_role", foreignKey = @ForeignKey(name = "FK_user_role"))
-    private Role role;
+    @Column(length = 255)
+    private String description;
 
     @Column(columnDefinition = "TINYINT DEFAULT 1")
     private Byte status = 1;
