@@ -11,7 +11,7 @@ public interface RoleService {
     RoleResponse getRoleById(Integer id);
 
     RoleResponse createRole(CreateRoleRequest request);
-    RoleResponse updateRole(Integer roleId, UpdateRoleRequest request);
+    RoleResponse updateRole(Integer id, UpdateRoleRequest request);
     void deleteRole(Integer id);
-    void inactiveRole(Integer userId);
+    void inactiveRole(Integer id);
 }
