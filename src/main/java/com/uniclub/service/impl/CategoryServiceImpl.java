@@ -4,56 +4,57 @@ import com.uniclub.dto.request.Category.CreateCategoryRequest;
 import com.uniclub.dto.request.Category.UpdateCategoryRequest;
 import com.uniclub.dto.response.Category.CategoryResponse;
 import com.uniclub.entity.Category;
+import com.uniclub.entity.Role;
+import com.uniclub.exception.ResourceNotFoundException;
 import com.uniclub.repository.CategoryRepository;
 import com.uniclub.service.CategoryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-    private final CategoryRepository categoryRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Override
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         // Kiểm tra trùng tên
         if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new RuntimeException("Tên danh mục đã tồn tại");
+            throw new IllegalArgumentException("Role name already exists");
         }
 
-        Category category = Category.builder()
-                .name(request.getName())
-                .status(request.getStatus()) // mặc định là 1 nếu không truyền
-                .build();
+        Category category = new Category();
+        category.setName(request.getName());
 
-        Category saved = categoryRepository.save(category);
-        return CategoryResponse.fromEntity(saved);
+        Category savedCategory = categoryRepository.save(category);
+        return CategoryResponse.fromEntity(savedCategory);
     }
 
     @Override
-    public CategoryResponse updateCategory(UpdateCategoryRequest request) {
-        Category category = categoryRepository.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy category với id: " + request.getId()));
+    public CategoryResponse updateCategory(Integer categoryId, UpdateCategoryRequest request) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
 
-        // Nếu đổi tên thì kiểm tra trùng
-        if (request.getName() != null
-                && !request.getName().equalsIgnoreCase(category.getName())
-                && categoryRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new RuntimeException("Tên danh mục đã tồn tại");
+        if (request.getName() != null && !request.getName().equals(category.getName())) {
+            // Kiểm tra trùng tên role
+            if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
+                throw new IllegalArgumentException("Role name already exists");
+            }
+            category.setName(request.getName());
         }
 
-        category.setName(request.getName());
         if (request.getStatus() != null) {
             category.setStatus(request.getStatus());
         }
 
-        Category updated = categoryRepository.save(category);
-        return CategoryResponse.fromEntity(updated);
+        Category updatedCategory = categoryRepository.save(category);
+        return CategoryResponse.fromEntity(updatedCategory);
     }
 
     @Override
@@ -65,12 +66,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public void deleteCategory(Integer id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy category với id: " + id);
+    public void deleteCategory(Integer categoryId) {
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new ResourceNotFoundException("Category", "id", categoryId);
         }
-        // Hard delete (xóa hẳn trong DB)
-        categoryRepository.deleteById(id);
-
+        categoryRepository.deleteById(categoryId);
     }
 }

@@ -17,13 +17,11 @@ public class CreateProductRequest {
     private String information;
 
     @PositiveOrZero(message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
-    private double price;
+    private Integer price;
 
     @NotNull(message = "ID thương hiệu không được để trống")
-    private Integer idBrand;
+    private Integer brandId;
 
     @NotNull(message = "ID danh mục không được để trống")
-    private Integer idCategory;
-
-    private Byte status = 1;
+    private Integer categoryId;
 }

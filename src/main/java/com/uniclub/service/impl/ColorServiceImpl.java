@@ -4,56 +4,57 @@ import com.uniclub.dto.request.Color.CreateColorRequest;
 import com.uniclub.dto.request.Color.UpdateColorRequest;
 import com.uniclub.dto.response.Color.ColorResponse;
 import com.uniclub.entity.Color;
+import com.uniclub.entity.Role;
+import com.uniclub.exception.ResourceNotFoundException;
 import com.uniclub.repository.ColorRepository;
 import com.uniclub.service.ColorService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class ColorServiceImpl implements ColorService {
 
-    private final ColorRepository colorRepository;
+    @Autowired
+    private ColorRepository colorRepository;
 
     @Override
     public ColorResponse createColor(CreateColorRequest request) {
+        // Kiểm tra trùng tên color
         if (colorRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new RuntimeException("Tên màu đã tồn tại");
+            throw new IllegalArgumentException("Color name already exists");
         }
 
-        Color color = Color.builder()
-                .name(request.getName())
-                .hexCode(request.getHexCode())
-                .status(request.getStatus())
-                .build();
+        Color color = new Color();
+        color.setName(request.getName());
 
-        Color saved = colorRepository.save(color);
-        return ColorResponse.fromEntity(saved);
+        Color savedColor = colorRepository.save(color);
+        return ColorResponse.fromEntity(savedColor);
     }
 
     @Override
-    public ColorResponse updateColor(UpdateColorRequest request) {
-        Color color = colorRepository.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy màu với id: " + request.getId()));
+    public ColorResponse updateColor(Integer colorId, UpdateColorRequest request) {
+        Color color = colorRepository.findById(colorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Color", "id", colorId));
 
-        if (request.getName() != null
-                && !request.getName().equalsIgnoreCase(color.getName())
-                && colorRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new RuntimeException("Tên màu đã tồn tại");
+        if (request.getName() != null && !request.getName().equals(color.getName())) {
+            // Kiểm tra trùng tên color
+            if (colorRepository.existsByNameIgnoreCase(request.getName())) {
+                throw new IllegalArgumentException("Color name already exists");
+            }
+            color.setName(request.getName());
         }
 
-        color.setName(request.getName());
-        color.setHexCode(request.getHexCode());
         if (request.getStatus() != null) {
             color.setStatus(request.getStatus());
         }
 
-        Color updated = colorRepository.save(color);
-        return ColorResponse.fromEntity(updated);
+        Color updatedColor = colorRepository.save(color);
+        return ColorResponse.fromEntity(updatedColor);
     }
 
     @Override
@@ -65,17 +66,17 @@ public class ColorServiceImpl implements ColorService {
     }
 
     @Override
-    public ColorResponse getColorById(Integer id) {
-        Color color = colorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy màu với id: " + id));
+    public ColorResponse getColorById(Integer colorId) {
+        Color color = colorRepository.findById(colorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Color", "id", colorId));
         return ColorResponse.fromEntity(color);
     }
 
     @Override
-    public void deleteColor(Integer id) {
-        if (!colorRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy màu với id: " + id);
+    public void deleteColor(Integer colorId) {
+        if (!colorRepository.existsById(colorId)) {
+            throw new ResourceNotFoundException("Color", "id", colorId);
         }
-        colorRepository.deleteById(id); // Hard delete
+        colorRepository.deleteById(colorId); // Hard delete
     }
 }

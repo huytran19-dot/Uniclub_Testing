@@ -1,18 +1,16 @@
 package com.uniclub.entity;
 
+import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
-import java.util.List;
-import java.util.ArrayList;
 
 import java.time.LocalDateTime;
 
-@Builder
 @Data
-@Entity(name = "brand")
+@NoArgsConstructor
+@Entity
+@Table(name = "brand")
 public class Brand {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -20,27 +18,25 @@ public class Brand {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Builder.Default
+    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     private Byte status = 1;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "brand", fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<Product> products = new ArrayList<>();
-
-    // đồng bộ 2 chiều
-    public void addProduct(Product p) {
-        products.add(p);
-        p.setBrand(this);
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public void removeProduct(Product p) {
-        products.remove(p);
-        p.setBrand(null);
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

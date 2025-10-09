@@ -7,12 +7,11 @@ import lombok.Data;
 
 @Data
 public class CreateVariantRequest {
-
     @NotNull(message = "Id sản phẩm không được để trống")
-    private Integer idProduct;
+    private Integer productId;
 
-    private Integer idSize;
-    private Integer idColor;
+    private Integer sizeId;
+    private Integer colorId;
 
     @Size(max = 255, message = "Độ dài tối đa của images là 255 ký tự")
     private String images;
@@ -22,6 +21,4 @@ public class CreateVariantRequest {
 
     @Min(value = 0, message = "Giá phải >= 0")
     private Integer price;
-
-    private Byte status = 1;
 }

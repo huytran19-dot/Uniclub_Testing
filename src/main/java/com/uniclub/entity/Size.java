@@ -2,28 +2,42 @@ package com.uniclub.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@Entity(name = "size")
+@NoArgsConstructor
+@Entity
+@Table(name = "size")
 public class Size {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(length = 20, nullable = false)
     private String name;
 
     // 1 = active, 0 = inactive
-    @Column(columnDefinition = "TINYINT DEFAULT 1")
+    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     private Integer status = 1;
 
-    // Dùng default CURRENT_TIMESTAMP từ DB
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    // Dùng ON UPDATE CURRENT_TIMESTAMP từ DB
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

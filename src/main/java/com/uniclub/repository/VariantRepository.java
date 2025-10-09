@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface VariantRepository extends JpaRepository<Variant, Integer>{
 
-    List<Variant> findByProduct_Id(Integer productId);
+    List<Variant> findByProductId(Integer productId);
 
     List<Variant> findByStatus(Byte status);
 
-    List<Variant> findBySize_Id(Integer sizeId);
+    List<Variant> findBySizeId(Integer sizeId);
 
-    List<Variant> findByColor_Id(Integer colorId);
+    List<Variant> findByColorId(Integer colorId);
 }
