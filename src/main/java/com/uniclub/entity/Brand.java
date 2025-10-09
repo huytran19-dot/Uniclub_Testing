@@ -1,14 +1,17 @@
 package com.uniclub.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import java.time.LocalDateTime;
+import lombok.Builder;
+import lombok.Data;
 import java.util.List;
+import java.util.ArrayList;
+
+import java.time.LocalDateTime;
 
 @Builder
-@Entity(name = "color")
 @Data
-public class Color {
+@Entity(name = "brand")
+public class Brand {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,9 +19,6 @@ public class Color {
 
     @Column(nullable = false, length = 50)
     private String name;
-
-    @Column(name = "hex_code", length = 7)
-    private String hexCode;
 
     @Builder.Default
     private Byte status = 1;
@@ -29,7 +29,18 @@ public class Color {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    // Quan hệ 1-n: 1 color có thể thuộc nhiều variant
-    @OneToMany(mappedBy = "color", fetch = FetchType.LAZY)
-    private List<Variant> variants;
+    @OneToMany(mappedBy = "brand", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Product> products = new ArrayList<>();
+
+    // đồng bộ 2 chiều
+    public void addProduct(Product p) {
+        products.add(p);
+        p.setBrand(this);
+    }
+
+    public void removeProduct(Product p) {
+        products.remove(p);
+        p.setBrand(null);
+    }
 }
