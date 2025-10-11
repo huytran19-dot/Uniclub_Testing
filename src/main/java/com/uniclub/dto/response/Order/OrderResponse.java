@@ -1,6 +1,5 @@
 package com.uniclub.dto.response.Order;
 
-import com.uniclub.dto.response.PaymentMethod.PaymentMethodResponse;
 import com.uniclub.dto.response.User.UserResponse;
 import com.uniclub.entity.Order;
 import lombok.Data;
@@ -13,7 +12,6 @@ public class OrderResponse {
     private Integer id;
     private Integer total;
     private String note;
-    private PaymentMethodResponse paymentMethod;
     private UserResponse user;
     private List<OrderVariantResponse> orderVariants;
     private String status;
@@ -30,10 +28,6 @@ public class OrderResponse {
 
         if (order.getUser() != null) {
             res.setUser(UserResponse.fromEntity(order.getUser()));
-        }
-
-        if (order.getPaymentMethod() != null) {
-            res.setPaymentMethod(PaymentMethodResponse.fromEntity(order.getPaymentMethod()));
         }
 
         if (order.getOrderVariants() != null) {
