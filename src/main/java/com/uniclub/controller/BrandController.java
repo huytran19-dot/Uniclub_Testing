@@ -5,7 +5,6 @@ import com.uniclub.dto.request.Brand.UpdateBrandRequest;
 import com.uniclub.dto.response.Brand.BrandResponse;
 import com.uniclub.service.BrandService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -34,10 +33,10 @@ public class BrandController {
     }
 
     // UPDATE
-    @PutMapping
-    public ResponseEntity<BrandResponse> update(@PathVariable Integer brandId,
+    @PutMapping("/{id}")
+    public ResponseEntity<BrandResponse> update(@PathVariable Integer id,
                                                 @Valid @RequestBody UpdateBrandRequest request) {
-        BrandResponse updated = brandService.updateBrand(brandId, request);
+        BrandResponse updated = brandService.updateBrand(id, request);
         return ResponseEntity.ok(updated);
     }
 

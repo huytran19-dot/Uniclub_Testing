@@ -1,37 +1,39 @@
 package com.uniclub.entity;
 
+import com.uniclub.entity.enums.PaymentStatus;
+import com.uniclub.entity.enums.PaymentMethod;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 @Data
 @Entity
-@Table(name = "product")
-public class Product {
+@Table(name = "payment")
+public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 255)
-    private String name;
+    // Phương thức thanh toán: COD, VNPay
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 50)
+    private PaymentMethod paymentMethod;
 
-    @Column(length = 255)
-    private String description;
-
-    @Column(length = 255)
-    private String information;
+    @Column(name = "transaction_no", length = 100)
+    private String transactionNo;
 
     @Column(nullable = false)
-    private Integer price;
+    private Integer amount;
 
-    @Column(columnDefinition = "TINYINT DEFAULT 1")
-    private Byte status = 1;
+    // Trạng thái thanh toán: PENDING, SUCCESS, FAILED
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", nullable = false, length = 20)
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    @Column(name = "paid_at",
+            columnDefinition = "TIMESTAMP NULL")
+    private LocalDateTime paidAt;
 
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
@@ -42,16 +44,8 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_brand")
-    private Brand brand;
-
-    // FK_product_category (id_category) -> category(id)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_category")
-    private Category category;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Variant> variants = new ArrayList<>();
+    @JoinColumn(name = "id_order")
+    private Order order;
 
     @PrePersist
     public void prePersist() {
