@@ -4,12 +4,10 @@ import com.uniclub.dto.request.Category.CreateCategoryRequest;
 import com.uniclub.dto.request.Category.UpdateCategoryRequest;
 import com.uniclub.dto.response.Category.CategoryResponse;
 import com.uniclub.entity.Category;
-import com.uniclub.entity.Role;
 import com.uniclub.exception.ResourceNotFoundException;
 import com.uniclub.repository.CategoryRepository;
 import com.uniclub.service.CategoryService;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         // Kiểm tra trùng tên
         if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new IllegalArgumentException("Role name already exists");
+            throw new IllegalArgumentException("Tên danh mục đã tồn tại");
         }
 
         Category category = new Category();
@@ -44,7 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (request.getName() != null && !request.getName().equals(category.getName())) {
             // Kiểm tra trùng tên role
             if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
-                throw new IllegalArgumentException("Role name already exists");
+                throw new IllegalArgumentException("Tên danh mục đã tồn tại");
             }
             category.setName(request.getName());
         }
@@ -63,6 +61,13 @@ public class CategoryServiceImpl implements CategoryService {
                 .stream()
                 .map(CategoryResponse::fromEntity)
                 .toList();
+    }
+
+    @Override
+    public CategoryResponse getCategoryById(Integer categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+        return CategoryResponse.fromEntity(category);
     }
 
     @Override
