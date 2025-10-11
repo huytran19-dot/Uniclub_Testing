@@ -10,14 +10,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Builder
 @Data
-@Entity(name = "product")
+@Entity
+@Table(name = "product")
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -28,17 +27,18 @@ public class Product {
     @Column(length = 255)
     private String information;
 
+    @Column(nullable = false)
     private Integer price;
 
-    @Builder.Default
+    @Column(columnDefinition = "TINYINT DEFAULT 1")
     private Byte status = 1;
 
-    // Dùng default CURRENT_TIMESTAMP từ DB
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    // Dùng ON UPDATE CURRENT_TIMESTAMP từ DB
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -52,4 +52,15 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Variant> variants = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

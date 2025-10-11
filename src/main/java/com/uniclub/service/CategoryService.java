@@ -10,9 +10,11 @@ public interface CategoryService {
 
     CategoryResponse createCategory(CreateCategoryRequest request);
 
-    CategoryResponse updateCategory(UpdateCategoryRequest request);
+    CategoryResponse updateCategory(Integer categoryId, UpdateCategoryRequest request);
 
     List<CategoryResponse> getAllCategories();
+    
+    CategoryResponse getCategoryById(Integer id);
 
     void deleteCategory(Integer id);
 

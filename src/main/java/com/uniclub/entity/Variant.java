@@ -2,17 +2,15 @@ package com.uniclub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
-@Entity (name = "variant")
-@Builder
+@NoArgsConstructor
+@Entity
+@Table(name = "variant")
 public class Variant {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer sku;
@@ -21,18 +19,20 @@ public class Variant {
     private String images;
 
     @Column(name = "quantity", columnDefinition = "INT DEFAULT 0")
-    private Integer quantity;
+    private Integer quantity = 0;
 
     @Column(name = "price")
     private Integer price;
 
     @Column(name = "status", columnDefinition = "TINYINT DEFAULT 1")
-    private Byte status;
+    private Byte status = 1;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
 
@@ -54,6 +54,14 @@ public class Variant {
     @OneToMany(mappedBy = "variant", fetch = FetchType.LAZY)
     private Set<OrderVariant> orderVariants;
 
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
 
-
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

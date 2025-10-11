@@ -14,9 +14,6 @@ public class CreateOrderRequest {
     @NotNull(message = "User ID is required")
     private Integer userId;
 
-    @NotNull(message = "Payment method ID is required")
-    private Integer paymentMethodId;
-
     @NotNull(message = "Order items cannot be empty")
     private List<CreateOrderVariantRequest> orderVariants;
 }

@@ -9,11 +9,11 @@ import java.util.List;
 public interface ColorService {
 
     ColorResponse createColor(CreateColorRequest request);
-    ColorResponse updateColor(UpdateColorRequest request);
+    ColorResponse updateColor(Integer colorId, UpdateColorRequest request);
 
     List<ColorResponse> getAllColors();
 
-    ColorResponse getColorById(Integer id);
+    ColorResponse getColorById(Integer colorId);
 
-    void deleteColor(Integer id);
+    void deleteColor(Integer colorId);
 }

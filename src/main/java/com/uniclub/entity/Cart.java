@@ -2,28 +2,27 @@ package com.uniclub.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
-@NoArgsConstructor
 @Entity
-@Table(name = "payment_method")
-public class PaymentMethod {
-
+@Table(name = "cart")
+public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 50, unique = true)
-    private String name;
+    @Column(name = "total_price")
+    private Integer totalPrice = 0;
+
+    @Column(name = "shipping_fee")
+    private Integer shippingFee = 0;
 
     @Column(length = 255)
-    private String description;
-
-    @Column(columnDefinition = "TINYINT DEFAULT 1")
-    private Byte status = 1;
+    private String note;
 
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
@@ -32,6 +31,17 @@ public class PaymentMethod {
     @Column(name = "updated_at", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
+
+    @Column(columnDefinition = "TINYINT DEFAULT 1")
+    private Byte status = 1;
+
+    // Khóa ngoại tới User
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_user", nullable = false)
+    private User user;
+
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> cartItems = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

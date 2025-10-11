@@ -11,7 +11,7 @@ public interface VariantService {
     VariantResponse createVariant(CreateVariantRequest request);
     VariantResponse getBySku(Integer sku);
 
-    List<VariantResponse> getAllVariant(Byte status);
+    List<VariantResponse> getAllVariants(Byte status);
 
     VariantResponse updateVariant(Integer sku, UpdateVariantRequest request);
 

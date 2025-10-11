@@ -22,14 +22,6 @@ public class Order {
     @Column(length = 255)
     private String note;
 
-    // Quan hệ N-1 với PaymentMethod
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "id_payment",
-            foreignKey = @ForeignKey(name = "FK_order_payment")
-    )
-    private PaymentMethod paymentMethod;
-
     // Quan hệ N-1 với User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

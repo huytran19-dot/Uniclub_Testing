@@ -2,12 +2,14 @@ package com.uniclub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Builder
-@Entity(name = "color")
 @Data
+@NoArgsConstructor
+@Entity
+@Table(name = "color")
 public class Color {
 
     @Id
@@ -20,16 +22,14 @@ public class Color {
     @Column(name = "hex_code", length = 7)
     private String hexCode;
 
-    @Builder.Default
+    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     private Byte status = 1;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
-
-    // Quan hệ 1-n: 1 color có thể thuộc nhiều variant
-    @OneToMany(mappedBy = "color", fetch = FetchType.LAZY)
-    private List<Variant> variants;
 }

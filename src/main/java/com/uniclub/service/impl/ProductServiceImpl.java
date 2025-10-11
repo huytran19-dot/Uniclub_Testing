@@ -7,9 +7,10 @@ import com.uniclub.entity.Brand;
 import com.uniclub.entity.Category;
 import com.uniclub.entity.Product;
 import com.uniclub.repository.BrandRepository;
-//import com.uniclub.repository.CategoryRepository;
+import com.uniclub.repository.CategoryRepository;
 import com.uniclub.repository.ProductRepository;
 import com.uniclub.service.ProductService;
+import com.uniclub.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,57 +24,72 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;
-//    private final CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
-//    @Override
-//    public ProductResponse createProduct(CreateProductRequest request) {
-//        // Lấy Brand & Category từ id
-//        Brand brand = brandRepository.findById(request.getIdBrand())
-//                .orElseThrow(() -> new RuntimeException("Không tìm thấy brand với id=" + request.getIdBrand()));
-//        Category category = categoryRepository.findById(request.getIdCategory())
-//                .orElseThrow(() -> new RuntimeException("Không tìm thấy category với id=" + request.getIdCategory()));
-//
-//        Product product = Product.builder()
-//                .name(request.getName())
-//                .description(request.getDescription())
-//                .information(request.getInformation())
-//                .price(request.getPrice())       // DB: INT, entity bạn đang để Integer hoặc double -> khớp DTO
-//                .status(request.getStatus())     // nếu entity bạn chưa có field status thì bỏ dòng này
-//                .brand(brand)
-//                .category(category)
-//                .build();
-//
-//        Product saved = productRepository.save(product);
-//        return ProductResponse.fromEntity(saved);
-//    }
+    @Override
+    public ProductResponse createProduct(CreateProductRequest request) {
+        // Check if product name already exists
+        if (productRepository.existsByNameIgnoreCase(request.getName())) {
+            throw new IllegalArgumentException("Tên sản phẩm đã tồn tại");
+        }
 
-//    @Override
-//    public ProductResponse updateProduct(UpdateProductRequest request) {
-//        Product product = productRepository.findById(request.getId())
-//                .orElseThrow(() -> new RuntimeException("Không tìm thấy product với id=" + request.getId()));
-//
-//        product.setName(request.getName());
-//        product.setDescription(request.getDescription());
-//        product.setInformation(request.getInformation());
-//        product.setPrice(request.getPrice());
-//
-//        if (request.getStatus() != null) {
-//            product.setStatus(request.getStatus());
-//        }
-//        if (request.getIdBrand() != null) {
-//            Brand brand = brandRepository.findById(request.getIdBrand())
-//                    .orElseThrow(() -> new RuntimeException("Không tìm thấy brand với id=" + request.getIdBrand()));
-//            product.setBrand(brand);
-//        }
-//        if (request.getIdCategory() != null) {
-//            Category category = categoryRepository.findById(request.getIdCategory())
-//                    .orElseThrow(() -> new RuntimeException("Không tìm thấy category với id=" + request.getIdCategory()));
-//            product.setCategory(category);
-//        }
-//
-//        Product updated = productRepository.save(product);
-//        return ProductResponse.fromEntity(updated);
-//    }
+        // Get Brand and Category from IDs
+        Brand brand = brandRepository.findById(request.getBrandId())
+                .orElseThrow(() -> new ResourceNotFoundException("Brand", "id", request.getBrandId()));
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getCategoryId()));
+
+        Product product = new Product();
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setInformation(request.getInformation());
+        product.setPrice(request.getPrice());
+        product.setBrand(brand);
+        product.setCategory(category);
+
+        Product saved = productRepository.save(product);
+        return ProductResponse.fromEntity(saved);
+    }
+
+    @Override
+    public ProductResponse updateProduct(Integer id, UpdateProductRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
+
+        // Check if name is being changed and if it already exists
+        if (request.getName() != null && !request.getName().equals(product.getName())) {
+            if (productRepository.existsByNameIgnoreCase(request.getName())) {
+                throw new IllegalArgumentException("Tên sản phẩm đã tồn tại");
+            }
+            product.setName(request.getName());
+        }
+
+        if (request.getDescription() != null) {
+            product.setDescription(request.getDescription());
+        }
+        if (request.getInformation() != null) {
+            product.setInformation(request.getInformation());
+        }
+        if (request.getPrice() != null) {
+            product.setPrice(request.getPrice());
+        }
+        if (request.getStatus() != null) {
+            product.setStatus(request.getStatus());
+        }
+        if (request.getIdBrand() != null) {
+            Brand brand = brandRepository.findById(request.getIdBrand())
+                    .orElseThrow(() -> new ResourceNotFoundException("Brand", "id", request.getIdBrand()));
+            product.setBrand(brand);
+        }
+        if (request.getIdCategory() != null) {
+            Category category = categoryRepository.findById(request.getIdCategory())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getIdCategory()));
+            product.setCategory(category);
+        }
+
+        Product updated = productRepository.save(product);
+        return ProductResponse.fromEntity(updated);
+    }
 
 
     @Override
@@ -87,14 +103,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse getProductById(Integer id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy product với id=" + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
         return ProductResponse.fromEntity(product);
     }
 
     @Override
     public void deleteProduct(Integer id) {
         if (!productRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy product với id=" + id);
+            throw new ResourceNotFoundException("Product", "id", id);
         }
         productRepository.deleteById(id); // Hard delete
         // Nếu muốn soft delete: load entity -> setStatus((byte)0) -> save(entity)

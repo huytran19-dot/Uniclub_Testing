@@ -5,7 +5,7 @@ import com.uniclub.dto.request.Brand.UpdateBrandRequest;
 import com.uniclub.dto.response.Brand.BrandResponse;
 import com.uniclub.service.BrandService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +15,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/brands")
-@RequiredArgsConstructor
 @Validated
 @CrossOrigin(origins = "*") // tuỳ bạn, có thể cấu hình CORS global
 public class BrandController {
 
-    private final BrandService brandService;
+    @Autowired
+    private BrandService brandService;
 
     // CREATE
     @PostMapping
@@ -33,9 +33,10 @@ public class BrandController {
     }
 
     // UPDATE
-    @PutMapping
-    public ResponseEntity<BrandResponse> update(@Valid @RequestBody UpdateBrandRequest request) {
-        BrandResponse updated = brandService.updateBrand(request);
+    @PutMapping("/{id}")
+    public ResponseEntity<BrandResponse> update(@PathVariable Integer id,
+                                                @Valid @RequestBody UpdateBrandRequest request) {
+        BrandResponse updated = brandService.updateBrand(id, request);
         return ResponseEntity.ok(updated);
     }
 

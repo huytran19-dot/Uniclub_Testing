@@ -4,73 +4,77 @@ import com.uniclub.dto.request.Variant.CreateVariantRequest;
 import com.uniclub.dto.request.Variant.UpdateVariantRequest;
 import com.uniclub.dto.response.Variant.VariantResponse;
 import com.uniclub.entity.*;
+import com.uniclub.exception.ResourceNotFoundException;
 import com.uniclub.repository.*;
 import com.uniclub.service.VariantService;
 import jakarta.transaction.Transactional;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Builder
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class VariantServiceImpl implements VariantService {
 
-    private final VariantRepository variantRepository;
-    private final ProductRepository productRepository;
-    private final SizeRepository sizeRepository;
-    private final ColorRepository colorRepository;
+    @Autowired
+    private VariantRepository variantRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private SizeRepository sizeRepository;
+
+    @Autowired
+    private ColorRepository colorRepository;
 
     // CREATE
     @Override
     public VariantResponse createVariant(CreateVariantRequest request) {
-        Product product = productRepository.findById(request.getIdProduct())
+        Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() ->
-                        new RuntimeException("Không tìm thấy product: " + request.getIdProduct()));
+                        new ResourceNotFoundException("Product", "id", request.getProductId()));
 
         Size size = null;
-        if (request.getIdSize() != null) {
-            size = sizeRepository.findById(request.getIdSize())
+        if (request.getSizeId() != null) {
+            size = sizeRepository.findById(request.getSizeId())
                     .orElseThrow(() ->
-                            new RuntimeException("Không tìm thấy size: " + request.getIdSize()));
+                            new ResourceNotFoundException("Size", "id", request.getSizeId()));
         }
 
         Color color = null;
-        if (request.getIdColor() != null) {
-            color = colorRepository.findById(request.getIdColor())
+        if (request.getColorId() != null) {
+            color = colorRepository.findById(request.getColorId())
                     .orElseThrow(() ->
-                            new RuntimeException("Không tìm thấy color: " + request.getIdColor()));
+                            new ResourceNotFoundException("Color", "id", request.getColorId()));
         }
 
+        Variant variant = new Variant();
+        variant.setProduct(product);
+        variant.setSize(size);
+        variant.setColor(color);
+        variant.setImages(request.getImages());
+        variant.setQuantity(request.getQuantity() != null ? request.getQuantity() : 0);
+        variant.setPrice(request.getPrice());
 
-        Variant v = Variant.builder()
-                .product(product)
-                .size(size)
-                .color(color)
-                .images(request.getImages())
-                .quantity(request.getQuantity() != null ? request.getQuantity() : 0)
-                .price(request.getPrice())
-                .status(request.getStatus() != null ? request.getStatus() : 1)
-                .build();
-
-        Variant saved = variantRepository.save(v);
-        return VariantResponse.fromEntity(saved);
+        Variant savedVariant = variantRepository.save(variant);
+        return VariantResponse.fromEntity(savedVariant);
     }
 
     // GET by SKU
     @Override
-    public VariantResponse getBySku(Integer sku) {
-        Variant v = variantRepository.findById(sku)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy variant SKU: " + sku));
+    public VariantResponse getBySku(Integer skuId) {
+        Variant v = variantRepository.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variant", "id", skuId));
         return VariantResponse.fromEntity(v);
     }
 
     // GET all (optional filter by status)
     @Override
-    public List<VariantResponse> getAllVariant(Byte status) {
+    public List<VariantResponse> getAllVariants(Byte status) {
         List<Variant> list = (status == null)
                 ? variantRepository.findAll()
                 : variantRepository.findByStatus(status);
@@ -80,28 +84,28 @@ public class VariantServiceImpl implements VariantService {
 
     // UPDATE
     @Override
-    public VariantResponse updateVariant(Integer sku, UpdateVariantRequest request) {
-        Variant v = variantRepository.findById(sku)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy variant SKU: " + sku));
+    public VariantResponse updateVariant(Integer skuId, UpdateVariantRequest request) {
+        Variant v = variantRepository.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variant", "id", skuId));
 
-        if (request.getIdProduct() != null) {
-            Product product = productRepository.findById(request.getIdProduct())
+        if (request.getProductId() != null) {
+            Product product = productRepository.findById(request.getProductId())
                     .orElseThrow(() ->
-                            new RuntimeException("Không tìm thấy product: " + request.getIdProduct()));
+                            new ResourceNotFoundException("Product", "id", request.getProductId()));
             v.setProduct(product);
         }
 
-        if (request.getIdSize() != null) {
-            Size size = sizeRepository.findById(request.getIdSize())
+        if (request.getSizeId() != null) {
+            Size size = sizeRepository.findById(request.getSizeId())
                     .orElseThrow(() ->
-                            new RuntimeException("Không tìm thấy size: " + request.getIdSize()));
+                            new ResourceNotFoundException("Size", "id", request.getSizeId()));
             v.setSize(size);
         }
 
-        if (request.getIdColor() != null) {
-            Color color = colorRepository.findById(request.getIdColor())
+        if (request.getColorId() != null) {
+            Color color = colorRepository.findById(request.getColorId())
                     .orElseThrow(() ->
-                            new RuntimeException("Không tìm thấy color: " + request.getIdColor()));
+                            new ResourceNotFoundException("Color", "id", request.getSizeId()));
             v.setColor(color);
         }
 
@@ -110,39 +114,39 @@ public class VariantServiceImpl implements VariantService {
         if (request.getPrice() != null) v.setPrice(request.getPrice());
         if (request.getStatus() != null) v.setStatus(request.getStatus());
 
-        Variant updated = variantRepository.save(v);
-        return VariantResponse.fromEntity(updated);
+        Variant updatedVariant = variantRepository.save(v);
+        return VariantResponse.fromEntity(updatedVariant);
     }
 
     // DELETE
     @Override
-    public void deleteVariantBySku(Integer sku) {
-        if (!variantRepository.existsById(sku)) {
-            throw new RuntimeException("Không tìm thấy variant SKU: " + sku);
+    public void deleteVariantBySku(Integer skuId) {
+        if (!variantRepository.existsById(skuId)) {
+            throw new ResourceNotFoundException("Variant", "id", skuId);
         }
-        variantRepository.deleteById(sku); // Hard delete; nếu muốn soft -> set status=0 rồi save
+        variantRepository.deleteById(skuId); // Hard delete; nếu muốn soft -> set status=0 rồi save
     }
 
     // STOCK +
     @Override
-    public VariantResponse increaseStock(Integer sku, Integer amount) {
+    public VariantResponse increaseStock(Integer skuId, Integer amount) {
         if (amount == null || amount <= 0) {
             throw new RuntimeException("Số lượng tăng phải > 0");
         }
-        Variant v = variantRepository.findById(sku)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy variant SKU: " + sku));
+        Variant v = variantRepository.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variant", "id", skuId));
         v.setQuantity((v.getQuantity() == null ? 0 : v.getQuantity()) + amount);
         return VariantResponse.fromEntity(variantRepository.save(v));
     }
 
     // STOCK -
     @Override
-    public VariantResponse decreaseStock(Integer sku, Integer amount) {
+    public VariantResponse decreaseStock(Integer skuId, Integer amount) {
         if (amount == null || amount <= 0) {
             throw new RuntimeException("Số lượng giảm phải > 0");
         }
-        Variant v = variantRepository.findById(sku)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy variant SKU: " + sku));
+        Variant v = variantRepository.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variant", "id", skuId));
 
         int current = (v.getQuantity() == null ? 0 : v.getQuantity());
         int next = current - amount;
