@@ -19,6 +19,9 @@ public class Color {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(name = "hex_code", length = 7)
+    private String hexCode;
+
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     private Byte status = 1;
 
