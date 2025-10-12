@@ -4,36 +4,66 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
-@Entity(name = "billing_details")
+@Entity
+@Table(name = "billing_details")
 public class BillingDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
-    @Column(name = "first_name")
-    private String firstName;
+    // Liên kết với bảng orders
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_order")
+    private Order order;
 
-    @Column(name = "last_name")
-    private String lastName;
+    @Column(name = "full_name", length = 100)
+    private String fullName;
 
-    @Column(name = "company_name")
-    private String companyName;
-
-    private String address;
-    private String town;
-    private String state;
-
-    @Column(name = "zip_code")
-    private int zipCode;
-
+    @Column(length = 15)
     private String phone;
+
+    @Column(length = 100)
     private String email;
 
-    @CreationTimestamp
-    @Column(name="create_date")
-    private Date createDate;
+    @Column(length = 255)
+    private String address;
+
+    @Column(length = 50)
+    private String province;
+
+    @Column(length = 50)
+    private String district;
+
+    @Column(length = 50)
+    private String ward;
+
+    @Column(length = 255)
+    private String note;
+
+    @Column(columnDefinition = "TINYINT DEFAULT 1")
+    private Integer status = 1;
+
+    @Column(name = "created_at", nullable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
