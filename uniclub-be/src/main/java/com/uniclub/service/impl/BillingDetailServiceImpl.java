@@ -28,15 +28,14 @@ public class BillingDetailServiceImpl implements BillingDetailService {
         }
 
         BillingDetail billingDetail = new BillingDetail();
-        billingDetail.setFirstName(request.getFirstName());
-        billingDetail.setLastName(request.getLastName());
-        billingDetail.setCompanyName(request.getCompanyName());
-        billingDetail.setAddress(request.getAddress());
-        billingDetail.setTown(request.getTown());
-        billingDetail.setState(request.getState());
-        billingDetail.setZipCode(request.getZipCode());
+        billingDetail.setFullName(request.getFullName());
         billingDetail.setPhone(request.getPhone());
         billingDetail.setEmail(request.getEmail());
+        billingDetail.setAddress(request.getAddress());
+        billingDetail.setProvince(request.getProvince());
+        billingDetail.setDistrict(request.getDistrict());
+        billingDetail.setWard(request.getWard());
+        billingDetail.setNote(request.getNote());
 
         BillingDetail savedBillingDetail = billingDetailRepository.save(billingDetail);
         return BillingDetailResponse.fromEntity(savedBillingDetail);
@@ -55,29 +54,29 @@ public class BillingDetailServiceImpl implements BillingDetailService {
             billingDetail.setEmail(request.getEmail());
         }
 
-        if (request.getFirstName() != null) {
-            billingDetail.setFirstName(request.getFirstName());
+        if (request.getFullName() != null) {
+            billingDetail.setFullName(request.getFullName());
         }
-        if (request.getLastName() != null) {
-            billingDetail.setLastName(request.getLastName());
-        }
-        if (request.getCompanyName() != null) {
-            billingDetail.setCompanyName(request.getCompanyName());
+        if (request.getPhone() != null) {
+            billingDetail.setPhone(request.getPhone());
         }
         if (request.getAddress() != null) {
             billingDetail.setAddress(request.getAddress());
         }
-        if (request.getTown() != null) {
-            billingDetail.setTown(request.getTown());
+        if (request.getProvince() != null) {
+            billingDetail.setProvince(request.getProvince());
         }
-        if (request.getState() != null) {
-            billingDetail.setState(request.getState());
+        if (request.getDistrict() != null) {
+            billingDetail.setDistrict(request.getDistrict());
         }
-        if (request.getZipCode() != null) {
-            billingDetail.setZipCode(request.getZipCode());
+        if (request.getWard() != null) {
+            billingDetail.setWard(request.getWard());
         }
-        if (request.getPhone() != null) {
-            billingDetail.setPhone(request.getPhone());
+        if (request.getNote() != null) {
+            billingDetail.setNote(request.getNote());
+        }
+        if (request.getStatus() != null) {
+            billingDetail.setStatus(request.getStatus());
         }
 
         BillingDetail updatedBillingDetail = billingDetailRepository.save(billingDetail);

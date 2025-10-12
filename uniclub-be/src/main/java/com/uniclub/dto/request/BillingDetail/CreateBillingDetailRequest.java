@@ -8,33 +8,30 @@ import jakarta.validation.constraints.Size;
 
 @Data
 public class CreateBillingDetailRequest {
-    @NotBlank(message = "Tên không được để trống")
-    @Size(max = 50, message = "Tên không được vượt quá 50 ký tự")
-    private String firstName;
-
-    @NotBlank(message = "Họ không được để trống")
-    @Size(max = 50, message = "Họ không được vượt quá 50 ký tự")
-    private String lastName;
-
-    @Size(max = 100, message = "Tên công ty không được vượt quá 100 ký tự")
-    private String companyName;
-
-    @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
-    private String address;
-
-    @Size(max = 50, message = "Thành phố không được vượt quá 50 ký tự")
-    private String town;
-
-    @Size(max = 50, message = "Tỉnh không được vượt quá 50 ký tự")
-    private String state;
-
-    private Integer zipCode;
+    @NotBlank(message = "Họ tên không được để trống")
+    @Size(max = 100, message = "Họ tên không được vượt quá 100 ký tự")
+    private String fullName;
 
     @Pattern(regexp = "^[0-9+\\-\\s()]+$", message = "Số điện thoại không hợp lệ")
-    @Size(max = 20, message = "Số điện thoại không được vượt quá 20 ký tự")
+    @Size(max = 15, message = "Số điện thoại không được vượt quá 15 ký tự")
     private String phone;
 
     @Email(message = "Email không hợp lệ")
     @Size(max = 100, message = "Email không được vượt quá 100 ký tự")
     private String email;
+
+    @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
+    private String address;
+
+    @Size(max = 50, message = "Tỉnh không được vượt quá 50 ký tự")
+    private String province;
+
+    @Size(max = 50, message = "Quận/Huyện không được vượt quá 50 ký tự")
+    private String district;
+
+    @Size(max = 50, message = "Phường/Xã không được vượt quá 50 ký tự")
+    private String ward;
+
+    @Size(max = 255, message = "Ghi chú không được vượt quá 255 ký tự")
+    private String note;
 }
