@@ -1,0 +1,17 @@
+# chung
+.DS_Store
+Thumbs.db
+
+# log
+*.log
+
+# Java / Spring Boot
+/target/
+/.build/
+/.gradle/
+/mvnw.*
+/.idea/
+/*.iml
+
+# ENV chung
+.env
