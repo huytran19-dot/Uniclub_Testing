@@ -1,0 +1,26 @@
+# Maven build
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA / VS Code
+.idea/
+.vscode/
+*.iml
+
+# Logs & temp files
+*.log
+logs/
+
+# Env & config
+.env
+application-*.yml
+application-*.yaml
+application-*.properties
+
+# System files
+.DS_Store
+Thumbs.db
+
+# OS / temporary
+*.tmp
+*.bak
