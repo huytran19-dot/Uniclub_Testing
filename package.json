@@ -1,0 +1,14 @@
+{
+  "name": "uniclub",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter ./web --filter ./admin dev",
+    "build": "pnpm -r --filter ./web --filter ./admin build",
+    "preview": "pnpm -r --filter ./web --filter ./admin preview",
+    "clean": "rimraf **/node_modules **/dist"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.0"
+  }
+}
