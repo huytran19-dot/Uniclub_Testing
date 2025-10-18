@@ -3,26 +3,37 @@ node_modules/
 
 # Build output
 dist/
+build/
 .vite/
 
-# Env files (bí mật)
+# Environment files
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
 
 # Logs
 npm-debug.log*
+yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Editor/OS
+# Editor/IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS files
 .DS_Store
 Thumbs.db
 
-# Coverage / test
+# Coverage
 coverage/
+*.lcov
 
-# Optional caches
+# Misc
 .eslintcache
+.vercel
