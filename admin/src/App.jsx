@@ -12,6 +12,7 @@ import ColorList from "./pages/colors/List"
 import ColorForm from "./pages/colors/Form"
 import ProductList from "./pages/products/List"
 import ProductForm from "./pages/products/Form"
+import ProductVariants from "./pages/products/Variants"
 import VariantList from "./pages/variants/List"
 import VariantForm from "./pages/variants/Form"
 import OrderList from "./pages/orders/List"
@@ -21,7 +22,6 @@ import SupplierForm from "./pages/suppliers/Form"
 import GrnList from "./pages/grn/List"
 import GrnNew from "./pages/grn/New"
 import GrnDetail from "./pages/grn/Detail"
-import Settings from "./pages/settings/Settings"
 
 export default function App() {
   return (
@@ -43,6 +43,7 @@ export default function App() {
         <Route path="/products" element={<ProductList />} />
         <Route path="/products/new" element={<ProductForm />} />
         <Route path="/products/:id" element={<ProductForm />} />
+        <Route path="/products/:productId/variants" element={<ProductVariants />} />
         <Route path="/variants" element={<VariantList />} />
         <Route path="/variants/new" element={<VariantForm />} />
         <Route path="/variants/:sku" element={<VariantForm />} />
@@ -54,7 +55,6 @@ export default function App() {
         <Route path="/grn" element={<GrnList />} />
         <Route path="/grn/new" element={<GrnNew />} />
         <Route path="/grn/:id" element={<GrnDetail />} />
-        <Route path="/settings" element={<Settings />} />
         <Route path="/" element={<Dashboard />} />
       </Routes>
     </Layout>

@@ -6,7 +6,7 @@ import Card from "../../components/Card"
 import Table from "../../components/Table"
 import Badge from "../../components/Badge"
 import Toast from "../../components/Toast"
-import Confirm from "../../components/Confirm"
+import AlertDialog from "../../components/AlertDialog"
 import Breadcrumb from "../../components/Breadcrumb"
 import { api } from "../../lib/api"
 import { formatDate, getStatusLabel, getStatusType } from "../../lib/utils"
@@ -81,17 +81,22 @@ export default function ProductList() {
             data={products}
             onEdit={(row) => navigate(`/products/${row.id}`)}
             onDelete={(row) => setConfirmDelete(row)}
+            onVariants={(row) => navigate(`/products/${row.id}/variants`)}
           />
         </div>
       </Card>
 
       {confirmDelete && (
-        <Confirm
+        <AlertDialog
           isOpen={true}
           title="Xóa sản phẩm"
-          message={`Bạn có chắc muốn xóa sản phẩm "${confirmDelete.name}"?`}
+          description="Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác."
+          itemName={confirmDelete.name}
+          itemSku={confirmDelete.sku}
           onConfirm={handleDelete}
-          onCancel={() => setConfirmDelete(null)}
+          onClose={() => setConfirmDelete(null)}
+          confirmText="Xóa"
+          cancelText="Hủy"
         />
       )}
 

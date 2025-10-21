@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import Card from "../../components/Card"
 import Badge from "../../components/Badge"
 import Breadcrumb from "../../components/Breadcrumb"
+import Toast from "../../components/Toast"
 import { api } from "../../lib/api"
 import { formatMoney, getStatusLabel, getStatusType } from "../../lib/utils"
 
@@ -13,6 +14,10 @@ export default function OrderDetail() {
   const { id } = useParams()
   const [order, setOrder] = useState(null)
   const [items, setItems] = useState([])
+  const [currentStatus, setCurrentStatus] = useState("")
+  const [originalStatus, setOriginalStatus] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     loadOrder()
@@ -22,6 +27,8 @@ export default function OrderDetail() {
     const data = await api.get("orders", id)
     if (data) {
       setOrder(data)
+      setCurrentStatus(data.status)
+      setOriginalStatus(data.status)
       // Mock items - in real app would fetch from order_variant table
       setItems([
         {
@@ -35,6 +42,29 @@ export default function OrderDetail() {
       ])
     }
   }
+
+  const handleStatusChange = (e) => {
+    setCurrentStatus(e.target.value)
+  }
+
+  const handleSaveStatus = () => {
+    setIsSaving(true)
+    // Simulate API call
+    setTimeout(() => {
+      setOriginalStatus(currentStatus)
+      setIsSaving(false)
+      setToast({ type: "success", message: "Cập nhật trạng thái thành công" })
+    }, 500)
+  }
+
+  const isStatusChanged = currentStatus !== originalStatus
+
+  const statusOptions = [
+    { value: "pending", label: "Chờ xử lý" },
+    { value: "shipping", label: "Đang giao" },
+    { value: "delivered", label: "Đã giao" },
+    { value: "cancelled", label: "Đã hủy" },
+  ]
 
   if (!order) return <div>Đang tải...</div>
 
@@ -64,9 +94,28 @@ export default function OrderDetail() {
                 <span className="text-neutral-600">Khách hàng:</span>
                 <span className="font-medium">ID: {order.id_user}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-neutral-600">Trạng thái:</span>
-                <Badge status={getStatusType(order.status)} label={getStatusLabel(order.status)} />
+                <div className="flex items-center gap-2">
+                  <select
+                    value={currentStatus}
+                    onChange={handleStatusChange}
+                    className="px-3 py-1.5 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleSaveStatus}
+                    disabled={!isStatusChanged || isSaving}
+                    className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
+                  >
+                    {isSaving ? "Đang lưu..." : "Lưu"}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600">Ghi chú:</span>
@@ -120,6 +169,8 @@ export default function OrderDetail() {
           </Card>
         </div>
       </div>
+
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   )
 }

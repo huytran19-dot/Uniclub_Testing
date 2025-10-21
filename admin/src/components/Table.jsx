@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
+import { ActionButtonGroup, ActionDropdown } from "./ActionButtons"
 
 export default function Table({
   columns,
@@ -9,6 +10,8 @@ export default function Table({
   onEdit,
   onDelete,
   onView,
+  onVariants,
+  customActions,
   searchable = true,
   filterable = true,
   sortable = true,
@@ -16,6 +19,7 @@ export default function Table({
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortConfig, setSortConfig] = useState(null)
+  const [loadingRow, setLoadingRow] = useState(null)
   const itemsPerPage = 10
 
   // Ensure data is always an array
@@ -75,7 +79,7 @@ export default function Table({
                   {col.label}
                 </th>
               ))}
-              {(onEdit || onDelete || onView) && (
+              {(onEdit || onDelete || onView || onVariants) && (
                 <th className="px-4 py-3 text-left font-medium text-neutral-700">Thao tác</th>
               )}
             </tr>
@@ -88,23 +92,34 @@ export default function Table({
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}
-                {(onEdit || onDelete || onView) && (
-                  <td className="px-4 py-3 flex gap-2">
-                    {onView && (
-                      <button onClick={() => onView(row)} className="text-blue-600 hover:underline text-sm">
-                        Xem
-                      </button>
-                    )}
-                    {onEdit && (
-                      <button onClick={() => onEdit(row)} className="text-blue-600 hover:underline text-sm">
-                        Sửa
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button onClick={() => onDelete(row)} className="text-red-600 hover:underline text-sm">
-                        Xóa
-                      </button>
-                    )}
+                {(onEdit || onDelete || onView || onVariants || customActions) && (
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {/* Desktop: Button group */}
+                      <div className="hidden sm:block">
+                        <ActionButtonGroup
+                          row={row}
+                          onView={onView}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                          onVariants={onVariants}
+                          loading={loadingRow === idx ? 'loading' : null}
+                        />
+                      </div>
+                      
+                      {/* Mobile: Dropdown */}
+                      <div className="sm:hidden">
+                        <ActionDropdown
+                          row={row}
+                          onView={onView}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                          onVariants={onVariants}
+                        />
+                      </div>
+                      
+                      {customActions && customActions(row)}
+                    </div>
                   </td>
                 )}
               </tr>
