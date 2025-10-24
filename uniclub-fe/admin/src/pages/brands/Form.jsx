@@ -38,15 +38,26 @@ export default function BrandForm() {
       return
     }
 
-    if (id) {
-      await api.update("brands", id, form)
-      setToast({ message: "Cập nhật nhãn hàng thành công", type: "success" })
-    } else {
-      await api.create("brands", form)
-      setToast({ message: "Tạo thương hiệu thành công", type: "success" })
-    }
+    try {
+      if (id) {
+        await api.update("brands", id, form)
+        setToast({ message: "Cập nhật nhãn hàng thành công", type: "success" })
+      } else {
+        await api.create("brands", form)
+        setToast({ message: "Tạo thương hiệu thành công", type: "success" })
+      }
 
-    navigate("/brands")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/brands")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating brand:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật nhãn hàng", 
+        type: "error" 
+      })
+    }
   }
 
   return (

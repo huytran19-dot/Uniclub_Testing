@@ -4,14 +4,19 @@ import com.uniclub.dto.request.Variant.CreateVariantRequest;
 import com.uniclub.dto.request.Variant.UpdateVariantRequest;
 import com.uniclub.dto.response.Variant.VariantResponse;
 import com.uniclub.service.VariantService;
+import com.uniclub.service.CloudinaryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/variants")
@@ -21,6 +26,9 @@ public class VariantController {
 
     @Autowired
     private VariantService variantService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     // CREATE
     @PostMapping
@@ -74,6 +82,46 @@ public class VariantController {
                                                  @RequestParam Integer colorId) {
         boolean exists = variantService.existsByCombination(productId, sizeId, colorId);
         return ResponseEntity.ok(exists);
+    }
+
+    // UPLOAD IMAGE FOR VARIANT
+    @PostMapping("/{sku}/upload-image")
+    public ResponseEntity<?> uploadVariantImage(@PathVariable Integer sku, 
+                                               @RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is empty");
+            }
+
+            // Validate file type
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("File must be an image");
+            }
+
+            // Validate file size (max 5MB)
+            if (file.getSize() > 5 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body("File size must be less than 5MB");
+            }
+
+            // Upload image to Cloudinary
+            String imageUrl = cloudinaryService.uploadImage(file, "uniclub/variants");
+            
+            // Update variant with new image URL
+            VariantResponse updated = variantService.updateVariantImage(sku, imageUrl);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("variant", updated);
+            response.put("imageUrl", imageUrl);
+            response.put("message", "Image uploaded and variant updated successfully");
+
+            return ResponseEntity.ok(response);
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Failed to upload image: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Unexpected error: " + e.getMessage());
+        }
     }
 
     // DELETE

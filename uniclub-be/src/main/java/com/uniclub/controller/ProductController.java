@@ -24,11 +24,17 @@ public class ProductController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
-        ProductResponse created = productService.createProduct(request);
-        return ResponseEntity
-                .created(URI.create("/api/products/" + created.getId()))
-                .body(created);
+    public ResponseEntity<?> create(@Valid @RequestBody CreateProductRequest request) {
+        try {
+            ProductResponse created = productService.createProduct(request);
+            return ResponseEntity
+                    .created(URI.create("/api/products/" + created.getId()))
+                    .body(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Internal server error");
+        }
     }
 
     // UPDATE

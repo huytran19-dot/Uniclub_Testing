@@ -7,11 +7,11 @@ import Table from "../../components/Table"
 import Badge from "../../components/Badge"
 import Breadcrumb from "../../components/Breadcrumb"
 import { api } from "../../lib/api"
-import { formatDate, formatMoney, getStatusLabel, getStatusType } from "../../lib/utils"
+import { formatDate, formatDateTime, formatMoney, getStatusLabel, getStatusType } from "../../lib/utils"
 
 export default function GrnList() {
   const navigate = useNavigate()
-  const [grns, setGrns] = useState([])
+  const [grnHeaders, setGrnHeaders] = useState([])
   const [suppliers, setSuppliers] = useState([])
 
   useEffect(() => {
@@ -19,9 +19,9 @@ export default function GrnList() {
   }, [])
 
   const loadData = async () => {
-    const [grnData, suppData] = await Promise.all([api.list("grn"), api.list("suppliers")])
-    setGrns(grnData || [])
-    setSuppliers(suppData || [])
+    const [grnHeadersData, suppliersData] = await Promise.all([api.list("grn-headers"), api.list("suppliers")])
+    setGrnHeaders(grnHeadersData || [])
+    setSuppliers(suppliersData || [])
   }
 
   const getSupplierName = (id) => suppliers.find((s) => s.id === id)?.name || "-"
@@ -29,15 +29,15 @@ export default function GrnList() {
   const columns = [
     { key: "id", label: "Mã phiếu" },
     {
-      key: "id_supplier",
+      key: "supplierId",
       label: "Nhà cung cấp",
-      render: (row) => getSupplierName(row.id_supplier),
+      render: (row) => getSupplierName(row.supplierId),
     },
-    { key: "received_date", label: "Ngày nhận", render: (row) => formatDate(row.received_date) },
+    { key: "receivedDate", label: "Ngày nhận", render: (row) => formatDateTime(row.receivedDate) },
     {
-      key: "total_cost",
+      key: "totalCost",
       label: "Tổng tiền",
-      render: (row) => formatMoney(row.total_cost),
+      render: (row) => formatMoney(row.totalCost),
     },
     {
       key: "status",
@@ -61,7 +61,13 @@ export default function GrnList() {
 
       <Card>
         <div className="p-6">
-          <Table columns={columns} data={grns} onView={(row) => navigate(`/grn/${row.id}`)} />
+          {grnHeaders.length === 0 ? (
+            <div className="text-center py-8 text-neutral-500">
+              Chưa có phiếu nhập nào
+            </div>
+          ) : (
+            <Table columns={columns} data={grnHeaders} onView={(row) => navigate(`/grn/${row.id}`)} />
+          )}
         </div>
       </Card>
     </div>

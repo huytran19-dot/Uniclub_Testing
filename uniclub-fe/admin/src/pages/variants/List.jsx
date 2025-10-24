@@ -46,38 +46,59 @@ export default function VariantList() {
 
   const getProductName = (id) => products.find((p) => p.id === id)?.name || "-"
   const getColorName = (id) => colors.find((c) => c.id === id)?.name || "-"
-  const getColorHex = (id) => colors.find((c) => c.id === id)?.hex_code || "#000000"
+  const getColorHex = (id) => colors.find((c) => c.id === id)?.hexCode || "#000000"
   const getSizeName = (id) => sizes.find((s) => s.id === id)?.name || "-"
 
   const columns = [
     { key: "sku", label: "SKU" },
     {
-      key: "id_product",
+      key: "productId",
       label: "Sản phẩm",
-      render: (row) => getProductName(row.id_product),
+      render: (row) => getProductName(row.productId),
     },
     {
-      key: "id_color",
+      key: "colorId",
       label: "Màu",
       render: (row) => (
         <div className="flex items-center gap-2">
           <div
             className="w-4 h-4 rounded border border-neutral-300"
-            style={{ backgroundColor: getColorHex(row.id_color) }}
+            style={{ backgroundColor: getColorHex(row.colorId) }}
           />
-          <span>{getColorName(row.id_color)}</span>
+          <span>{getColorName(row.colorId)}</span>
         </div>
       ),
     },
     {
-      key: "id_size",
+      key: "sizeId",
       label: "Kích cỡ",
-      render: (row) => getSizeName(row.id_size),
+      render: (row) => getSizeName(row.sizeId),
     },
     {
       key: "price",
       label: "Giá",
       render: (row) => formatMoney(row.price),
+    },
+    {
+      key: "images",
+      label: "Hình ảnh",
+      render: (row) => (
+        row.images ? (
+          <img 
+            src={row.images} 
+            alt="Variant" 
+            className="w-12 h-12 object-cover rounded border border-neutral-200"
+            onError={(e) => {
+              e.target.style.display = 'none'
+              e.target.nextSibling.style.display = 'block'
+            }}
+          />
+        ) : (
+          <div className="w-12 h-12 bg-neutral-100 rounded border border-neutral-200 flex items-center justify-center text-neutral-400 text-xs">
+            No image
+          </div>
+        )
+      ),
     },
     {
       key: "quantity",

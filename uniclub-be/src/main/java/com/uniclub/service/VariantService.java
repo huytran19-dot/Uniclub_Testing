@@ -21,4 +21,6 @@ public interface VariantService {
     VariantResponse decreaseStock(Integer sku, Integer amount);
 
     boolean existsByCombination(Integer productId, Integer sizeId, Integer colorId);
+    
+    VariantResponse updateVariantImage(Integer sku, String imageUrl);
 }

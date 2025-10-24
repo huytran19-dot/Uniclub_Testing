@@ -9,6 +9,12 @@ export function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString("vi-VN")
 }
 
+export function formatDateTime(dateString) {
+  if (!dateString) return "";
+  // toLocaleString sẽ lấy cả ngày và giờ
+  return new Date(dateString).toLocaleString("vi-VN");
+}
+
 export function getStatusLabel(status) {
   const labels = {
     1: "Hoạt động",

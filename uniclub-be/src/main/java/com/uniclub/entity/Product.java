@@ -27,9 +27,6 @@ public class Product {
     @Column(length = 255)
     private String information;
 
-    @Column(nullable = false)
-    private Integer price;
-
     @Column(columnDefinition = "TINYINT DEFAULT 1")
     private Byte status = 1;
 

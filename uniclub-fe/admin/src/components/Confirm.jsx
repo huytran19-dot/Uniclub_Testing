@@ -16,8 +16,8 @@ export default function Confirm({ isOpen, title, message, onConfirm, onCancel })
             >
               Hủy
             </button>
-            <button onClick={onConfirm} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-              Xóa
+            <button onClick={onConfirm} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+              Xác nhận
             </button>
           </div>
         </div>

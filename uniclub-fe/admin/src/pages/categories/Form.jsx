@@ -38,15 +38,26 @@ export default function CategoryForm() {
       return
     }
 
-    if (id) {
-      await api.update("categories", id, form)
-      setToast({ message: "Cập nhật danh mục thành công", type: "success" })
-    } else {
-      await api.create("categories", form)
-      setToast({ message: "Tạo danh mục thành công", type: "success" })
-    }
+    try {
+      if (id) {
+        await api.update("categories", id, form)
+        setToast({ message: "Cập nhật danh mục thành công", type: "success" })
+      } else {
+        await api.create("categories", form)
+        setToast({ message: "Tạo danh mục thành công", type: "success" })
+      }
 
-    navigate("/categories")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/categories")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating category:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật danh mục", 
+        type: "error" 
+      })
+    }
   }
 
   return (

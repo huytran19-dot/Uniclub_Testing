@@ -13,7 +13,7 @@ export default function SupplierForm() {
   const { id } = useParams()
   const [form, setForm] = useState({
     name: "",
-    contact_person: "",
+    contactPerson: "",
     phone: "",
     email: "",
     address: "",
@@ -45,15 +45,26 @@ export default function SupplierForm() {
       return
     }
 
-    if (id) {
-      await api.update("suppliers", id, form)
-      setToast({ message: "Cập nhật nhà cung cấp thành công", type: "success" })
-    } else {
-      await api.create("suppliers", form)
-      setToast({ message: "Tạo nhà cung cấp thành công", type: "success" })
-    }
+    try {
+      if (id) {
+        await api.update("suppliers", id, form)
+        setToast({ message: "Cập nhật nhà cung cấp thành công", type: "success" })
+      } else {
+        await api.create("suppliers", form)
+        setToast({ message: "Tạo nhà cung cấp thành công", type: "success" })
+      }
 
-    navigate("/suppliers")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/suppliers")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating supplier:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật nhà cung cấp", 
+        type: "error" 
+      })
+    }
   }
 
   return (
@@ -73,8 +84,8 @@ export default function SupplierForm() {
 
           <FormField
             label="Người liên hệ"
-            value={form.contact_person}
-            onChange={(e) => setForm({ ...form, contact_person: e.target.value })}
+            value={form.contactPerson}
+            onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
           />
 
           <FormField

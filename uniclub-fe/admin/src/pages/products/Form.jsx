@@ -15,8 +15,8 @@ export default function ProductForm() {
     name: "",
     description: "",
     information: "",
-    id_brand: "",
-    id_category: "",
+    brandId: "",
+    categoryId: "",
     status: 1,
   })
   const [categories, setCategories] = useState([])
@@ -46,8 +46,8 @@ export default function ProductForm() {
   const validate = () => {
     const newErrors = {}
     if (!form.name.trim()) newErrors.name = "Tên sản phẩm là bắt buộc"
-    if (!form.id_brand) newErrors.id_brand = "Nhãn hàng là bắt buộc"
-    if (!form.id_category) newErrors.id_category = "Danh mục là bắt buộc"
+    if (!form.brandId) newErrors.brandId = "Nhãn hàng là bắt buộc"
+    if (!form.categoryId) newErrors.categoryId = "Danh mục là bắt buộc"
     return newErrors
   }
 
@@ -59,15 +59,28 @@ export default function ProductForm() {
       return
     }
 
-    if (id) {
-      await api.update("products", id, form)
-      setToast({ message: "Cập nhật sản phẩm thành công", type: "success" })
-    } else {
-      await api.create("products", form)
-      setToast({ message: "Tạo sản phẩm thành công", type: "success" })
-    }
+    try {
+      console.log("Sending product data:", form) // Debug log
+      
+      if (id) {
+        await api.update("products", id, form)
+        setToast({ message: "Cập nhật sản phẩm thành công", type: "success" })
+      } else {
+        await api.create("products", form)
+        setToast({ message: "Tạo sản phẩm thành công", type: "success" })
+      }
 
-    navigate("/products")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/products")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating product:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật sản phẩm", 
+        type: "error" 
+      })
+    }
   }
 
   return (
@@ -102,20 +115,20 @@ export default function ProductForm() {
           <FormField
             label="Nhãn hàng"
             type="select"
-            value={form.id_brand}
-            onChange={(e) => setForm({ ...form, id_brand: Number.parseInt(e.target.value) })}
+            value={form.brandId}
+            onChange={(e) => setForm({ ...form, brandId: Number.parseInt(e.target.value) })}
             options={brands}
-            error={errors.id_brand}
+            error={errors.brandId}
             required
           />
 
           <FormField
             label="Danh mục"
             type="select"
-            value={form.id_category}
-            onChange={(e) => setForm({ ...form, id_category: Number.parseInt(e.target.value) })}
+            value={form.categoryId}
+            onChange={(e) => setForm({ ...form, categoryId: Number.parseInt(e.target.value) })}
             options={categories}
-            error={errors.id_category}
+            error={errors.categoryId}
             required
           />
 

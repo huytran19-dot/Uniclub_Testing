@@ -11,7 +11,7 @@ import { api } from "../../lib/api"
 export default function ColorForm() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const [form, setForm] = useState({ name: "", hex_code: "#000000", status: 1 })
+  const [form, setForm] = useState({ name: "", hexCode: "#000000", status: 1 })
   const [errors, setErrors] = useState({})
   const [toast, setToast] = useState(null)
 
@@ -27,7 +27,7 @@ export default function ColorForm() {
   const validate = () => {
     const newErrors = {}
     if (!form.name.trim()) newErrors.name = "Tên màu là bắt buộc"
-    if (!form.hex_code.match(/^#[0-9A-F]{6}$/i)) newErrors.hex_code = "Mã màu không hợp lệ"
+    if (!form.hexCode.match(/^#[0-9A-F]{6}$/i)) newErrors.hexCode = "Mã màu không hợp lệ"
     return newErrors
   }
 
@@ -39,15 +39,28 @@ export default function ColorForm() {
       return
     }
 
-    if (id) {
-      await api.update("colors", id, form)
-      setToast({ message: "Cập nhật màu sắc thành công", type: "success" })
-    } else {
-      await api.create("colors", form)
-      setToast({ message: "Tạo màu sắc thành công", type: "success" })
-    }
+    try {
+      console.log("Sending form data:", form) // Debug log
+      
+      if (id) {
+        await api.update("colors", id, form)
+        setToast({ message: "Cập nhật màu sắc thành công", type: "success" })
+      } else {
+        await api.create("colors", form)
+        setToast({ message: "Tạo màu sắc thành công", type: "success" })
+      }
 
-    navigate("/colors")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/colors")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating color:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật màu sắc", 
+        type: "error" 
+      })
+    }
   }
 
   return (
@@ -78,21 +91,21 @@ export default function ColorForm() {
             <div className="flex gap-2">
               <input
                 type="color"
-                value={form.hex_code}
-                onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
+                value={form.hexCode}
+                onChange={(e) => setForm({ ...form, hexCode: e.target.value })}
                 className="w-12 h-10 border border-neutral-200 rounded-lg cursor-pointer"
               />
               <input
                 type="text"
-                value={form.hex_code}
-                onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
+                value={form.hexCode}
+                onChange={(e) => setForm({ ...form, hexCode: e.target.value })}
                 placeholder="#000000"
                 className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.hex_code ? "border-red-500" : "border-neutral-200"
+                  errors.hexCode ? "border-red-500" : "border-neutral-200"
                 }`}
               />
             </div>
-            {errors.hex_code && <p className="text-red-500 text-sm mt-1">{errors.hex_code}</p>}
+            {errors.hexCode && <p className="text-red-500 text-sm mt-1">{errors.hexCode}</p>}
           </div>
 
           <div className="mb-4">

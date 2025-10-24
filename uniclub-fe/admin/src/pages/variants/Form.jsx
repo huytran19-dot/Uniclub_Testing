@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Card from "../../components/Card"
 import FormField from "../../components/FormField"
+import FileUpload from "../../components/FileUpload"
 import Toast from "../../components/Toast"
 import Breadcrumb from "../../components/Breadcrumb"
 import { api } from "../../lib/api"
@@ -12,9 +13,9 @@ export default function VariantForm() {
   const navigate = useNavigate()
   const { sku } = useParams()
   const [form, setForm] = useState({
-    id_product: "",
-    id_color: "",
-    id_size: "",
+    productId: "",
+    colorId: "",
+    sizeId: "",
     price: "",
     images: "",
     status: 1,
@@ -33,6 +34,15 @@ export default function VariantForm() {
     if (sku) loadVariant()
   }, [sku])
 
+  useEffect(() => {
+    // Set productId from URL params when creating new variant
+    const urlParams = new URLSearchParams(window.location.search)
+    const productIdFromUrl = urlParams.get('productId')
+    if (productIdFromUrl && !sku) {
+      setForm(prev => ({ ...prev, productId: Number.parseInt(productIdFromUrl) }))
+    }
+  }, [sku])
+
   const loadData = async () => {
     const [prods, cols, szs] = await Promise.all([api.list("products"), api.list("colors"), api.list("sizes")])
     setProducts(prods)
@@ -42,14 +52,26 @@ export default function VariantForm() {
 
   const loadVariant = async () => {
     const data = await api.get("variants", sku)
-    if (data) setForm(data)
+    console.log('Loaded variant data:', data)
+    if (data) {
+      const formData = {
+        productId: data.productId || "",
+        colorId: data.colorId || "",
+        sizeId: data.sizeId || "",
+        price: data.price || "",
+        images: data.images || "",
+        status: data.status || 1,
+      }
+      console.log('Setting form data:', formData)
+      setForm(formData)
+    }
   }
 
   const validate = () => {
     const newErrors = {}
-    if (!form.id_product) newErrors.id_product = "Sản phẩm là bắt buộc"
-    if (!form.id_color) newErrors.id_color = "Màu sắc là bắt buộc"
-    if (!form.id_size) newErrors.id_size = "Kích cỡ là bắt buộc"
+    if (!form.productId) newErrors.productId = "Sản phẩm là bắt buộc"
+    if (!form.colorId) newErrors.colorId = "Màu sắc là bắt buộc"
+    if (!form.sizeId) newErrors.sizeId = "Kích cỡ là bắt buộc"
     if (!form.price || form.price <= 0) newErrors.price = "Giá phải lớn hơn 0"
     return newErrors
   }
@@ -62,15 +84,28 @@ export default function VariantForm() {
       return
     }
 
-    if (sku) {
-      await api.update("variants", sku, form)
-      setToast({ message: "Cập nhật biến thể thành công", type: "success" })
-    } else {
-      await api.create("variants", form)
-      setToast({ message: "Tạo biến thể thành công", type: "success" })
-    }
+    try {
+      console.log("Sending variant data:", form) // Debug log
+      
+      if (sku) {
+        await api.update("variants", sku, form)
+        setToast({ message: "Cập nhật biến thể thành công", type: "success" })
+      } else {
+        await api.create("variants", form)
+        setToast({ message: "Tạo biến thể thành công", type: "success" })
+      }
 
-    navigate("/variants")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/variants")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating variant:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật biến thể", 
+        type: "error" 
+      })
+    }
   }
 
   return (
@@ -89,30 +124,30 @@ export default function VariantForm() {
           <FormField
             label="Sản phẩm"
             type="select"
-            value={form.id_product}
-            onChange={(e) => setForm({ ...form, id_product: Number.parseInt(e.target.value) })}
+            value={form.productId}
+            onChange={(e) => setForm({ ...form, productId: Number.parseInt(e.target.value) })}
             options={products}
-            error={errors.id_product}
+            error={errors.productId}
             required
           />
 
           <FormField
             label="Màu sắc"
             type="select"
-            value={form.id_color}
-            onChange={(e) => setForm({ ...form, id_color: Number.parseInt(e.target.value) })}
+            value={form.colorId}
+            onChange={(e) => setForm({ ...form, colorId: Number.parseInt(e.target.value) })}
             options={colors}
-            error={errors.id_color}
+            error={errors.colorId}
             required
           />
 
           <FormField
             label="Kích cỡ"
             type="select"
-            value={form.id_size}
-            onChange={(e) => setForm({ ...form, id_size: Number.parseInt(e.target.value) })}
+            value={form.sizeId}
+            onChange={(e) => setForm({ ...form, sizeId: Number.parseInt(e.target.value) })}
             options={sizes}
-            error={errors.id_size}
+            error={errors.sizeId}
             required
           />
 
@@ -125,10 +160,12 @@ export default function VariantForm() {
             required
           />
 
-          <FormField
-            label="Hình ảnh (URL)"
+          <FileUpload
+            label="Hình ảnh"
             value={form.images}
-            onChange={(e) => setForm({ ...form, images: e.target.value })}
+            onChange={(url) => setForm({ ...form, images: url })}
+            error={errors.images}
+            singleImage={true}
           />
 
           <div className="mb-4">

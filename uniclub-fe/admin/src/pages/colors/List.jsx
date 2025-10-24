@@ -37,12 +37,12 @@ export default function ColorList() {
     { key: "id", label: "ID" },
     { key: "name", label: "Tên màu" },
     {
-      key: "hex_code",
+      key: "hexCode",
       label: "Mã màu",
       render: (row) => (
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded border border-neutral-300" style={{ backgroundColor: row.hex_code }} />
-          <span>{row.hex_code}</span>
+        <div className="flex items-center gap-2"> 
+          <div className="w-6 h-6 rounded border border-neutral-300" style={{ backgroundColor: row.hexCode }} />
+          <span>{row.hexCode}</span>
         </div>
       ),
     },
@@ -80,7 +80,7 @@ export default function ColorList() {
       {confirmDelete && (
         <Confirm
           isOpen={true}
-          title="Xóa màu sắc"
+          title="màu sắc"
           message={`Bạn có chắc muốn xóa màu "${confirmDelete.name}"?`}
           onConfirm={handleDelete}
           onCancel={() => setConfirmDelete(null)}
