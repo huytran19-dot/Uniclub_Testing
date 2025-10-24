@@ -38,15 +38,26 @@ export default function SizeForm() {
       return
     }
 
-    if (id) {
-      await api.update("sizes", id, form)
-      setToast({ message: "Cập nhật kích cỡ thành công", type: "success" })
-    } else {
-      await api.create("sizes", form)
-      setToast({ message: "Tạo kích cỡ thành công", type: "success" })
-    }
+    try {
+      if (id) {
+        await api.update("sizes", id, form)
+        setToast({ message: "Cập nhật kích cỡ thành công", type: "success" })
+      } else {
+        await api.create("sizes", form)
+        setToast({ message: "Tạo kích cỡ thành công", type: "success" })
+      }
 
-    navigate("/sizes")
+      // Delay navigation to show toast
+      setTimeout(() => {
+        navigate("/sizes")
+      }, 1500)
+    } catch (error) {
+      console.error("Error creating/updating size:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi tạo/cập nhật kích cỡ", 
+        type: "error" 
+      })
+    }
   }
 
   return (

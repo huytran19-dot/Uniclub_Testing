@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: uniclub-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: huytran123
+      MYSQL_DATABASE: uniclub
+      MYSQL_USER: uniclub_user
+      MYSQL_PASSWORD: uniclub_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init/init-database.sql:/docker-entrypoint-initdb.d/init-database.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - uniclub-network
+
+  # Optional: phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: uniclub-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: huytran123
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - uniclub-network
+
+volumes:
+  mysql_data:
+
+networks:
+  uniclub-network:
+    driver: bridge

@@ -15,12 +15,11 @@ public class ProductResponse {
     private String name;
     private String description;
     private String information;
-    private Integer price;
 
-    private Integer idBrand;
+    private Integer brandId;
     private String brandName;
 
-    private Integer idCategory;
+    private Integer categoryId;
     private String categoryName;
 
     private Byte status;
@@ -35,19 +34,20 @@ public class ProductResponse {
         response.setName(product.getName());
         response.setDescription(product.getDescription());
         response.setInformation(product.getInformation());
-        response.setPrice(product.getPrice());
         response.setStatus(product.getStatus());
         response.setCreatedAt(product.getCreatedAt());
         response.setUpdatedAt(product.getUpdatedAt());
 
         // lay brandname
         if (product.getBrand() != null) {
-            response.setIdBrand(product.getBrand().getId());
+            response.setBrandId(product.getBrand().getId());
+            response.setBrandName(product.getBrand().getName());
         }
 
         // lay categoryName
         if (product.getCategory() != null) {
-            response.setIdCategory(product.getCategory().getId());
+            response.setCategoryId(product.getCategory().getId());
+            response.setCategoryName(product.getCategory().getName());
         }
 
         return response;

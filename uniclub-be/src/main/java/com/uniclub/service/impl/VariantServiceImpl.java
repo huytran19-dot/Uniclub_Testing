@@ -162,4 +162,15 @@ public class VariantServiceImpl implements VariantService {
         return false;
     }
 
+    @Override
+    public VariantResponse updateVariantImage(Integer sku, String imageUrl) {
+        Variant variant = variantRepository.findById(sku)
+                .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", sku));
+        
+        variant.setImages(imageUrl);
+        Variant updatedVariant = variantRepository.save(variant);
+        
+        return VariantResponse.fromEntity(updatedVariant);
+    }
+
 }

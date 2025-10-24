@@ -24,11 +24,17 @@ public class ColorController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<ColorResponse> create(@Valid @RequestBody CreateColorRequest request) {
-        ColorResponse created = colorService.createColor(request);
-        return ResponseEntity
-                .created(URI.create("/api/colors/" + created.getId()))
-                .body(created);
+    public ResponseEntity<?> create(@Valid @RequestBody CreateColorRequest request) {
+        try {
+            ColorResponse created = colorService.createColor(request);
+            return ResponseEntity
+                    .created(URI.create("/api/colors/" + created.getId()))
+                    .body(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Internal server error");
+        }
     }
 
     // UPDATE

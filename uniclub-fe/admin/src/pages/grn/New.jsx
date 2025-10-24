@@ -12,8 +12,8 @@ import { formatMoney } from "../../lib/utils"
 export default function GrnNew() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    id_supplier: "",
-    received_date: "",
+    supplierId: "",
+    receivedDate: "",
     note: "",
   })
   const [details, setDetails] = useState([])
@@ -38,8 +38,8 @@ export default function GrnNew() {
         api.list("sizes"),
       ])
       
-      setSuppliers(suppData || getMockSuppliers())
-      setProducts(prodData || getMockProducts())
+      setSuppliers(suppData || [])
+      setProducts(prodData || [])
       
       // Enrich variants with color and size names
       if (varData && varData.length > 0) {
@@ -48,14 +48,14 @@ export default function GrnNew() {
         const products = prodData || []
         
         const enrichedVariants = varData.map((v) => {
-          const product = products.find((p) => p.id === v.id_product)
-          const color = colors.find((c) => c.id === v.id_color)
-          const size = sizes.find((s) => s.id === v.id_size)
+          const product = products.find((p) => p.id === v.productId)
+          const color = colors.find((c) => c.id === v.colorId)
+          const size = sizes.find((s) => s.id === v.sizeId)
           
           return {
             id: v.sku,
             sku: v.sku,
-            product_id: v.id_product, // Map id_product to product_id
+            product_id: v.productId,
             product_name: product?.name || "Unknown",
             color: color?.name || "N/A",
             size: size?.name || "N/A",
@@ -64,47 +64,32 @@ export default function GrnNew() {
         })
         setVariants(enrichedVariants)
       } else {
-        setVariants(getMockVariants())
+        setVariants([])
       }
     } catch (error) {
       console.error("Error loading data:", error)
-      setSuppliers(getMockSuppliers())
-      setProducts(getMockProducts())
-      setVariants(getMockVariants())
+      setToast({ 
+        message: "Không thể tải dữ liệu. Vui lòng thử lại sau.", 
+        type: "error" 
+      })
+      setSuppliers([])
+      setProducts([])
+      setVariants([])
     }
   }
 
-  const getMockSuppliers = () => [
-    { id: 1, name: "Nhà cung cấp A" },
-    { id: 2, name: "Nhà cung cấp B" },
-  ]
-
-  const getMockProducts = () => [
-    { id: 1, name: "Áo thun cổ tròn" },
-    { id: 2, name: "Quần jean nam" },
-    { id: 3, name: "Áo hoodie" },
-  ]
-
-  const getMockVariants = () => [
-    { id: 1, sku: "TS001-BLK-M", product_id: 1, product_name: "Áo thun cổ tròn", color: "Đen", size: "M", price: 150000 },
-    { id: 2, sku: "TS001-BLK-L", product_id: 1, product_name: "Áo thun cổ tròn", color: "Đen", size: "L", price: 150000 },
-    { id: 3, sku: "TS001-WHT-M", product_id: 1, product_name: "Áo thun cổ tròn", color: "Trắng", size: "M", price: 150000 },
-    { id: 4, sku: "QJ002-BLU-30", product_id: 2, product_name: "Quần jean nam", color: "Xanh", size: "30", price: 350000 },
-    { id: 5, sku: "QJ002-BLU-32", product_id: 2, product_name: "Quần jean nam", color: "Xanh", size: "32", price: 350000 },
-    { id: 6, sku: "HD003-BLK-L", product_id: 3, product_name: "Áo hoodie", color: "Đen", size: "L", price: 280000 },
-  ]
 
   const handleAddRow = () => {
     setDetails([
       ...details,
       {
-        product_id: "",
-        id_variant: "",
+        productId: "",
+        variantSku: "",
         sku: "",
         color: "",
         size: "",
         quantity: "",
-        unit_cost: "",
+        unitCost: "",
         subtotal: 0,
       },
     ])
@@ -124,12 +109,12 @@ export default function GrnNew() {
     const newDetails = [...details]
     newDetails[idx] = {
       ...newDetails[idx],
-      product_id: productId,
-      id_variant: "",
+      productId: productId,
+      variantSku: "",
       sku: "",
       color: "",
       size: "",
-      unit_cost: "",
+      unitCost: "",
     }
     setDetails(newDetails)
   }
@@ -158,11 +143,11 @@ export default function GrnNew() {
     
     newDetails[idx] = {
       ...newDetails[idx],
-      id_variant: variant.id,
+      variantSku: variant.id,
       sku: variant.sku,
       color: variant.color,
       size: variant.size,
-      unit_cost: unitCost,
+      unitCost: unitCost,
     }
 
     // Recalculate subtotal if quantity exists
@@ -181,9 +166,9 @@ export default function GrnNew() {
     const newDetails = [...details]
     newDetails[idx][field] = value
 
-    if (field === "quantity" || field === "unit_cost") {
+    if (field === "quantity" || field === "unitCost") {
       const qty = parseInt(newDetails[idx].quantity) || 0
-      const cost = parseInt(newDetails[idx].unit_cost) || 0
+      const cost = parseInt(newDetails[idx].unitCost) || 0
       newDetails[idx].subtotal = qty * cost
     }
 
@@ -192,15 +177,15 @@ export default function GrnNew() {
 
   const getVariantsByProduct = (productId) => {
     if (!productId) return []
-    return variants.filter((v) => v.product_id === parseInt(productId))
+    return variants.filter((v) => v.id === parseInt(productId))
   }
 
   const totalCost = details.reduce((sum, d) => sum + (d.subtotal || 0), 0)
 
   const validate = () => {
     const newErrors = {}
-    if (!form.id_supplier) newErrors.id_supplier = "Nhà cung cấp là bắt buộc"
-    if (!form.received_date) newErrors.received_date = "Ngày nhận là bắt buộc"
+    if (!form.supplierId) newErrors.supplierId = "Nhà cung cấp là bắt buộc"
+    if (!form.receivedDate) newErrors.receivedDate = "Ngày nhận là bắt buộc"
     if (details.length === 0) {
       newErrors.details = "Phải có ít nhất 1 dòng chi tiết"
     }
@@ -209,7 +194,7 @@ export default function GrnNew() {
 
   const isFormValid = () => {
     // Check basic form fields
-    if (!form.id_supplier || !form.received_date) return false
+    if (!form.supplierId || !form.receivedDate) return false
     
     // Check details
     if (details.length === 0) return false
@@ -217,12 +202,12 @@ export default function GrnNew() {
     // Check each detail row
     return details.every((detail) => {
       return (
-        detail.product_id &&
-        detail.id_variant &&
+        detail.productId &&
+        detail.variantSku &&
         detail.quantity &&
         parseInt(detail.quantity) > 0 &&
-        detail.unit_cost &&
-        parseInt(detail.unit_cost) > 0
+        detail.unitCost &&
+        parseInt(detail.unitCost) > 0
       )
     })
   }
@@ -235,23 +220,38 @@ export default function GrnNew() {
       return
     }
 
-    const payload = {
-      ...form,
-      id_supplier: parseInt(form.id_supplier),
-      total_cost: totalCost,
-      status: "PENDING",
-      details: details.map((d) => ({
-        id_variant: d.id_variant,
-        sku: d.sku,
-        quantity: parseInt(d.quantity),
-        unit_cost: parseInt(d.unit_cost),
-        subtotal: d.subtotal,
-      })),
-    }
+    try {
+      // Create GRN Header first
+      const grnHeaderPayload = {
+        supplierId: parseInt(form.supplierId),
+        receivedDate: form.receivedDate,
+        note: form.note,
+      }
 
-    await api.create("grn", payload)
-    setToast({ type: "success", message: "Tạo phiếu nhập kho thành công" })
-    setTimeout(() => navigate("/grn"), 1500)
+      const grnHeader = await api.create("grn-headers", grnHeaderPayload)
+      
+      // Create GRN Details
+      const grnDetailsPayload = details.map((d) => ({
+        grnHeaderId: grnHeader.id,
+        variantSku: parseInt(d.variantSku),
+        quantity: parseInt(d.quantity),
+        unitCost: parseInt(d.unitCost),
+      }))
+
+      // Create all details
+      for (const detail of grnDetailsPayload) {
+        await api.create("grn-details", detail)
+      }
+      
+      setToast({ type: "success", message: "Tạo phiếu nhập kho thành công" })
+      setTimeout(() => navigate("/grn"), 1500)
+    } catch (error) {
+      console.error("Error creating GRN:", error)
+      setToast({ 
+        type: "error", 
+        message: error.message || "Có lỗi xảy ra khi tạo phiếu nhập kho" 
+      })
+    }
   }
 
   return (
@@ -266,19 +266,19 @@ export default function GrnNew() {
             <FormField
               label="Nhà cung cấp"
               type="select"
-              value={form.id_supplier}
-              onChange={(e) => setForm({ ...form, id_supplier: e.target.value })}
+              value={form.supplierId}
+              onChange={(e) => setForm({ ...form, supplierId: e.target.value })}
               options={suppliers}
-              error={errors.id_supplier}
+              error={errors.supplierId}
               required
             />
 
             <FormField
               label="Ngày nhận"
               type="date"
-              value={form.received_date}
-              onChange={(e) => setForm({ ...form, received_date: e.target.value })}
-              error={errors.received_date}
+              value={form.receivedDate}
+              onChange={(e) => setForm({ ...form, receivedDate: e.target.value })}
+              error={errors.receivedDate}
               required
             />
           </div>
@@ -331,7 +331,7 @@ export default function GrnNew() {
                       <td className="px-4 py-2">
                         <select
                           ref={(el) => (rowRefs.current[idx] = el)}
-                          value={detail.product_id}
+                          value={detail.productId}
                           onChange={(e) => handleProductChange(idx, e.target.value)}
                           className="w-full px-2 py-1 border border-neutral-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
@@ -347,16 +347,16 @@ export default function GrnNew() {
                       {/* Variant Select */}
                       <td className="px-4 py-2">
                         <select
-                          value={detail.id_variant}
+                          value={detail.variantSku}
                           onChange={(e) => handleVariantChange(idx, e.target.value)}
-                          disabled={!detail.product_id}
+                          disabled={!detail.productId}
                           className="w-full px-2 py-1 border border-neutral-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-neutral-100 disabled:cursor-not-allowed"
                         >
                           <option value="">
-                            {detail.product_id ? "Chọn biến thể" : "Chọn sản phẩm trước"}
+                            {detail.productId ? "Chọn biến thể" : "Chọn sản phẩm trước"}
                           </option>
-                          {detail.product_id &&
-                            getVariantsByProduct(detail.product_id).map((v) => (
+                          {detail.productId &&
+                            getVariantsByProduct(detail.productId).map((v) => (
                               <option key={v.id} value={v.id}>
                                 {v.sku} ({v.color} - {v.size})
                               </option>
@@ -402,8 +402,8 @@ export default function GrnNew() {
                       <td className="px-4 py-2">
                         <input
                           type="number"
-                          value={detail.unit_cost}
-                          onChange={(e) => handleDetailChange(idx, "unit_cost", e.target.value)}
+                          value={detail.unitCost}
+                          onChange={(e) => handleDetailChange(idx, "unitCost", e.target.value)}
                           className="w-full px-2 py-1 border border-neutral-200 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="0"
                           min="0"

@@ -9,7 +9,7 @@ import Toast from "../../components/Toast"
 import Confirm from "../../components/Confirm"
 import Breadcrumb from "../../components/Breadcrumb"
 import { api } from "../../lib/api"
-import { formatDate, getStatusLabel, getStatusType } from "../../lib/utils"
+import { formatDate, formatDateTime, getStatusLabel, getStatusType } from "../../lib/utils"
 
 export default function CategoryList() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export default function CategoryList() {
       label: "Trạng thái",
       render: (row) => <Badge status={getStatusType(row.status)} label={getStatusLabel(row.status)} />,
     },
-    { key: "created_at", label: "Ngày tạo", render: (row) => formatDate(row.created_at) },
+    { key: "createdAt", label: "Ngày tạo", render: (row) => formatDateTime(row.createdAt) },
   ]
 
   return (

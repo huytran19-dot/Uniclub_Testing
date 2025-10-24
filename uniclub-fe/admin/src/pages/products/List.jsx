@@ -9,7 +9,7 @@ import Toast from "../../components/Toast"
 import AlertDialog from "../../components/AlertDialog"
 import Breadcrumb from "../../components/Breadcrumb"
 import { api } from "../../lib/api"
-import { formatDate, getStatusLabel, getStatusType } from "../../lib/utils"
+import { formatDate, formatDateTime, getStatusLabel, getStatusType } from "../../lib/utils"
 
 export default function ProductList() {
   const navigate = useNavigate()
@@ -44,21 +44,21 @@ export default function ProductList() {
     { key: "id", label: "ID" },
     { key: "name", label: "Tên" },
     {
-      key: "id_category",
+      key: "categoryId",
       label: "Danh mục",
-      render: (row) => getCategoryName(row.id_category),
+      render: (row) => getCategoryName(row.categoryId),
     },
     {
-      key: "id_brand",
+      key: "brandId",
       label: "Nhãn hàng",
-      render: (row) => getBrandName(row.id_brand),
+      render: (row) => getBrandName(row.brandId),
     },
     {
       key: "status",
       label: "Trạng thái",
       render: (row) => <Badge status={getStatusType(row.status)} label={getStatusLabel(row.status)} />,
     },
-    { key: "created_at", label: "Ngày tạo", render: (row) => formatDate(row.created_at) },
+    { key: "createdAt", label: "Ngày tạo", render: (row) => formatDateTime(row.createdAt) },
   ]
 
   return (

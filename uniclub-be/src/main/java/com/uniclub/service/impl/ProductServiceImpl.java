@@ -43,7 +43,6 @@ public class ProductServiceImpl implements ProductService {
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setInformation(request.getInformation());
-        product.setPrice(request.getPrice());
         product.setBrand(brand);
         product.setCategory(category);
 
@@ -69,9 +68,6 @@ public class ProductServiceImpl implements ProductService {
         }
         if (request.getInformation() != null) {
             product.setInformation(request.getInformation());
-        }
-        if (request.getPrice() != null) {
-            product.setPrice(request.getPrice());
         }
         if (request.getStatus() != null) {
             product.setStatus(request.getStatus());

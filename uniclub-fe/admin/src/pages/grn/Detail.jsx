@@ -17,6 +17,8 @@ export default function GrnDetail() {
   const [details, setDetails] = useState([])
   const [suppliers, setSuppliers] = useState([])
   const [variants, setVariants] = useState([])
+  const [colors, setColors] = useState([])
+  const [sizes, setSizes] = useState([])
   const [toast, setToast] = useState(null)
   const [confirmApprove, setConfirmApprove] = useState(false)
 
@@ -25,16 +27,25 @@ export default function GrnDetail() {
   }, [id])
 
   const loadData = async () => {
-    const [grnData, suppData, varData, detailData] = await Promise.all([
-      api.get("grn", id),
-      api.list("suppliers"),
-      api.list("variants"),
-      api.getGrnDetails(id),
-    ])
-    setGrn(grnData)
-    setSuppliers(suppData)
-    setVariants(varData)
-    setDetails(detailData)
+    try {
+      const [grnData, suppData, varData, detailData, colorsData, sizesData] = await Promise.all([
+        api.get("grn-headers", id),
+        api.list("suppliers"),
+        api.list("variants"),
+        api.getGrnDetails(id),
+        api.list("colors"),
+        api.list("sizes"),
+      ])
+      setGrn(grnData)
+      setSuppliers(suppData)
+      setVariants(varData)
+      setDetails(detailData)
+      setColors(colorsData)
+      setSizes(sizesData)
+    } catch (error) {
+      console.error("Error loading GRN detail:", error)
+      setToast({ message: "Không thể tải thông tin phiếu nhập", type: "error" })
+    }
   }
 
   const handleApprove = async () => {
@@ -75,11 +86,11 @@ export default function GrnDetail() {
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600">Nhà cung cấp:</span>
-                <span className="font-medium">{getSupplierName(grn.id_supplier)}</span>
+                <span className="font-medium">{getSupplierName(grn.supplierId)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600">Ngày nhận:</span>
-                <span className="font-medium">{formatDate(grn.received_date)}</span>
+                <span className="font-medium">{formatDate(grn.receivedDate)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600">Trạng thái:</span>
@@ -109,15 +120,15 @@ export default function GrnDetail() {
                 </thead>
                 <tbody>
                   {details.map((detail, idx) => {
-                    const variant = getVariantInfo(detail.id_variant)
+                    const variant = getVariantInfo(detail.variantSku)
                     return (
                       <tr key={idx} className="border-b border-neutral-200">
-                        <td className="px-4 py-2">{detail.id_variant}</td>
-                        <td className="px-4 py-2">-</td>
-                        <td className="px-4 py-2">-</td>
-                        <td className="px-4 py-2">-</td>
+                        <td className="px-4 py-2">{detail.variantSku}</td>
+                        <td className="px-4 py-2">{detail.productName || "-"}</td>
+                        <td className="px-4 py-2">{colors.find((c) => c.id === variant.colorId)?.name || "-"}</td>
+                        <td className="px-4 py-2">{sizes.find((s) => s.id === variant.sizeId)?.name || "-"}</td>
                         <td className="px-4 py-2 text-right">{detail.quantity}</td>
-                        <td className="px-4 py-2 text-right">{formatMoney(detail.unit_cost)}</td>
+                        <td className="px-4 py-2 text-right">{formatMoney(detail.unitCost)}</td>
                         <td className="px-4 py-2 text-right font-medium">{formatMoney(detail.subtotal)}</td>
                       </tr>
                     )
@@ -134,7 +145,7 @@ export default function GrnDetail() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-neutral-600">Tổng tiền:</span>
-                <span className="font-bold text-lg">{formatMoney(grn.total_cost)}</span>
+                <span className="font-bold text-lg">{formatMoney(grn.totalCost)}</span>
               </div>
 
               {grn.status === "PENDING" && (

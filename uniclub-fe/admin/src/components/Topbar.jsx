@@ -2,9 +2,18 @@
 
 import { Menu, Bell, User } from "lucide-react"
 import { useState } from "react"
+import { useAuth } from "../lib/auth.jsx"
+import { useNavigate } from "react-router-dom"
 
 export default function Topbar({ onMenuClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <header className="bg-white border-b border-neutral-200 shadow-sm">
@@ -33,8 +42,17 @@ export default function Topbar({ onMenuClick }) {
             </button>
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-50">
+                <div className="px-4 py-2 border-b border-neutral-200">
+                  <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
                 <button className="w-full text-left px-4 py-2 hover:bg-neutral-100">Hồ sơ</button>
-                <button className="w-full text-left px-4 py-2 hover:bg-neutral-100">Đăng xuất</button>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-neutral-100 text-red-600"
+                >
+                  Đăng xuất
+                </button>
               </div>
             )}
           </div>

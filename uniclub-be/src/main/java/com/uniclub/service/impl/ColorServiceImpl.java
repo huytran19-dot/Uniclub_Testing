@@ -31,6 +31,7 @@ public class ColorServiceImpl implements ColorService {
 
         Color color = new Color();
         color.setName(request.getName());
+        color.setHexCode(request.getHexCode());
 
         Color savedColor = colorRepository.save(color);
         return ColorResponse.fromEntity(savedColor);
@@ -47,6 +48,10 @@ public class ColorServiceImpl implements ColorService {
                 throw new IllegalArgumentException("Color name already exists");
             }
             color.setName(request.getName());
+        }
+
+        if (request.getHexCode() != null) {
+            color.setHexCode(request.getHexCode());
         }
 
         if (request.getStatus() != null) {

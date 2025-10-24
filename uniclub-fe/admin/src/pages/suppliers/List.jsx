@@ -36,7 +36,7 @@ export default function SupplierList() {
   const columns = [
     { key: "id", label: "ID" },
     { key: "name", label: "Tên NCC" },
-    { key: "contact_person", label: "Người liên hệ" },
+    { key: "contactPerson", label: "Người liên hệ" },
     { key: "phone", label: "SĐT" },
     { key: "email", label: "Email" },
     { key: "address", label: "Địa chỉ" },

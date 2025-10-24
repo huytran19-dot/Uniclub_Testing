@@ -41,7 +41,8 @@ export default function ProductVariants() {
     
     if (allVariants && allVariants.length > 0) {
       // Filter variants for this specific product
-      const productVariants = allVariants.filter((v) => v.id_product === Number.parseInt(productId))
+      const productVariants = allVariants.filter((v) => v.productId === Number.parseInt(productId))
+      console.log('Filtered variants for product:', productVariants)
       
       // Fetch colors and sizes for display
       const [colors, sizes] = await Promise.all([api.list("colors"), api.list("sizes")])
@@ -50,8 +51,8 @@ export default function ProductVariants() {
       const enrichedVariants = productVariants.map((v) => ({
         id: v.sku,
         sku: v.sku,
-        color: colors.find((c) => c.id === v.id_color)?.name || "N/A",
-        size: sizes.find((s) => s.id === v.id_size)?.name || "N/A",
+        color: colors.find((c) => c.id === v.colorId)?.name || "N/A",
+        size: sizes.find((s) => s.id === v.sizeId)?.name || "N/A",
         price: v.price,
         stock: v.quantity || 0,
         status: v.status === 1 ? "active" : "inactive",
@@ -95,12 +96,20 @@ export default function ProductVariants() {
         <div>
           <h1 className="text-3xl font-bold">Biến thể - {product.name}</h1>
         </div>
-        <button
-          onClick={() => navigate("/products")}
-          className="px-4 py-2 border border-neutral-200 rounded-lg hover:bg-neutral-50"
-        >
-          Quay lại
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/variants/new?productId=${productId}`)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Thêm biến thể mới
+          </button>
+          <button
+            onClick={() => navigate("/products")}
+            className="px-4 py-2 border border-neutral-200 rounded-lg hover:bg-neutral-50"
+          >
+            Quay lại
+          </button>
+        </div>
       </div>
 
       <Card>
