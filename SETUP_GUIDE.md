@@ -42,8 +42,8 @@ pnpm dev
 
 | Email | Password | Role |
 |-------|----------|------|
-| admin@uniclub.com | 123456 | SysAdmin |
-| buyer@uniclub.com | 123456 | Buyer |
+| admin@uniclub.com | huytran123 | SysAdmin |
+| buyer@uniclub.com | huytran123 | Buyer |
 
 ## 📊 Sample Data
 
