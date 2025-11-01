@@ -55,8 +55,8 @@ public class OrderServiceImpl implements OrderService {
 
         // Check if all variants exist and have enough stock
         for (var item : request.getOrderVariants()) {
-            Variant variant = variantRepository.findById(item.getSkuVariant())
-                    .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getSkuVariant()));
+            Variant variant = variantRepository.findById(item.getVariantSku())
+                    .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getVariantSku()));
             
             if (variant.getQuantity() < item.getQuantity()) {
                 throw new IllegalArgumentException("Sản phẩm " + variant.getSku() + " không đủ số lượng");
@@ -77,8 +77,8 @@ public class OrderServiceImpl implements OrderService {
         if (request.getOrderVariants() != null && !request.getOrderVariants().isEmpty()) {
             // Check if all variants exist and have enough stock
             for (var item : request.getOrderVariants()) {
-                Variant variant = variantRepository.findById(item.getSkuVariant())
-                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getSkuVariant()));
+                Variant variant = variantRepository.findById(item.getVariantSku())
+                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getVariantSku()));
                 
                 if (variant.getQuantity() < item.getQuantity()) {
                     throw new IllegalArgumentException("Sản phẩm " + variant.getSku() + " không đủ số lượng");
@@ -104,8 +104,8 @@ public class OrderServiceImpl implements OrderService {
         if (request.getOrderVariants() != null && !request.getOrderVariants().isEmpty()) {
             existingOrder.getOrderVariants().clear();
             List<OrderVariant> updatedVariants = request.getOrderVariants().stream().map(item -> {
-                Variant variant = variantRepository.findById(item.getSkuVariant())
-                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getSkuVariant()));
+                Variant variant = variantRepository.findById(item.getVariantSku())
+                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getVariantSku()));
 
                 OrderVariant ov = new OrderVariant();
                 ov.setOrder(existingOrder);
@@ -123,6 +123,25 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order savedOrder = orderRepository.save(existingOrder);
+        return OrderResponse.fromEntity(savedOrder);
+    }
+
+    @Override
+    public OrderResponse updateOrderStatus(Integer id, CreateOrderRequest request) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));
+
+        // Check if order is already completed or cancelled
+        if ("DELIVERED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus())) {
+            throw new IllegalArgumentException("Không thể cập nhật trạng thái đơn hàng đã hoàn thành hoặc bị hủy");
+        }
+
+        // Update status if provided
+        if (request.getStatus() != null) {
+            order.setStatus(request.getStatus().name());
+        }
+
+        Order savedOrder = orderRepository.save(order);
         return OrderResponse.fromEntity(savedOrder);
     }
 
@@ -154,8 +173,8 @@ public class OrderServiceImpl implements OrderService {
 
         // Create OrderVariants after order is saved
         List<OrderVariant> variants = request.getOrderVariants().stream().map(item -> {
-            Variant variant = variantRepository.findById(item.getSkuVariant())
-                    .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getSkuVariant()));
+            Variant variant = variantRepository.findById(item.getVariantSku())
+                    .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", item.getVariantSku()));
 
             OrderVariant ov = new OrderVariant();
             ov.setOrder(order);

@@ -1,11 +1,12 @@
 package com.uniclub.dto.response.Order;
 
 import com.uniclub.entity.OrderVariant;
+
 import lombok.Data;
 
 @Data
 public class OrderVariantResponse {
-    private Integer skuVariant;
+    private Integer variantSku;
     private String productName;
     private String sizeName;
     private String colorName;
@@ -17,7 +18,7 @@ public class OrderVariantResponse {
         var variant = ov.getVariant();
 
         OrderVariantResponse res = new OrderVariantResponse();
-        res.setSkuVariant(variant.getSku());
+        res.setVariantSku(variant.getSku());
         // Lấy tên product
         if (variant.getProduct() != null) {
             res.setProductName(variant.getProduct().getName());

@@ -5,7 +5,11 @@ echo ========================================
 echo.
 
 echo Step 1: Starting MySQL Database...
-call start-docker.bat
+start "Database" cmd /k "cd /d %~dp0 && start-docker.bat"
+
+echo.
+echo Waiting 10 seconds for database to initialize...
+timeout /t 10 /nobreak > nul
 
 echo.
 echo Step 2: Starting Spring Boot Backend...

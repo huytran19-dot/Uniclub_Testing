@@ -1,7 +1,8 @@
 package com.uniclub.entity;
 
-import lombok.Data;
 import java.io.Serializable;
+
+import lombok.Data;
 
 @Data
 public class OrderVariantId implements Serializable {

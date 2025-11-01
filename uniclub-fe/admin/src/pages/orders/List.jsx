@@ -6,25 +6,36 @@ import Card from "../../components/Card"
 import Table from "../../components/Table"
 import Badge from "../../components/Badge"
 import Breadcrumb from "../../components/Breadcrumb"
+import Toast from "../../components/Toast"
 import { api } from "../../lib/api"
-import { formatDate, formatMoney, getStatusLabel, getStatusType } from "../../lib/utils"
+import { formatDateTime, formatMoney, getStatusLabel, getStatusType } from "../../lib/utils"
 
 export default function OrderList() {
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     loadOrders()
   }, [])
 
   const loadOrders = async () => {
-    const data = await api.list("orders")
-    setOrders(data || [])
+    try {
+      const data = await api.list("orders")
+      setOrders(data || [])
+    } catch (error) {
+      console.error("Error loading orders:", error)
+      setToast({ message: "Không thể tải danh sách đơn hàng", type: "error" })
+    }
   }
 
   const columns = [
     { key: "id", label: "Mã đơn" },
-    { key: "id_user", label: "Khách hàng" },
+    {
+      key: "user", // Thay key thành "user" cho hợp lý
+      label: "Khách hàng",
+      render: (row) => row.user?.fullname || row.user?.email || "N/A", // Lấy fullName hoặc email từ object user
+    },
     {
       key: "total",
       label: "Tổng tiền",
@@ -33,9 +44,13 @@ export default function OrderList() {
     {
       key: "status",
       label: "Trạng thái",
-      render: (row) => <Badge status={getStatusType(row.status)} label={getStatusLabel(row.status)} />,
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <Badge status={getStatusType(row.status)} label={getStatusLabel(row.status)} />
+        </div>
+      ),
     },
-    { key: "created_at", label: "Ngày tạo", render: (row) => formatDate(row.created_at) },
+    { key: "createdAt", label: "Ngày tạo", render: (row) => formatDateTime(row.createdAt) },
   ]
 
   return (
@@ -48,6 +63,14 @@ export default function OrderList() {
           <Table columns={columns} data={orders} onView={(row) => navigate(`/orders/${row.id}`)} />
         </div>
       </Card>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

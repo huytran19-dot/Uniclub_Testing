@@ -10,5 +10,6 @@ public interface OrderService {
     OrderResponse getOrderById(Integer id);
     OrderResponse createOrder(CreateOrderRequest request);
     OrderResponse updateOrder(Integer id, CreateOrderRequest request);
+    OrderResponse updateOrderStatus(Integer id, CreateOrderRequest request);
     void deleteOrder(Integer id);
 }

@@ -21,6 +21,7 @@ const menuItems = [
   { label: "Đơn hàng", path: "/orders", icon: "🛒" },
   { label: "Nhà cung cấp", path: "/suppliers", icon: "🏭" },
   { label: "Phiếu nhập", path: "/grn", icon: "📋" },
+  { label: "Người dùng", path: "/users", icon: "👥" },
 ]
 
 export default function Sidebar({ open, onToggle }) {

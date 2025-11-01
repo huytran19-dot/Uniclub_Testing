@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Card from "../../components/Card"
-import Badge from "../../components/Badge"
 import Breadcrumb from "../../components/Breadcrumb"
 import Toast from "../../components/Toast"
 import { api } from "../../lib/api"
@@ -24,22 +23,15 @@ export default function OrderDetail() {
   }, [id])
 
   const loadOrder = async () => {
-    const data = await api.get("orders", id)
-    if (data) {
-      setOrder(data)
-      setCurrentStatus(data.status)
-      setOriginalStatus(data.status)
-      // Mock items - in real app would fetch from order_variant table
-      setItems([
-        {
-          sku: 1001,
-          product_name: "Áo thun cổ tròn",
-          color: "Đen",
-          size: "M",
-          price: 199000,
-          quantity: 2,
-        },
-      ])
+    try {
+      const data = await api.get(`orders`, id)
+      if (data) {
+        setOrder(data)
+        setOriginalStatus(data.status) // Lưu trạng thái ban đầu
+        setItems(data.orderVariants) // Lấy danh sách items từ API
+      }
+    } catch (error) {
+      console.error("Error loading order:", error)
     }
   }
 
@@ -47,23 +39,45 @@ export default function OrderDetail() {
     setCurrentStatus(e.target.value)
   }
 
-  const handleSaveStatus = () => {
+  const handleSaveStatus = async () => {
+    if (currentStatus === originalStatus) {
+      setToast({ message: "Trạng thái không thay đổi", type: "warning" })
+      return
+    }
+
+    // Check if order is already completed or cancelled
+    if (originalStatus === "DELIVERED" || originalStatus === "CANCELLED") {
+      setToast({ message: "Không thể cập nhật trạng thái đơn hàng đã hoàn thành hoặc bị hủy", type: "error" })
+      return
+    }
+
     setIsSaving(true)
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await api.updateOrderStatus(id, { status: currentStatus })
       setOriginalStatus(currentStatus)
+      setOrder({ ...order, status: currentStatus })
+      setToast({ message: "Cập nhật trạng thái thành công", type: "success" })
+    } catch (error) {
+      console.error("Error updating order status:", error)
+      setToast({ 
+        message: error.message || "Có lỗi xảy ra khi cập nhật trạng thái", 
+        type: "error" 
+      })
+      // Revert status on error
+      setCurrentStatus(originalStatus)
+    } finally {
       setIsSaving(false)
-      setToast({ type: "success", message: "Cập nhật trạng thái thành công" })
-    }, 500)
+    }
   }
 
   const isStatusChanged = currentStatus !== originalStatus
 
   const statusOptions = [
-    { value: "pending", label: "Chờ xử lý" },
-    { value: "shipping", label: "Đang giao" },
-    { value: "delivered", label: "Đã giao" },
-    { value: "cancelled", label: "Đã hủy" },
+    { value: "PENDING", label: "Chờ xử lý" },
+    { value: "CONFIRMED", label: "Đã xác nhận" },
+    { value: "SHIPPING", label: "Đang giao" },
+    { value: "DELIVERED", label: "Đã giao" },
+    { value: "CANCELLED", label: "Đã hủy" },
   ]
 
   if (!order) return <div>Đang tải...</div>
@@ -92,15 +106,20 @@ export default function OrderDetail() {
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600">Khách hàng:</span>
-                <span className="font-medium">ID: {order.id_user}</span>
+                <span className="font-medium">ID: {order.user.id}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-neutral-600">Trạng thái:</span>
                 <div className="flex items-center gap-2">
                   <select
-                    value={currentStatus}
+                    value={currentStatus || originalStatus}
                     onChange={handleStatusChange}
-                    className="px-3 py-1.5 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                    disabled={originalStatus === "DELIVERED" || originalStatus === "CANCELLED"}
+                    className={`px-3 py-1.5 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 ${
+                      originalStatus === "DELIVERED" || originalStatus === "CANCELLED" 
+                        ? "bg-gray-100 cursor-not-allowed" 
+                        : ""
+                    }`}
                   >
                     {statusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -108,13 +127,15 @@ export default function OrderDetail() {
                       </option>
                     ))}
                   </select>
-                  <button
-                    onClick={handleSaveStatus}
-                    disabled={!isStatusChanged || isSaving}
-                    className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
-                  >
-                    {isSaving ? "Đang lưu..." : "Lưu"}
-                  </button>
+                  {originalStatus !== "DELIVERED" && originalStatus !== "CANCELLED" && (
+                    <button
+                      onClick={handleSaveStatus}
+                      disabled={!isStatusChanged || isSaving}
+                      className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
+                    >
+                      {isSaving ? "Đang lưu..." : "Lưu"}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex justify-between">
@@ -142,10 +163,10 @@ export default function OrderDetail() {
                 <tbody>
                   {items.map((item, idx) => (
                     <tr key={idx} className="border-b border-neutral-200">
-                      <td className="px-4 py-2">{item.sku}</td>
-                      <td className="px-4 py-2">{item.product_name}</td>
-                      <td className="px-4 py-2">{item.color}</td>
-                      <td className="px-4 py-2">{item.size}</td>
+                      <td className="px-4 py-2">{item.variantSku}</td>
+                      <td className="px-4 py-2">{item.productName}</td>
+                      <td className="px-4 py-2">{item.colorName}</td>
+                      <td className="px-4 py-2">{item.sizeName}</td>
                       <td className="px-4 py-2 text-right">{formatMoney(item.price)}</td>
                       <td className="px-4 py-2 text-right">{item.quantity}</td>
                       <td className="px-4 py-2 text-right font-medium">{formatMoney(item.price * item.quantity)}</td>

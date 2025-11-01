@@ -1,10 +1,10 @@
 package com.uniclub.dto.response.Variant;
 
-import com.uniclub.entity.Variant;
-import lombok.Data;
-
-
 import java.time.LocalDateTime;
+
+import com.uniclub.entity.Variant;
+
+import lombok.Data;
 
 @Data
 public class VariantResponse {
@@ -16,8 +16,8 @@ public class VariantResponse {
     private Integer quantity;
     private Integer price;
     private Byte status;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     public static VariantResponse fromEntity(Variant variant) {
@@ -30,8 +30,8 @@ public class VariantResponse {
         response.setQuantity(variant.getQuantity());
         response.setPrice(variant.getPrice());
         response.setStatus(variant.getStatus());
-        response.setCreated_at(variant.getCreatedAt());
-        response.setUpdated_at(variant.getUpdatedAt());
+        response.setCreatedAt(variant.getCreatedAt());
+        response.setUpdatedAt(variant.getUpdatedAt());
 
         return response;
     }

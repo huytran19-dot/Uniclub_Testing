@@ -1,19 +1,25 @@
 package com.uniclub.service.impl;
 
-import com.uniclub.dto.request.Variant.CreateVariantRequest;
-import com.uniclub.dto.request.Variant.UpdateVariantRequest;
-import com.uniclub.dto.response.Variant.VariantResponse;
-import com.uniclub.entity.*;
-import com.uniclub.exception.ResourceNotFoundException;
-import com.uniclub.repository.*;
-import com.uniclub.service.VariantService;
-import jakarta.transaction.Transactional;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.uniclub.dto.request.Variant.CreateVariantRequest;
+import com.uniclub.dto.request.Variant.UpdateVariantRequest;
+import com.uniclub.dto.response.Variant.VariantResponse;
+import com.uniclub.entity.Color;
+import com.uniclub.entity.Product;
+import com.uniclub.entity.Size;
+import com.uniclub.entity.Variant;
+import com.uniclub.exception.ResourceNotFoundException;
+import com.uniclub.repository.ColorRepository;
+import com.uniclub.repository.ProductRepository;
+import com.uniclub.repository.SizeRepository;
+import com.uniclub.repository.VariantRepository;
+import com.uniclub.service.VariantService;
+
+import jakarta.transaction.Transactional;
 
 @Service
 @Transactional

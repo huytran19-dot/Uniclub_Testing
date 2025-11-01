@@ -36,8 +36,8 @@ public class OrderVariantServiceImpl implements OrderVariantService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
         // Check if variant exists
-        Variant variant = variantRepository.findById(request.getSkuVariant())
-                .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", request.getSkuVariant()));
+        Variant variant = variantRepository.findById(request.getVariantSku())
+                .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", request.getVariantSku()));
 
         // Check if order variant already exists
         OrderVariantId id = new OrderVariantId();

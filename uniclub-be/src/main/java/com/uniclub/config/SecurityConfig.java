@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/variants/**").permitAll()
                 .requestMatchers("/api/orders/**").permitAll()
                 .requestMatchers("/api/users/**").permitAll()
+                .requestMatchers("/api/roles/**").permitAll()
                 .requestMatchers("/api/suppliers/**").permitAll()
                 .requestMatchers("/api/grn-headers/**").permitAll()
                 .requestMatchers("/api/grn-details/**").permitAll()
