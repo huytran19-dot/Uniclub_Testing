@@ -20,10 +20,8 @@ export function getStatusLabel(status) {
     1: "Hoạt động",
     0: "Ẩn",
     PENDING: "Chờ xử lý",
-    PAID: "Đã thanh toán",
     CONFIRMED: "Đã xác nhận",
     SHIPPING: "Đang giao",
-    SHIPPED: "Đang giao",
     DELIVERED: "Đã giao",
     CANCELLED: "Đã hủy",
   }
