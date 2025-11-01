@@ -5,12 +5,13 @@ import { AddressForm } from "@/components/checkout/AddressForm"
 import { PaymentMethod } from "@/components/checkout/PaymentMethod"
 import { Button } from "@/components/ui/button"
 import { Price } from "@/components/Price"
-import { getCart, getCartTotal, clearCart } from "@/lib/cart"
-import { ShoppingBag } from "lucide-react"
+import { getFullCart } from "@/lib/cart-api"
+import { Loader2, ShoppingBag } from "lucide-react"
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const [cart, setCart] = useState([])
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
@@ -25,14 +26,43 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    const items = getCart()
-    if (items.length === 0) {
-      navigate("/cart")
+    const fetchCart = async () => {
+      const userStr = localStorage.getItem('uniclub_user')
+      if (!userStr) {
+        navigate("/login")
+        return
+      }
+
+      try {
+        const user = JSON.parse(userStr)
+        const { items } = await getFullCart(user.id)
+        
+        if (items.length === 0) {
+          navigate("/cart")
+          return
+        }
+        
+        setCart(items)
+        
+        // Auto-fill user info
+        setFormData(prev => ({
+          ...prev,
+          full_name: user.full_name || user.fullName || "",
+          email: user.email || "",
+          phone: user.phone || "",
+        }))
+      } catch (error) {
+        console.error('Error fetching cart:', error)
+        navigate("/cart")
+      } finally {
+        setLoading(false)
+      }
     }
-    setCart(items)
+
+    fetchCart()
   }, [navigate])
 
-  const subtotal = getCartTotal()
+  const subtotal = cart.reduce((sum, item) => sum + (item.subtotal || item.unitPrice * item.quantity), 0)
   const shipping = subtotal >= 499000 ? 0 : 30000
   const total = subtotal + shipping
 
@@ -40,17 +70,23 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Mock order creation - in real app, this would call an API
+    // TODO: Implement real checkout API
     setTimeout(() => {
-      // Create mock order ID (in real app, this comes from API response)
-      const mockOrderId = 1001 // Use existing order from mock data
-      
-      clearCart()
-      window.dispatchEvent(new Event("cart-updated"))
-      
-      // Redirect to order detail page
-      navigate(`/orders/${mockOrderId}`)
+      alert("Tính năng thanh toán đang được phát triển")
+      setIsSubmitting(false)
     }, 1000)
+  }
+
+  if (loading) {
+    return (
+      <PageLayout title="Thanh toán" breadcrumbs={[{ label: "Thanh toán" }]}>
+        <div className="section">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          </div>
+        </div>
+      </PageLayout>
+    )
   }
 
   if (cart.length === 0) {
@@ -89,22 +125,31 @@ export default function CheckoutPage() {
               <h3 className="text-lg font-semibold text-foreground">Đơn hàng của bạn</h3>
 
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {cart.map((item) => (
-                  <div key={item.sku_variant} className="flex gap-3 text-sm">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-surface flex-shrink-0">
-                      <img src={item.image || "/placeholder.svg"} alt={item.productName} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-foreground line-clamp-1">{item.productName}</div>
-                      <div className="text-muted-foreground">
-                        {item.sizeName} / {item.colorName} × {item.qty}
+                {cart.map((item) => {
+                  const quantity = item.quantity || item.qty || 0
+                  const unitPrice = item.unitPrice || 0
+                  const productName = item.variant?.product?.name || item.productName || "Sản phẩm"
+                  const sizeName = item.variant?.size?.name || item.sizeName || ""
+                  const colorName = item.variant?.color?.name || item.colorName || ""
+                  const imageUrl = item.variant?.product?.primaryImage || item.image || "/placeholder.svg"
+                  
+                  return (
+                    <div key={item.id} className="flex gap-3 text-sm">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-surface flex-shrink-0">
+                        <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
                       </div>
-                      <div className="font-medium text-foreground">
-                        <Price value={item.unitPrice * item.qty} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-foreground line-clamp-1">{productName}</div>
+                        <div className="text-muted-foreground">
+                          {sizeName} / {colorName} × {quantity}
+                        </div>
+                        <div className="font-medium text-foreground">
+                          <Price value={unitPrice * quantity} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               <div className="space-y-2 text-sm pt-4 border-t border-border">

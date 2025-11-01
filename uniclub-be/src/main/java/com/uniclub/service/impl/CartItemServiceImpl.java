@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -40,8 +41,20 @@ public class CartItemServiceImpl implements CartItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Variant", "sku", request.getVariantSku()));
 
         // Check if cart item with same variant already exists
-        if (cartItemRepository.existsByCartIdAndVariantSku(request.getCartId(), request.getVariantSku())) {
-            throw new IllegalArgumentException("Sản phẩm này đã có trong giỏ hàng");
+        Optional<CartItem> existingCartItemOpt = cartItemRepository.findByCartIdAndVariantSku(request.getCartId(), request.getVariantSku());
+        if (existingCartItemOpt.isPresent()) {
+            // If exists, increase quantity
+            CartItem existingCartItem = existingCartItemOpt.get();
+            int newQuantity = existingCartItem.getQuantity() + request.getQuantity();
+            
+            // Check if variant has enough quantity
+            if (variant.getQuantity() < newQuantity) {
+                throw new IllegalArgumentException("Số lượng sản phẩm không đủ");
+            }
+            
+            existingCartItem.setQuantity(newQuantity);
+            CartItem updatedCartItem = cartItemRepository.save(existingCartItem);
+            return CartItemResponse.fromEntity(updatedCartItem);
         }
 
         // Check if variant has enough quantity
@@ -49,6 +62,7 @@ public class CartItemServiceImpl implements CartItemService {
             throw new IllegalArgumentException("Số lượng sản phẩm không đủ");
         }
 
+        // Create new cart item
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
         cartItem.setVariant(variant);

@@ -6,12 +6,12 @@ import { Button } from "./ui/button"
 export function VariantSelector({ sizes, colors, selectedSizeId, selectedColorId, disabledPairs, onSelect }) {
   const isSizeDisabled = (sizeId) => {
     if (!selectedColorId) return false
-    return disabledPairs.some((pair) => pair.id_size === sizeId && pair.id_color === selectedColorId)
+    return disabledPairs.some((pair) => pair.sizeId === sizeId && pair.colorId === selectedColorId)
   }
 
   const isColorDisabled = (colorId) => {
     if (!selectedSizeId) return false
-    return disabledPairs.some((pair) => pair.id_size === selectedSizeId && pair.id_color === colorId)
+    return disabledPairs.some((pair) => pair.sizeId === selectedSizeId && pair.colorId === colorId)
   }
 
   return (
@@ -29,7 +29,7 @@ export function VariantSelector({ sizes, colors, selectedSizeId, selectedColorId
                 variant={selected ? "default" : "outline"}
                 size="sm"
                 disabled={disabled}
-                onClick={() => onSelect({ id_size: size.id, id_color: selectedColorId })}
+                onClick={() => onSelect({ sizeId: size.id, colorId: selectedColorId })}
                 className={cn("rounded-full min-w-12", disabled && "opacity-50 cursor-not-allowed")}
               >
                 {size.name}
@@ -52,7 +52,7 @@ export function VariantSelector({ sizes, colors, selectedSizeId, selectedColorId
                 variant={selected ? "default" : "outline"}
                 size="sm"
                 disabled={disabled}
-                onClick={() => onSelect({ id_size: selectedSizeId, id_color: color.id })}
+                onClick={() => onSelect({ sizeId: selectedSizeId, colorId: color.id })}
                 className={cn("rounded-full", disabled && "opacity-50 cursor-not-allowed")}
               >
                 {color.name}

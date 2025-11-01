@@ -12,6 +12,7 @@ import OrderDetailPage from "./pages/OrderDetailPage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import ProfilePage from "./pages/ProfilePage"
+import VerifyEmailPage from "./pages/VerifyEmailPage"
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/orders/:id" element={<OrderDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Routes>
       <Toaster />

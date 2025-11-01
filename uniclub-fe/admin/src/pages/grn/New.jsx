@@ -55,8 +55,8 @@ export default function GrnNew() {
           return {
             id: v.sku,
             sku: v.sku,
-            product_id: v.productId,
-            product_name: product?.name || "Unknown",
+            productId: v.productId,
+            productName: product?.name || "Unknown",
             color: color?.name || "N/A",
             size: size?.name || "N/A",
             price: v.price,
@@ -177,7 +177,7 @@ export default function GrnNew() {
 
   const getVariantsByProduct = (productId) => {
     if (!productId) return []
-    return variants.filter((v) => v.id === parseInt(productId))
+    return variants.filter((v) => v.productId === parseInt(productId))
   }
 
   const totalCost = details.reduce((sum, d) => sum + (d.subtotal || 0), 0)

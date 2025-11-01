@@ -2,16 +2,13 @@
 
 import { useEffect, useState, useMemo, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Search, Grid3x3, List } from "lucide-react"
+import { Search, Grid3x3, List, Loader2 } from "lucide-react"
 import { PageLayout } from "../components/PageLayout"
 import { SidebarFilter } from "../components/SidebarFilter"
 import { ProductCard } from "../components/ProductCard"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
-import { products, variants, brands, categories, sizes, colors, reviews } from "../lib/mock-data"
-import { calculateAverageRating, getMinPrice, isOutOfStock } from "../lib/utils"
-import { addToCart } from "../lib/cart"
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -21,11 +18,23 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState("grid")
   const [sortBy, setSortBy] = useState("newest")
+  
+  // API Data States
+  const [products, setProducts] = useState([])
+  const [brands, setBrands] = useState([])
+  const [categories, setCategories] = useState([])
+  const [sizes, setSizes] = useState([])
+  const [colors, setColors] = useState([])
+  const [variants, setVariants] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const priceRange = useMemo(() => {
+    if (variants.length === 0) return [0, 1000000]
     const prices = variants.filter((v) => v.status === 1 && v.price !== null).map((v) => v.price)
+    if (prices.length === 0) return [0, 1000000]
     return [Math.min(...prices), Math.max(...prices)]
-  }, [])
+  }, [variants])
 
   const [filters, setFilters] = useState({
     categories: [],
@@ -35,6 +44,55 @@ export default function ProductsPage() {
     priceRange,
     stockOnly: false,
   })
+
+  // Fetch all data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      
+      try {
+        const [productsRes, brandsRes, categoriesRes, sizesRes, colorsRes, variantsRes] = await Promise.all([
+          fetch('http://localhost:8080/api/products'),
+          fetch('http://localhost:8080/api/brands'),
+          fetch('http://localhost:8080/api/categories'),
+          fetch('http://localhost:8080/api/sizes'),
+          fetch('http://localhost:8080/api/colors'),
+          fetch('http://localhost:8080/api/variants'),
+        ])
+
+        if (!productsRes.ok) throw new Error('Không thể tải danh sách sản phẩm')
+        if (!brandsRes.ok) throw new Error('Không thể tải danh sách thương hiệu')
+        if (!categoriesRes.ok) throw new Error('Không thể tải danh sách danh mục')
+        if (!sizesRes.ok) throw new Error('Không thể tải danh sách kích cỡ')
+        if (!colorsRes.ok) throw new Error('Không thể tải danh sách màu sắc')
+        if (!variantsRes.ok) throw new Error('Không thể tải danh sách biến thể')
+
+        const [productsData, brandsData, categoriesData, sizesData, colorsData, variantsData] = await Promise.all([
+          productsRes.json(),
+          brandsRes.json(),
+          categoriesRes.json(),
+          sizesRes.json(),
+          colorsRes.json(),
+          variantsRes.json(),
+        ])
+
+        setProducts(productsData)
+        setBrands(brandsData)
+        setCategories(categoriesData)
+        setSizes(sizesData)
+        setColors(colorsData)
+        setVariants(variantsData)
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   useEffect(() => {
     if (initializedFromURL.current) return
@@ -97,6 +155,19 @@ export default function ProductsPage() {
     updateURL(filters, searchQuery, sort)
   }
 
+  // Helper functions - defined before useMemo
+  const getMinPrice = (productVariants, basePrice) => {
+    if (productVariants.length === 0) return basePrice || 0
+    const variantPrices = productVariants.map(v => v.price).filter(p => p !== null && p > 0)
+    if (variantPrices.length === 0) return basePrice || 0
+    return Math.min(...variantPrices, basePrice || Infinity)
+  }
+
+  const isOutOfStock = (productVariants) => {
+    if (productVariants.length === 0) return true
+    return productVariants.every(v => v.quantity === 0)
+  }
+
   const filteredProducts = useMemo(() => {
     let filtered = products.filter((p) => p.status === 1)
 
@@ -105,23 +176,23 @@ export default function ProductsPage() {
     }
 
     if (filters.categories.length > 0) {
-      filtered = filtered.filter((p) => filters.categories.includes(p.id_category))
+      filtered = filtered.filter((p) => filters.categories.includes(p.categoryId))
     }
 
     if (filters.brands.length > 0) {
-      filtered = filtered.filter((p) => filters.brands.includes(p.id_brand))
+      filtered = filtered.filter((p) => filters.brands.includes(p.brandId))
     }
 
     filtered = filtered.filter((product) => {
-      const productVariants = variants.filter((v) => v.id_product === product.id && v.status === 1)
+      const productVariants = variants.filter((v) => v.productId === product.id && v.status === 1)
 
       if (filters.sizes.length > 0) {
-        const hasSizes = productVariants.some((v) => filters.sizes.includes(v.id_size))
+        const hasSizes = productVariants.some((v) => filters.sizes.includes(v.sizeId))
         if (!hasSizes) return false
       }
 
       if (filters.colors.length > 0) {
-        const hasColors = productVariants.some((v) => filters.colors.includes(v.id_color))
+        const hasColors = productVariants.some((v) => filters.colors.includes(v.colorId))
         if (!hasColors) return false
       }
 
@@ -139,49 +210,55 @@ export default function ProductsPage() {
 
     filtered.sort((a, b) => {
       if (sortBy === "newest") {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       }
       if (sortBy === "price-asc") {
-        const aVariants = variants.filter((v) => v.id_product === a.id && v.status === 1)
-        const bVariants = variants.filter((v) => v.id_product === b.id && v.status === 1)
+        const aVariants = variants.filter((v) => v.productId === a.id && v.status === 1)
+        const bVariants = variants.filter((v) => v.productId === b.id && v.status === 1)
         return getMinPrice(aVariants, a.price) - getMinPrice(bVariants, b.price)
       }
       if (sortBy === "price-desc") {
-        const aVariants = variants.filter((v) => v.id_product === a.id && v.status === 1)
-        const bVariants = variants.filter((v) => v.id_product === b.id && v.status === 1)
+        const aVariants = variants.filter((v) => v.productId === a.id && v.status === 1)
+        const bVariants = variants.filter((v) => v.productId === b.id && v.status === 1)
         return getMinPrice(bVariants, b.price) - getMinPrice(aVariants, a.price)
-      }
-      if (sortBy === "rating") {
-        const aReviews = reviews.filter((r) => r.id_product === a.id && r.status === 1)
-        const bReviews = reviews.filter((r) => r.id_product === b.id && r.status === 1)
-        return calculateAverageRating(bReviews) - calculateAverageRating(aReviews)
       }
       return 0
     })
 
     return filtered
-  }, [filters, searchQuery, sortBy])
+  }, [filters, searchQuery, sortBy, products, variants])
 
-  const handleAddToCart = (product) => {
-    const productVariants = variants.filter((v) => v.id_product === product.id && v.status === 1)
-    const availableVariant = productVariants.find((v) => v.quantity > 0)
+  // Show loading state
+  if (loading) {
+    return (
+      <PageLayout title="Sản phẩm" breadcrumbs={[{ label: "Sản phẩm" }]}>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-lg text-muted-foreground">Đang tải sản phẩm...</p>
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
 
-    if (!availableVariant) return
-
-    const size = sizes.find((s) => s.id === availableVariant.id_size)
-    const color = colors.find((c) => c.id === availableVariant.id_color)
-
-    addToCart({
-      sku_variant: availableVariant.sku,
-      productName: product.name,
-      sizeName: size?.name || "N/A",
-      colorName: color?.name || "N/A",
-      unitPrice: availableVariant.price || product.price,
-      image: availableVariant.images,
-      maxQuantity: availableVariant.quantity,
-    })
-
-    window.dispatchEvent(new Event("cart-updated"))
+  // Show error state
+  if (error) {
+    return (
+      <PageLayout title="Sản phẩm" breadcrumbs={[{ label: "Sản phẩm" }]}>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <p className="text-lg text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Thử lại
+            </Button>
+          </div>
+        </div>
+      </PageLayout>
+    )
   }
 
   if (!mounted) return null
@@ -276,9 +353,8 @@ export default function ProductsPage() {
               }
             >
               {filteredProducts.map((product) => {
-                const productVariants = variants.filter((v) => v.id_product === product.id && v.status === 1)
-                const productReviews = reviews.filter((r) => r.id_product === product.id && r.status === 1)
-                const brand = brands.find((b) => b.id === product.id_brand)
+                const productVariants = variants.filter((v) => v.productId === product.id && v.status === 1)
+                const brand = brands.find((b) => b.id === product.brandId)
                 const firstVariant = productVariants[0]
 
                 return (
@@ -286,12 +362,11 @@ export default function ProductsPage() {
                     key={product.id}
                     product={product}
                     brand={brand?.name || "Không xác định"}
-                    image={firstVariant?.images || "/placeholder.svg?height=400&width=400"}
+                    image={product.image || firstVariant?.images || "/placeholder.svg?height=400&width=400"}
                     minPrice={getMinPrice(productVariants, product.price)}
-                    rating={calculateAverageRating(productReviews)}
-                    reviewCount={productReviews.length}
+                    rating={0}
+                    reviewCount={0}
                     isOutOfStock={isOutOfStock(productVariants)}
-                    onAddToCart={() => handleAddToCart(product)}
                   />
                 )
               })}

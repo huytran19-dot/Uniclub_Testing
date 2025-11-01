@@ -33,7 +33,10 @@ export function CartSummary({ subtotal, shipping = 0, discount = 0, onCheckout }
         </span>
       </div>
 
-      <Button onClick={onCheckout} className="w-full">
+      <Button 
+        onClick={onCheckout} 
+        className="w-full"
+      >
         Thanh toán
       </Button>
 

@@ -4,7 +4,7 @@ import { ShoppingCart, Search, User, Menu } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { categories } from "@/lib/mock-data"
-import { getCartCount } from "@/lib/cart"
+import { getUserCart, getCartItems } from "@/lib/cart-api"
 import { getCurrentUser, logout } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,23 +21,38 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
 
+  const fetchCartCount = async () => {
+    const userStr = localStorage.getItem('uniclub_user')
+    if (!userStr) {
+      setCartCount(0)
+      return
+    }
+
+    try {
+      const user = JSON.parse(userStr)
+      const cart = await getUserCart(user.id)
+      const items = await getCartItems(cart.id)
+      setCartCount(items.length)
+    } catch (error) {
+      setCartCount(0)
+    }
+  }
+
   useEffect(() => {
-    setCartCount(getCartCount())
+    fetchCartCount()
     setUser(getCurrentUser())
 
-    const handleStorage = () => {
-      setCartCount(getCartCount())
+    const handleUpdate = () => {
+      fetchCartCount()
       setUser(getCurrentUser())
     }
 
-    window.addEventListener("storage", handleStorage)
-    window.addEventListener("cart-updated", handleStorage)
-    window.addEventListener("auth-updated", handleStorage)
+    window.addEventListener("cart-updated", handleUpdate)
+    window.addEventListener("auth-updated", handleUpdate)
 
     return () => {
-      window.removeEventListener("storage", handleStorage)
-      window.removeEventListener("cart-updated", handleStorage)
-      window.removeEventListener("auth-updated", handleStorage)
+      window.removeEventListener("cart-updated", handleUpdate)
+      window.removeEventListener("auth-updated", handleUpdate)
     }
   }, [])
 

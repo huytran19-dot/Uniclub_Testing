@@ -79,7 +79,7 @@ export const payment_methods = [
     created_at: "2024-01-01",
     updated_at: "2024-01-01",
   },
-  { id: 3, name: "MOMO", description: "Ví MoMo", status: 1, created_at: "2024-01-01", updated_at: "2024-01-01" },
+  { id: 3, name: "MOMO", description: "Ví MoMo", status: 0, created_at: "2024-01-01", updated_at: "2024-01-01" },
 ]
 
 export const products = [

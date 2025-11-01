@@ -1,8 +1,7 @@
 "use client"
 
-import { Star, ShoppingCart } from "lucide-react"
+import { Star } from "lucide-react"
 import { Link } from "react-router-dom"
-import { Button } from "./ui/button"
 import { Price } from "./Price"
 import { cn } from "../lib/utils"
 
@@ -14,7 +13,6 @@ export function ProductCard({
   rating,
   reviewCount,
   isOutOfStock = false,
-  onAddToCart,
   className,
 }) {
   return (
@@ -50,21 +48,6 @@ export function ProductCard({
 
             <div className="flex items-center justify-between">
               <Price value={minPrice} className="text-lg font-bold text-primary" />
-
-              {!isOutOfStock && onAddToCart && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onAddToCart()
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="sr-only">Thêm vào giỏ</span>
-                </Button>
-              )}
             </div>
           </div>
         </div>
