@@ -24,7 +24,7 @@ export default function RegisterPage() {
     setError("")
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
 
@@ -46,32 +46,33 @@ export default function RegisterPage() {
 
     setIsLoading(true)
 
-    // Mock registration
-    setTimeout(() => {
-      const newUser = {
-        id: Date.now(),
-        full_name: formData.full_name,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        id_role: 2,
-        status: 1,
-        created_at: new Date().toISOString(),
-      }
+    try {
+      // Call real backend API
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullname: formData.full_name,
+        }),
+      })
 
-      // Store user in localStorage with correct key
-      const authUser = {
-        id: newUser.id,
-        email: newUser.email,
-        full_name: newUser.full_name,
-        id_role: newUser.id_role,
+      if (response.ok) {
+        // Registration successful - redirect to verify email page
+        navigate('/verify-email', { state: { email: formData.email } })
+      } else {
+        const errorText = await response.text()
+        setError(errorText || 'Đăng ký thất bại. Vui lòng thử lại.')
       }
-      localStorage.setItem("uniclub_user", JSON.stringify(authUser))
-      window.dispatchEvent(new Event("auth-updated"))
-      
-      // Redirect to home
-      navigate("/")
-    }, 800)
+    } catch (err) {
+      console.error('Registration error:', err)
+      setError('Lỗi kết nối. Vui lòng kiểm tra kết nối mạng.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

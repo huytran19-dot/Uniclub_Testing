@@ -11,6 +11,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * Authentication Service
+ * 
+ * User Status:
+ * - 0: Unverified user (registered but email not verified)
+ * - 1: Admin role (full access)
+ * - 2: Verified user role (normal user with verified email)
+ */
 @Service
 public class AuthService {
 
@@ -28,19 +36,25 @@ public class AuthService {
         Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
         
         if (userOptional.isEmpty()) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException("Email hoặc mật khẩu không đúng");
         }
 
         User user = userOptional.get();
 
-        // Check if user is active
-        if (user.getStatus() != 1) {
-            throw new RuntimeException("Account is deactivated");
+        // Check user status
+        // 0 = unverified email, 1 = admin, 2 = verified user
+        if (user.getStatus() == 0) {
+            throw new RuntimeException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.");
+        }
+        
+        // Only admin (1) and verified users (2) can login
+        if (user.getStatus() != 1 && user.getStatus() != 2) {
+            throw new RuntimeException("Tài khoản không hợp lệ hoặc đã bị khóa.");
         }
 
         // Verify password
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException("Email hoặc mật khẩu không đúng");
         }
 
         // Generate JWT token

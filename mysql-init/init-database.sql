@@ -400,7 +400,7 @@ CREATE TABLE `user` (
 
 INSERT INTO `user` (`id`, `email`, `password`, `full_name`, `id_role`, `status`, `created_at`, `updated_at`) VALUES
 (1, 'admin@uniclub.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', 'System Administrator', 1, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05'),
-(2, 'buyer@uniclub.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', 'Buyer User', 2, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05'),
+(2, 'buyer@uniclub.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', 'Buyer User', 2, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05');
 
 -- --------------------------------------------------------
 

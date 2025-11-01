@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Price } from "@/components/Price"
 
 export function CartLineItem({ item, onUpdateQty, onRemove }) {
-  const { sku_variant, productName, sizeName, colorName, unitPrice, qty, image, maxQuantity } = item
+  // Support both qty and quantity for backward compatibility
+  const quantity = item.quantity || item.qty || 0
+  const { sku_variant, productName, sizeName, colorName, unitPrice, image, maxQuantity } = item
 
   return (
     <div className="card p-4 flex gap-4">
@@ -33,30 +35,30 @@ export function CartLineItem({ item, onUpdateQty, onRemove }) {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => onUpdateQty(sku_variant, qty - 1)}
-              disabled={qty <= 1}
+              onClick={() => onUpdateQty(sku_variant, quantity - 1)}
+              disabled={quantity <= 1}
               className="h-9 w-9 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground"
             >
               <Minus className="w-4 h-4" />
             </Button>
             <div className="w-14 h-9 flex items-center justify-center border border-border rounded-lg bg-muted/30">
-              <span className="text-sm font-semibold text-foreground">{qty}</span>
+              <span className="text-sm font-semibold text-foreground">{quantity}</span>
             </div>
             <Button
               variant="outline"
               size="icon"
-              onClick={() => onUpdateQty(sku_variant, qty + 1)}
-              disabled={qty >= maxQuantity}
+              onClick={() => onUpdateQty(sku_variant, quantity + 1)}
+              disabled={quantity >= maxQuantity}
               className="h-9 w-9 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground"
             >
               <Plus className="w-4 h-4" />
             </Button>
-            {qty >= maxQuantity && (
+            {quantity >= maxQuantity && (
               <span className="text-xs text-warning ml-2">Tối đa</span>
             )}
           </div>
           <div className="font-semibold text-foreground">
-            <Price value={unitPrice * qty} />
+            <Price value={unitPrice * quantity} />
           </div>
         </div>
       </div>

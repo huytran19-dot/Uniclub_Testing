@@ -15,6 +15,15 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+# cấu hình email
+sendgrid:
+  api-key: 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
+app:
+  mail:
+    from: "no-reply@mail.tranhuy.dev"      # Phải là email hợp lệ (có @)
+    otp-expiration-minutes: 5              # mã OTP hết hạn sau 5 phút
+    max-attempts: 5
+
 jwt:
   secret: uniclub-secret-key-for-jwt-token-generation-2024
   expiration: 86400000  # 24 hours in milliseconds

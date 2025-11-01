@@ -1,37 +1,84 @@
 import React, { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { PageLayout } from "../components/PageLayout"
 import { CartLineItem } from "@/components/cart/CartLineItem"
 import { CartSummary } from "@/components/cart/CartSummary"
 import { Button } from "@/components/ui/button"
-import { getCart, updateCartItemQty, removeFromCart, getCartTotal } from "@/lib/cart"
-import { ShoppingBag } from "lucide-react"
+import { getFullCart, updateCartItem, removeCartItem } from "@/lib/cart-api"
+import { ShoppingBag, Loader2 } from "lucide-react"
 
 export default function CartPage() {
   const navigate = useNavigate()
   const [cart, setCart] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchCart = async () => {
+    const userStr = localStorage.getItem('uniclub_user')
+    if (!userStr) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const user = JSON.parse(userStr)
+      const { items } = await getFullCart(user.id)
+      setCart(items)
+    } catch (error) {
+      console.error('Error fetching cart:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    setCart(getCart())
-    const handleUpdate = () => setCart(getCart())
+    fetchCart()
+    const handleUpdate = () => fetchCart()
     window.addEventListener("cart-updated", handleUpdate)
     return () => window.removeEventListener("cart-updated", handleUpdate)
   }, [])
 
-  const handleUpdateQty = (sku, qty) => {
-    updateCartItemQty(sku, qty)
-    setCart(getCart())
-    window.dispatchEvent(new Event("cart-updated"))
+  const handleUpdateQty = async (sku, qty) => {
+    try {
+      const item = cart.find(i => i.sku_variant === sku)
+      if (!item) return
+      
+      await updateCartItem(item.id, qty)
+      fetchCart()
+      window.dispatchEvent(new Event("cart-updated"))
+    } catch (error) {
+      console.error('Error updating cart item:', error)
+      alert(error.response?.data?.message || 'Không thể cập nhật số lượng')
+    }
   }
 
-  const handleRemove = (sku) => {
-    removeFromCart(sku)
-    setCart(getCart())
-    window.dispatchEvent(new Event("cart-updated"))
+  const handleRemove = async (sku) => {
+    try {
+      const item = cart.find(i => i.sku_variant === sku)
+      if (!item) return
+      
+      await removeCartItem(item.id)
+      fetchCart()
+      window.dispatchEvent(new Event("cart-updated"))
+    } catch (error) {
+      console.error('Error removing cart item:', error)
+      alert(error.response?.data?.message || 'Không thể xóa sản phẩm')
+    }
   }
 
-  const subtotal = getCartTotal()
+  const subtotal = cart.reduce((sum, item) => sum + (item.subtotal || item.unitPrice * item.quantity), 0)
   const shipping = subtotal >= 499000 ? 0 : 30000
+
+  if (loading) {
+    return (
+      <PageLayout title="Giỏ hàng" breadcrumbs={[{ label: "Giỏ hàng" }]}>
+        <div className="section">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
 
   if (cart.length === 0) {
     return (
