@@ -17,7 +17,10 @@ public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int sku;
+    private Integer id;
+
+    // SKU kept as regular column (not auto-generated) to avoid multiple AUTO_INCREMENT columns
+    private Integer sku;
 
     private double star;
     private String content;

@@ -177,7 +177,7 @@ export default function GrnNew() {
 
   const getVariantsByProduct = (productId) => {
     if (!productId) return []
-    return variants.filter((v) => v.product_id === parseInt(productId))
+    return variants.filter((v) => v.productId === parseInt(productId))
   }
 
   const totalCost = details.reduce((sum, d) => sum + (d.subtotal || 0), 0)

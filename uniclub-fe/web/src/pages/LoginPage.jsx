@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom"
 import { PageLayout } from "../components/PageLayout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { users } from "@/lib/mock-data"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 
 export default function LoginPage() {
@@ -21,33 +20,51 @@ export default function LoginPage() {
     setError("")
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
-    // Mock authentication
-    setTimeout(() => {
-      const user = users.find(
-        (u) => u.email === formData.email && u.password === formData.password
-      )
+    try {
+      // Call real backend API
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      })
 
-      if (user) {
-        // Store user in localStorage with correct key
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Store user info and token
         const authUser = {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          id_role: user.id_role,
+          id: data.id,
+          email: data.email,
+          full_name: data.fullName,
+          role: data.role,
+          token: data.token,
         }
+        
         localStorage.setItem("uniclub_user", JSON.stringify(authUser))
         window.dispatchEvent(new Event("auth-updated"))
+        
+        // Redirect to home
         navigate("/")
       } else {
-        setError("Email hoặc mật khẩu không đúng")
+        const errorText = await response.text()
+        setError(errorText || "Email hoặc mật khẩu không đúng")
       }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError("Lỗi kết nối. Vui lòng kiểm tra kết nối mạng.")
+    } finally {
       setIsLoading(false)
-    }, 800)
+    }
   }
 
   return (
@@ -129,10 +146,6 @@ export default function LoginPage() {
                 </Link>
               </div>
             </form>
-          </div>
-
-          <div className="mt-4 text-center text-xs text-muted-foreground">
-            Demo: admin@uniclub.vn / admin123
           </div>
         </div>
       </div>

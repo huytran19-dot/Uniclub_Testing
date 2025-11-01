@@ -25,15 +25,15 @@ echo ALL SERVICES STARTING...
 echo ========================================
 echo.
 echo MySQL Database: localhost:3307
-echo phpMyAdmin: http://localhost:8081
-echo Backend API: http://localhost:8080
-echo Frontend: http://localhost:5173
+echo phpMyAdmin: http://localhost:8081/
+echo Backend API: http://localhost:8080/
+echo Frontend: http://localhost:5173/
 echo.
 echo Please wait for all services to start...
 echo Check the opened command windows for status.
 echo.
 echo Login credentials:
 echo - Email: admin@uniclub.com
-echo - Password: admin123
+echo - Password: 123456
 echo.
 pause

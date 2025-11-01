@@ -1,40 +1,98 @@
 import React, { useMemo, useState, useEffect } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { PageLayout } from "../components/PageLayout"
-import { products, variants, brands, sizes, colors, reviews } from "@/lib/mock-data"
-import { calculateAverageRating, getMinPrice, isOutOfStock } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { VariantSelector } from "@/components/VariantSelector"
 import { Price } from "@/components/Price"
-import { addToCart } from "@/lib/cart"
+import { getUserCart, addToCart as addToCartAPI } from "@/lib/cart-api"
 import { ProductReviews } from "@/components/product/ProductReviews"
-import { Star } from "lucide-react"
+import { Star, Loader2 } from "lucide-react"
 
 export default function ProductDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const productId = Number(id)
 
-  const product = useMemo(() => products.find((p) => p.id === productId && p.status === 1), [productId])
-  const productVariants = useMemo(() => variants.filter((v) => v.id_product === productId && v.status === 1), [productId])
+  // State for API data
+  const [product, setProduct] = useState(null)
+  const [productVariants, setProductVariants] = useState([])
+  const [brand, setBrand] = useState(null)
+  const [sizes, setSizes] = useState([])
+  const [colors, setColors] = useState([])
   const [productReviews, setProductReviews] = useState([])
-  const brand = useMemo(() => (product ? brands.find((b) => b.id === product.id_brand) : null), [product])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [addingToCart, setAddingToCart] = useState(false)
 
   const [selectedSizeId, setSelectedSizeId] = useState(null)
   const [selectedColorId, setSelectedColorId] = useState(null)
 
+  // Fetch product data from API
   useEffect(() => {
-    // Load reviews from mock data
-    const initialReviews = reviews.filter((r) => r.id_product === productId && r.status === 1)
-    setProductReviews(initialReviews)
+    const fetchProductData = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        // Fetch product details
+        const productRes = await fetch(`http://localhost:8080/api/products/${productId}`)
+        if (!productRes.ok) {
+          if (productRes.status === 404) {
+            setError('Sản phẩm không tồn tại')
+          } else {
+            throw new Error('Không thể tải thông tin sản phẩm')
+          }
+          return
+        }
+        const productData = await productRes.json()
+        setProduct(productData)
+
+        // Fetch all variants for this product
+        const variantsRes = await fetch('http://localhost:8080/api/variants')
+        if (!variantsRes.ok) throw new Error('Không thể tải biến thể sản phẩm')
+        const allVariants = await variantsRes.json()
+        const filteredVariants = allVariants.filter(v => v.productId === parseInt(productId) && v.status === 1)
+        setProductVariants(filteredVariants)
+
+        // Fetch brand
+        if (productData.brandId) {
+          const brandRes = await fetch(`http://localhost:8080/api/brands/${productData.brandId}`)
+          if (brandRes.ok) {
+            const brandData = await brandRes.json()
+            setBrand(brandData)
+          }
+        }
+
+        // Fetch sizes and colors
+        const [sizesRes, colorsRes] = await Promise.all([
+          fetch('http://localhost:8080/api/sizes'),
+          fetch('http://localhost:8080/api/colors'),
+        ])
+
+        if (sizesRes.ok) setSizes(await sizesRes.json())
+        if (colorsRes.ok) setColors(await colorsRes.json())
+
+        // TODO: Fetch reviews when review API is ready
+        // For now, reviews are empty
+        setProductReviews([])
+
+      } catch (err) {
+        console.error('Error fetching product:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProductData()
   }, [productId])
 
   useEffect(() => {
     // Prefill first available combination
     if (productVariants.length > 0) {
       const available = productVariants.find((v) => v.quantity > 0) || productVariants[0]
-      setSelectedSizeId(available.id_size)
-      setSelectedColorId(available.id_color)
+      setSelectedSizeId(available.sizeId)
+      setSelectedColorId(available.colorId)
     }
   }, [productVariants])
 
@@ -42,19 +100,66 @@ export default function ProductDetailPage() {
 
   const selectedVariant = useMemo(
     () =>
-      productVariants.find((v) => v.id_size === selectedSizeId && v.id_color === selectedColorId) ||
-      productVariants.find((v) => v.id_size === selectedSizeId) ||
-      productVariants.find((v) => v.id_color === selectedColorId) ||
+      productVariants.find((v) => v.sizeId === selectedSizeId && v.colorId === selectedColorId) ||
+      productVariants.find((v) => v.sizeId === selectedSizeId) ||
+      productVariants.find((v) => v.colorId === selectedColorId) ||
       productVariants[0],
     [productVariants, selectedSizeId, selectedColorId],
   )
 
-  if (!product) {
+  // Get only sizes and colors that exist in product variants
+  const availableSizes = useMemo(() => {
+    const sizeIds = [...new Set(productVariants.map(v => v.sizeId))]
+    return sizes.filter(s => sizeIds.includes(s.id) && s.status === 1)
+  }, [productVariants, sizes])
+
+  const availableColors = useMemo(() => {
+    const colorIds = [...new Set(productVariants.map(v => v.colorId))]
+    return colors.filter(c => colorIds.includes(c.id) && c.status === 1)
+  }, [productVariants, colors])
+
+  // Helper functions
+  const getMinPrice = (variants, basePrice) => {
+    if (variants.length === 0) return basePrice || 0
+    const variantPrices = variants.map(v => v.price).filter(p => p !== null && p > 0)
+    if (variantPrices.length === 0) return basePrice || 0
+    return Math.min(...variantPrices, basePrice || Infinity)
+  }
+
+  const isOutOfStock = (variants) => {
+    if (variants.length === 0) return true
+    return variants.every(v => v.quantity === 0)
+  }
+
+  const calculateAverageRating = (reviews) => {
+    if (reviews.length === 0) return 0
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0)
+    return (sum / reviews.length).toFixed(1)
+  }
+
+  // Show loading state
+  if (loading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Sản phẩm", href: "/products" }, { label: "Không tìm thấy" }]}> 
+      <PageLayout breadcrumbs={[{ label: "Sản phẩm", href: "/products" }, { label: "Đang tải..." }]}>
+        <div className="section">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-lg text-muted-foreground">Đang tải sản phẩm...</p>
+            </div>
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  // Show error state
+  if (error || !product) {
+    return (
+      <PageLayout breadcrumbs={[{ label: "Sản phẩm", href: "/products" }, { label: "Lỗi" }]}> 
         <div className="section">
           <div className="card p-8 text-center">
-            <div className="text-lg font-medium mb-2">Sản phẩm không tồn tại</div>
+            <div className="text-lg font-medium mb-2">{error || "Sản phẩm không tồn tại"}</div>
             <div className="text-muted-foreground mb-4">Vui lòng quay lại trang sản phẩm.</div>
             <Button onClick={() => navigate("/products")}>Về trang sản phẩm</Button>
           </div>
@@ -67,27 +172,44 @@ export default function ProductDetailPage() {
   const minPrice = getMinPrice(productVariants, product.price)
   const oos = isOutOfStock(productVariants)
 
-  const onSelectVariant = ({ id_size, id_color }) => {
-    if (id_size != null) setSelectedSizeId(id_size)
-    if (id_color != null) setSelectedColorId(id_color)
+  const onSelectVariant = ({ sizeId, colorId }) => {
+    if (sizeId != null) setSelectedSizeId(sizeId)
+    if (colorId != null) setSelectedColorId(colorId)
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const v = selectedVariant
     if (!v || v.quantity <= 0) return
-    const sizeObj = sizes.find((s) => s.id === v.id_size)
-    const colorObj = colors.find((c) => c.id === v.id_color)
 
-    addToCart({
-      sku_variant: v.sku,
-      productName: product.name,
-      sizeName: sizeObj?.name || "N/A",
-      colorName: colorObj?.name || "N/A",
-      unitPrice: v.price || product.price,
-      image: v.images,
-      maxQuantity: v.quantity,
-    })
-    window.dispatchEvent(new Event("cart-updated"))
+    // Check if user is logged in
+    const userStr = localStorage.getItem('uniclub_user')
+    if (!userStr) {
+      alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng")
+      navigate('/login')
+      return
+    }
+
+    try {
+      setAddingToCart(true)
+      const user = JSON.parse(userStr)
+      
+      // Get or create cart
+      const cart = await getUserCart(user.id)
+      
+      // Add item to cart with quantity = 1
+      await addToCartAPI(cart.id, v.sku, 1, v.price || product.price)
+      
+      alert(`Đã thêm ${product.name} vào giỏ hàng`)
+      
+      // Trigger cart update event for header cart badge
+      window.dispatchEvent(new Event("cart-updated"))
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      const errorMsg = error.response?.data?.message || error.message || "Không thể thêm sản phẩm vào giỏ hàng"
+      alert(`Lỗi: ${errorMsg}`)
+    } finally {
+      setAddingToCart(false)
+    }
   }
 
   return (
@@ -110,11 +232,11 @@ export default function ProductDetailPage() {
               <button
                 key={v.sku}
                 onClick={() => {
-                  setSelectedSizeId(v.id_size)
-                  setSelectedColorId(v.id_color)
+                  setSelectedSizeId(v.sizeId)
+                  setSelectedColorId(v.colorId)
                 }}
                 className={`card overflow-hidden ${
-                  v.id_size === selectedSizeId && v.id_color === selectedColorId ? "ring-2 ring-ring" : ""
+                  v.sizeId === selectedSizeId && v.colorId === selectedColorId ? "ring-2 ring-ring" : ""
                 }`}
               >
                 <div className="aspect-square bg-surface">
@@ -144,8 +266,8 @@ export default function ProductDetailPage() {
           </div>
 
           <VariantSelector
-            sizes={sizes.filter((s) => s.status === 1)}
-            colors={colors.filter((c) => c.status === 1)}
+            sizes={availableSizes}
+            colors={availableColors}
             selectedSizeId={selectedSizeId}
             selectedColorId={selectedColorId}
             disabledPairs={disabledPairs}
@@ -153,8 +275,11 @@ export default function ProductDetailPage() {
           />
 
           <div className="flex gap-3">
-            <Button onClick={handleAddToCart} disabled={!selectedVariant || selectedVariant.quantity <= 0}>
-              Thêm vào giỏ
+            <Button 
+              onClick={handleAddToCart} 
+              disabled={!selectedVariant || selectedVariant.quantity <= 0 || addingToCart}
+            >
+              {addingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
             </Button>
             <Button variant="outline" aschild="true">
               <Link to="/cart">Xem giỏ hàng</Link>
