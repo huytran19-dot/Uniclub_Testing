@@ -98,4 +98,42 @@ export const api = {
     const data = await fetchAPI(`/grn-details/grn-header/${id}`)
     return data || []
   },
+
+  // Order specific API
+  updateOrderStatus: async (orderId, data) => {
+    return await fetchAPI(`/orders/${orderId}/status`, {
+      method: "PUT",
+      body: JSON.stringify(data)
+    })
+  },
+
+  // Users API
+  list: async (endpoint) => {
+    const data = await fetchAPI(`/${endpoint}`)
+    return data || []
+  },
+
+  get: async (endpoint, id) => {
+    return await fetchAPI(`/${endpoint}/${id}`)
+  },
+
+  create: async (endpoint, data) => {
+    return await fetchAPI(`/${endpoint}`, {
+      method: "POST",
+      body: JSON.stringify(data)
+    })
+  },
+
+  update: async (endpoint, id, data) => {
+    return await fetchAPI(`/${endpoint}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data)
+    })
+  },
+
+  delete: async (endpoint, id) => {
+    return await fetchAPI(`/${endpoint}/${id}`, {
+      method: "DELETE"
+    })
+  },
 }

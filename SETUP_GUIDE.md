@@ -34,8 +34,8 @@ pnpm dev
 - **Host:** localhost
 - **Port:** 3307
 - **Database:** uniclub
-- **Username:** uniclub_user
-- **Password:** uniclub_password
+- **Username:** root
+- **Password:** huytran123
 - **phpMyAdmin:** http://localhost:8081
 
 ## 👥 Default Users

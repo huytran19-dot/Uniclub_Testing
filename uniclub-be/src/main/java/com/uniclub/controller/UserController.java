@@ -4,60 +4,64 @@ import com.uniclub.dto.request.User.CreateUserRequest;
 import com.uniclub.dto.request.User.UpdateUserRequest;
 import com.uniclub.dto.response.User.UserResponse;
 import com.uniclub.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    // Lấy danh sách tất cả user
+    // CREATE
+    @PostMapping
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
+        try {
+            UserResponse created = userService.createUser(request);
+            return ResponseEntity.ok(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // UPDATE
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> update(@PathVariable Integer id,
+                                            @Valid @RequestBody UpdateUserRequest request) {
+        try {
+            UserResponse updated = userService.updateUser(id, request);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // GET ALL
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
+    public ResponseEntity<List<UserResponse>> getAll() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // Lấy user theo ID
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable("userId") Integer userId) {
-        return ResponseEntity.ok(userService.getUserById(userId));
+    // GET BY ID
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // Tạo user mới
-    @PostMapping
-    public ResponseEntity<UserResponse> createUser(
-            @Valid @RequestBody CreateUserRequest request) {
-        UserResponse response = userService.createUser(request);
-        return ResponseEntity.ok(response);
-    }
-
-    // Cập nhật user
-    @PutMapping("/{userId}")
-    public ResponseEntity<UserResponse> updateUser(
-            @PathVariable("userId") Integer userId,
-            @Valid @RequestBody UpdateUserRequest request) {
-        UserResponse updatedUser = userService.updateUser(userId, request);
-        return ResponseEntity.ok(updatedUser);
-    }
-
-    // Xóa user
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // Inactivate user (soft delete)
-    @PatchMapping("/{userId}/inactive")
-    public ResponseEntity<Void> inactiveUser(@PathVariable Integer userId) {
-        userService.inactiveUser(userId);
-        return ResponseEntity.noContent().build();
+    // DELETE
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok().build();
     }
 }

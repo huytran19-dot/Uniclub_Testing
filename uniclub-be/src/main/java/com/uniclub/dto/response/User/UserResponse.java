@@ -1,34 +1,39 @@
 package com.uniclub.dto.response.User;
 
-import com.uniclub.dto.response.Role.RoleResponse;
 import com.uniclub.entity.User;
-import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserResponse {
     private Integer id;
     private String email;
     private String fullname;
-    private RoleResponse role;
+    private Integer roleId;
+    private String roleName;
     private Byte status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static UserResponse fromEntity(User user) {
-        UserResponse response = new UserResponse();
-        response.setId(user.getId());
-        response.setEmail(user.getEmail());
-        response.setFullname(user.getFullname());
-        if (user.getRole() != null) {
-            response.setRole(RoleResponse.fromEntity(user.getRole()));
-        }
-        response.setStatus(user.getStatus());
-        response.setCreatedAt(user.getCreatedAt());
-        response.setUpdatedAt(user.getUpdatedAt());
-
-        return response;
+        if (user == null) return null;
+        
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullname(user.getFullname())
+                .roleId(user.getRole() != null ? user.getRole().getId() : null)
+                .roleName(user.getRole() != null ? user.getRole().getName() : null)
+                .status(user.getStatus())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 }

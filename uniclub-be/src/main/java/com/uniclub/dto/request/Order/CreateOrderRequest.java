@@ -1,5 +1,6 @@
 package com.uniclub.dto.request.Order;
 
+import com.uniclub.entity.enums.OrderStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -16,4 +17,6 @@ public class CreateOrderRequest {
 
     @NotNull(message = "Order items cannot be empty")
     private List<CreateOrderVariantRequest> orderVariants;
+    
+    private OrderStatus status;
 }

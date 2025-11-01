@@ -27,7 +27,7 @@ public class OrderVariantController {
                                                      @Valid @RequestBody CreateOrderVariantRequest request) {
         OrderVariantResponse created = orderVariantService.createOrderVariant(orderId, request);
         return ResponseEntity
-                .created(URI.create("/api/order-variants/" + orderId + "/" + created.getSkuVariant()))
+                .created(URI.create("/api/order-variants/" + orderId + "/" + created.getVariantSku()))
                 .body(created);
     }
 

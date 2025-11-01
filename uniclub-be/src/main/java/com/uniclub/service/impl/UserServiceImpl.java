@@ -7,11 +7,11 @@ import com.uniclub.dto.request.User.UpdateUserRequest;
 import com.uniclub.dto.request.User.VerifyCodeRequest;
 import com.uniclub.dto.response.Auth.LoginResponse;
 import com.uniclub.dto.response.User.UserResponse;
-import com.uniclub.entity.Role;
 import com.uniclub.entity.User;
+import com.uniclub.entity.Role;
 import com.uniclub.exception.ResourceNotFoundException;
-import com.uniclub.repository.RoleRepository;
 import com.uniclub.repository.UserRepository;
+import com.uniclub.repository.RoleRepository;
 import com.uniclub.service.UserService;
 import com.uniclub.service.VerificationService;
 import jakarta.transaction.Transactional;
@@ -22,8 +22,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserRepository userRepository;
 
@@ -48,55 +48,73 @@ public class UserServiceImpl implements UserService {
         return UserResponse.fromEntity(user);
     }
 
+    @Override
     public UserResponse createUser(CreateUserRequest request) {
+        // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new IllegalArgumentException("Email đã tồn tại");
         }
 
+        // Check if role exists
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullname(request.getFullname());
         user.setRole(role);
+        user.setStatus(request.getStatus() != null ? request.getStatus() : 1);
 
-        User updatedUser = userRepository.save(user);
-        return UserResponse.fromEntity(updatedUser);
+        User savedUser = userRepository.save(user);
+        return UserResponse.fromEntity(savedUser);
     }
 
+    @Override
     public UserResponse updateUser(Integer userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                throw new IllegalArgumentException("Email already exists");
-            }
-            user.setEmail(request.getEmail());
+        // Check if email already exists (excluding current user)
+        if (!user.getEmail().equals(request.getEmail()) && 
+            userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email đã tồn tại");
         }
 
-        if (request.getFullname() != null) {
-            user.setFullname(request.getFullname());
+        // Update fields
+        user.setEmail(request.getEmail());
+        user.setFullname(request.getFullname());
+        user.setStatus(request.getStatus());
+
+        // Update password only if provided
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
-        if (request.getPassword() != null) {
-            user.setPassword(request.getPassword());
-        }
-
+        // Update role if provided
         if (request.getRoleId() != null) {
             Role role = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
             user.setRole(role);
         }
 
-        if (request.getStatus() != null) {
-            user.setStatus(request.getStatus());
-        }
-
         User updatedUser = userRepository.save(user);
         return UserResponse.fromEntity(updatedUser);
+    }
+
+    @Override
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(UserResponse::fromEntity)
+                .toList();
+    }
+
+    @Override
+    public UserResponse getUserById(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        return UserResponse.fromEntity(user);
     }
 
     @Override

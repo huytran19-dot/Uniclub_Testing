@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class CreateOrderVariantRequest {
     @NotNull(message = "Variant ID is required")
-    private Integer skuVariant; // mapping tới Variant.sku
+    private Integer variantSku; // mapping tới Variant.sku
 
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")

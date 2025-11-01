@@ -25,6 +25,8 @@ import SupplierForm from "./pages/suppliers/Form"
 import GrnList from "./pages/grn/List"
 import GrnNew from "./pages/grn/New"
 import GrnDetail from "./pages/grn/Detail"
+import UserList from "./pages/users/List"
+import UserForm from "./pages/users/Form"
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth()
@@ -62,6 +64,9 @@ function AppRoutes() {
       <Route path="/grn/new" element={<ProtectedRoute><Layout><GrnNew /></Layout></ProtectedRoute>} />
       <Route path="/grn/:id" element={<ProtectedRoute><Layout><GrnDetail /></Layout></ProtectedRoute>} />
       <Route path="/grn/:id/details" element={<ProtectedRoute><Layout><GrnDetail /></Layout></ProtectedRoute>} />
+      <Route path="/users" element={<ProtectedRoute><Layout><UserList /></Layout></ProtectedRoute>} />
+      <Route path="/users/new" element={<ProtectedRoute><Layout><UserForm /></Layout></ProtectedRoute>} />
+      <Route path="/users/:id" element={<ProtectedRoute><Layout><UserForm /></Layout></ProtectedRoute>} />
     </Routes>
   )
 }

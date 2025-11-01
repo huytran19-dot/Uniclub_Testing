@@ -20,10 +20,10 @@ export function getStatusLabel(status) {
     1: "Hoạt động",
     0: "Ẩn",
     PENDING: "Chờ xử lý",
-    COMPLETED: "Hoàn thành",
-    PAID: "Đã thanh toán",
+    CONFIRMED: "Đã xác nhận",
+    SHIPPING: "Đang giao",
+    DELIVERED: "Đã giao",
     CANCELLED: "Đã hủy",
-    SHIPPED: "Đã giao",
   }
   return labels[status] || status
 }
@@ -33,10 +33,10 @@ export function getStatusType(status) {
     1: "active",
     0: "inactive",
     PENDING: "pending",
-    COMPLETED: "completed",
-    PAID: "paid",
+    CONFIRMED: "confirmed",
+    SHIPPING: "shipping",
+    DELIVERED: "delivered",
     CANCELLED: "cancelled",
-    SHIPPED: "shipped",
   }
   return types[status] || "inactive"
 }

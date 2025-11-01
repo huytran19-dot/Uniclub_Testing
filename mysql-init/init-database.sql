@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS `uniclub`;
+USE `uniclub`;
+
 -- phpMyAdmin SQL Dump
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
@@ -182,7 +185,7 @@ CREATE TABLE `comment` (
 CREATE TABLE `grn_detail` (
   `id` int NOT NULL,
   `id_grn` int NOT NULL,
-  `id_variant` int NOT NULL,
+  `id_sku` int NOT NULL,
   `quantity` int NOT NULL,
   `unit_cost` int NOT NULL,
   `subtotal` int GENERATED ALWAYS AS ((`quantity` * `unit_cost`)) STORED
@@ -208,49 +211,19 @@ CREATE TABLE `grn_header` (
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `orders`
---
-
-CREATE TABLE `orders` (
-  `id` int NOT NULL,
-  `total` int DEFAULT NULL,
-  `note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `id_user` int DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'PENDING',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Cấu trúc bảng cho bảng `order_variant`
---
-
-CREATE TABLE `order_variant` (
-  `id_order` int NOT NULL,
-  `sku_variant` int NOT NULL,
-  `quantity` int DEFAULT NULL,
-  `price` int DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
 -- Cấu trúc bảng cho bảng `payment`
 --
 
 CREATE TABLE `payment` (
   `id` int NOT NULL,
-  `order_id` int DEFAULT NULL,
+  `id_order` int DEFAULT NULL,
   `payment_method` enum('COD','VNPay') COLLATE utf8mb4_unicode_ci NOT NULL,
   `transaction_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `amount` int DEFAULT NULL,
   `payment_status` enum('FAILED','PENDING','SUCCESS') COLLATE utf8mb4_unicode_ci NOT NULL,
   `paid_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `id_order` int DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -295,9 +268,8 @@ CREATE TABLE `review` (
   `images` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` tinyint DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `create_date` datetime(6) DEFAULT NULL
-) ;
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -320,9 +292,7 @@ CREATE TABLE `role` (
 
 INSERT INTO `role` (`id`, `name`, `description`, `status`, `created_at`, `updated_at`) VALUES
 (1, 'SysAdmin', 'Quản trị viên - Có toàn quyền điều khiển hệ thống', 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05'),
-(2, 'Buyer', 'Người mua - Có thể xem và mua sản phẩm', 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05'),
-(3, 'ADMIN', 'Administrator role', 1, '2025-10-23 20:05:09', '2025-10-23 20:05:09'),
-(4, 'CUSTOMER', 'Customer role', 1, '2025-10-23 20:05:09', '2025-10-23 20:05:09');
+(2, 'Buyer', 'Người mua - Có thể xem và mua sản phẩm', 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05');
 
 -- --------------------------------------------------------
 
@@ -436,6 +406,41 @@ INSERT INTO `variant` (`sku`, `id_product`, `id_size`, `id_color`, `images`, `qu
 (8, 3, 5, 5, 'https://res.cloudinary.com/deooamndi/image/upload/v1761311014/uniclub/variants/shxd4gpykyx9b2gsmhth.jpg', 0, 140000, 1, '2025-10-24 20:02:46', '2025-10-24 20:02:46'),
 (9, 3, 4, 2, 'https://res.cloudinary.com/deooamndi/image/upload/v1761311050/uniclub/variants/ki43fdaaxkae7nvj8cce.jpg', 0, 160000, 1, '2025-10-24 20:03:21', '2025-10-24 20:03:21');
 
+
+--
+-- Cấu trúc bảng cho bảng `orders`
+--
+
+CREATE TABLE `orders` (
+  `id` int NOT NULL,
+  `total` int DEFAULT NULL,
+  `note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id_user` int DEFAULT NULL,
+  `status` enum('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') COLLATE utf8mb4_unicode_ci DEFAULT 'PENDING',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `order_variant`
+--
+
+CREATE TABLE `order_variant` (
+  `id_order` int NOT NULL,
+  `id_sku` int NOT NULL,
+  `quantity` int DEFAULT NULL,
+  `price` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+INSERT INTO `orders` (`id`, `total`, `note`, `id_user`, `status`, `created_at`, `updated_at`) VALUES
+(1, 108000, 'Note 1', 1, 'PENDING', '2025-10-23 13:03:05', '2025-10-23 13:03:05');
+
+INSERT INTO `order_variant` (`id_order`, `id_sku`, `quantity`, `price`) VALUES
+(1, 1, 1, 108000);
 --
 -- Chỉ mục cho các bảng đã đổ
 --
@@ -494,7 +499,7 @@ ALTER TABLE `comment`
 ALTER TABLE `grn_detail`
   ADD PRIMARY KEY (`id`),
   ADD KEY `FK_grn_detail_grn` (`id_grn`),
-  ADD KEY `FK_grn_detail_variant` (`id_variant`);
+  ADD KEY `FK_grn_detail_variant` (`id_sku`);
 
 --
 -- Chỉ mục cho bảng `grn_header`
@@ -514,16 +519,15 @@ ALTER TABLE `orders`
 -- Chỉ mục cho bảng `order_variant`
 --
 ALTER TABLE `order_variant`
-  ADD PRIMARY KEY (`id_order`,`sku_variant`),
-  ADD KEY `FK_ov_variant` (`sku_variant`);
+  ADD PRIMARY KEY (`id_order`,`id_sku`),
+  ADD KEY `FK_ov_variant` (`id_sku`);
 
 --
 -- Chỉ mục cho bảng `payment`
 --
 ALTER TABLE `payment`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `FK_payment_order` (`order_id`),
-  ADD KEY `FK6jjrm7t1sxyl94hpd3jks1q4l` (`id_order`);
+  ADD KEY `FK_payment_order` (`id_order`);
 
 --
 -- Chỉ mục cho bảng `product`
@@ -724,7 +728,7 @@ ALTER TABLE `comment`
 --
 ALTER TABLE `grn_detail`
   ADD CONSTRAINT `FK_grn_detail_grn` FOREIGN KEY (`id_grn`) REFERENCES `grn_header` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `FK_grn_detail_variant` FOREIGN KEY (`id_variant`) REFERENCES `variant` (`sku`);
+  ADD CONSTRAINT `FK_grn_detail_variant` FOREIGN KEY (`id_sku`) REFERENCES `variant` (`sku`);
 
 --
 -- Ràng buộc cho bảng `grn_header`
@@ -743,14 +747,13 @@ ALTER TABLE `orders`
 --
 ALTER TABLE `order_variant`
   ADD CONSTRAINT `FK_ov_order` FOREIGN KEY (`id_order`) REFERENCES `orders` (`id`),
-  ADD CONSTRAINT `FK_ov_variant` FOREIGN KEY (`sku_variant`) REFERENCES `variant` (`sku`);
+  ADD CONSTRAINT `FK_ov_variant` FOREIGN KEY (`id_sku`) REFERENCES `variant` (`sku`);
 
 --
 -- Ràng buộc cho bảng `payment`
 --
 ALTER TABLE `payment`
-  ADD CONSTRAINT `FK6jjrm7t1sxyl94hpd3jks1q4l` FOREIGN KEY (`id_order`) REFERENCES `orders` (`id`),
-  ADD CONSTRAINT `FK_payment_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`);
+  ADD CONSTRAINT `FK_payment_order` FOREIGN KEY (`id_order`) REFERENCES `orders` (`id`);
 
 --
 -- Ràng buộc cho bảng `product`
