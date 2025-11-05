@@ -1,14 +1,21 @@
 package com.uniclub.repository;
 
-import com.uniclub.entity.Order;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.uniclub.entity.Order;
+import com.uniclub.entity.enums.OrderStatus;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
-    List<Order> findByUserId(Integer userId);
-    List<Order> findByStatus(String status);
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.user WHERE o.user.id = :userId ORDER BY o.createdAt DESC")
+    List<Order> findByUserId(@Param("userId") Integer userId);
+    
+    List<Order> findByStatus(OrderStatus status);
+    
     boolean existsByUserId(Integer userId);
 }

@@ -42,7 +42,19 @@ export default function CartPage() {
       const item = cart.find(i => i.sku_variant === sku)
       if (!item) return
       
-      await updateCartItem(item.id, qty)
+      // ✅ Kiểm tra số lượng mới có vượt tồn kho không
+      if (qty > item.maxQuantity) {
+        alert(`⚠️ Không thể tăng thêm!\n\nSố lượng tồn kho chỉ còn: ${item.maxQuantity}\nSố lượng bạn đang chọn: ${qty}\n\nĐã tự động giảm xuống mức tối đa.`)
+        // Tự động set về số lượng tối đa
+        await updateCartItem(item.id, item.maxQuantity)
+      } else if (qty < 1) {
+        // Nếu giảm xuống 0 → Xóa khỏi giỏ
+        await removeCartItem(item.id)
+      } else {
+        // Update bình thường
+        await updateCartItem(item.id, qty)
+      }
+      
       fetchCart()
       window.dispatchEvent(new Event("cart-updated"))
     } catch (error) {

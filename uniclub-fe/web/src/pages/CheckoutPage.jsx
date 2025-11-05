@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { PageLayout } from "../components/PageLayout"
 import { AddressForm } from "@/components/checkout/AddressForm"
-import { PaymentMethod } from "@/components/checkout/PaymentMethod"
 import { Button } from "@/components/ui/button"
 import { Price } from "@/components/Price"
 import { getFullCart } from "@/lib/cart-api"
@@ -18,12 +17,17 @@ export default function CheckoutPage() {
     email: "",
     address: "",
     province: "",
+    provinceName: "",
     district: "",
+    districtName: "",
     ward: "",
+    wardName: "",
     note: "",
   })
   const [paymentId, setPaymentId] = useState(1)
+  const [paymentMethod, setPaymentMethod] = useState("COD") // COD or VNPay
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [useDefaultAddress, setUseDefaultAddress] = useState(true)
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -44,13 +48,24 @@ export default function CheckoutPage() {
         
         setCart(items)
         
-        // Auto-fill user info
+        // Auto-fill user info including default address
+        const hasDefaultAddress = user.address && user.provinceCode && user.districtCode && user.wardCode
+        
         setFormData(prev => ({
           ...prev,
           full_name: user.full_name || user.fullName || "",
           email: user.email || "",
           phone: user.phone || "",
+          address: hasDefaultAddress ? user.address : "",
+          province: hasDefaultAddress ? user.provinceCode : "",
+          provinceName: hasDefaultAddress ? user.provinceName : "",
+          district: hasDefaultAddress ? user.districtCode : "",
+          districtName: hasDefaultAddress ? user.districtName : "",
+          ward: hasDefaultAddress ? user.wardCode : "",
+          wardName: hasDefaultAddress ? user.wardName : "",
         }))
+        
+        setUseDefaultAddress(hasDefaultAddress)
       } catch (error) {
         console.error('Error fetching cart:', error)
         navigate("/cart")
@@ -66,15 +81,101 @@ export default function CheckoutPage() {
   const shipping = subtotal >= 499000 ? 0 : 30000
   const total = subtotal + shipping
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // TODO: Implement real checkout API
-    setTimeout(() => {
-      alert("Tính năng thanh toán đang được phát triển")
+    try {
+      const userStr = localStorage.getItem('uniclub_user')
+      if (!userStr) {
+        navigate("/login")
+        return
+      }
+
+      const user = JSON.parse(userStr)
+
+      // Validate user has ID
+      if (!user.id) {
+        alert("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.")
+        navigate("/login")
+        return
+      }
+
+      // Prepare order data
+      const orderData = {
+        userId: user.id,
+        recipientName: formData.full_name,
+        recipientPhone: formData.phone,
+        shippingAddress: `${formData.address}, ${formData.wardName || formData.ward}, ${formData.districtName || formData.district}, ${formData.provinceName || formData.province}`,
+        note: formData.note || "",
+        paymentMethod: paymentMethod, // Use selected payment method
+        orderVariants: cart.map((item) => ({
+          variantSku: item.sku_variant,
+          quantity: item.quantity,
+          price: item.unitPrice,
+        })),
+      }
+
+      console.log("Order data being sent:", orderData)
+      console.log("User ID:", user.id)
+      console.log("Payment method:", paymentMethod)
+
+      const response = await fetch("http://localhost:8080/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Không thể tạo đơn hàng")
+      }
+
+      const order = await response.json()
+
+      // If VNPay payment, redirect to VNPay
+      if (paymentMethod === "VNPay") {
+        try {
+          const paymentResponse = await fetch("http://localhost:8080/api/vnpay/create-payment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              orderId: order.id,
+              orderInfo: `Thanh toan don hang ${order.id}`,
+              locale: "vn",
+            }),
+          })
+
+          if (!paymentResponse.ok) {
+            throw new Error("Không thể tạo link thanh toán VNPay")
+          }
+
+          const paymentData = await paymentResponse.json()
+          
+          // Redirect to VNPay
+          window.location.href = paymentData.paymentUrl
+          return
+        } catch (error) {
+          console.error('Error creating VNPay payment:', error)
+          alert("Có lỗi xảy ra khi tạo link thanh toán. Vui lòng thử lại.")
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      // COD payment - show success and redirect to orders
+      alert("Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.")
+      navigate("/orders")
+    } catch (error) {
+      console.error('Error creating order:', error)
+      alert(error.message || "Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.")
+    } finally {
       setIsSubmitting(false)
-    }, 1000)
+    }
   }
 
   if (loading) {
@@ -110,13 +211,82 @@ export default function CheckoutPage() {
         <div className="section grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Thông tin giao hàng</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">Thông tin giao hàng</h2>
+                {useDefaultAddress && formData.address && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setUseDefaultAddress(false)
+                      setFormData(prev => ({
+                        ...prev,
+                        address: "",
+                        province: "",
+                        provinceName: "",
+                        district: "",
+                        districtName: "",
+                        ward: "",
+                        wardName: "",
+                      }))
+                    }}
+                  >
+                    Nhập địa chỉ khác
+                  </Button>
+                )}
+              </div>
+              {useDefaultAddress && formData.address && (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    ✓ Đang sử dụng địa chỉ mặc định từ hồ sơ của bạn
+                  </p>
+                </div>
+              )}
               <AddressForm formData={formData} onChange={setFormData} />
             </div>
 
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">Phương thức thanh toán</h2>
-              <PaymentMethod selectedId={paymentId} onChange={setPaymentId} />
+              <div className="space-y-3">
+                <label
+                  className={`card p-4 flex items-center gap-3 cursor-pointer transition-colors ${
+                    paymentMethod === "COD" ? "ring-2 ring-ring" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="COD"
+                    checked={paymentMethod === "COD"}
+                    onChange={() => setPaymentMethod("COD")}
+                    className="w-4 h-4 text-primary"
+                  />
+                  <div>
+                    <div className="font-medium text-foreground">Thanh toán khi nhận hàng (COD)</div>
+                    <div className="text-sm text-muted-foreground">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                  </div>
+                </label>
+
+                <label
+                  className={`card p-4 flex items-center gap-3 cursor-pointer transition-colors ${
+                    paymentMethod === "VNPay" ? "ring-2 ring-ring" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="VNPay"
+                    checked={paymentMethod === "VNPay"}
+                    onChange={() => setPaymentMethod("VNPay")}
+                    className="w-4 h-4 text-primary"
+                  />
+                  <div>
+                    <div className="font-medium text-foreground">Thanh toán qua VNPay</div>
+                    <div className="text-sm text-muted-foreground">Thanh toán trực tuyến qua cổng VNPay</div>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 

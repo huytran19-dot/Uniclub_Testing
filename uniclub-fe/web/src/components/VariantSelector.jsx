@@ -3,15 +3,22 @@
 import { cn } from "../lib/utils"
 import { Button } from "./ui/button"
 
-export function VariantSelector({ sizes, colors, selectedSizeId, selectedColorId, disabledPairs, onSelect }) {
+export function VariantSelector({ sizes, colors, selectedSizeId, selectedColorId, disabledPairs, allVariants, onSelect }) {
+  // Không disable bất kỳ size nào - cho phép chọn tất cả
   const isSizeDisabled = (sizeId) => {
-    if (!selectedColorId) return false
-    return disabledPairs.some((pair) => pair.sizeId === sizeId && pair.colorId === selectedColorId)
+    return false  // ✅ Luôn cho phép chọn size
   }
 
+  // Chỉ hiển thị màu của size đã chọn
   const isColorDisabled = (colorId) => {
-    if (!selectedSizeId) return false
-    return disabledPairs.some((pair) => pair.sizeId === selectedSizeId && pair.colorId === colorId)
+    if (!selectedSizeId) return true  // Chưa chọn size → disable tất cả màu
+    
+    // Kiểm tra xem có variant nào với size đã chọn và màu này không
+    const variantExists = allVariants?.some((v) => 
+      v.sizeId === selectedSizeId && v.colorId === colorId
+    )
+    
+    return !variantExists  // Disable nếu không có variant với combination này
   }
 
   return (

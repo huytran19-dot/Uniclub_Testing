@@ -6,6 +6,7 @@ import ProductsPage from "./pages/Products"
 import ProductDetailPage from "./pages/ProductDetailPage"
 import CartPage from "./pages/CartPage"
 import CheckoutPage from "./pages/CheckoutPage"
+import PaymentReturnPage from "./pages/PaymentReturnPage"
 import OrdersPage from "./pages/OrdersPage"
 import AllOrdersPage from "./pages/AllOrdersPage"
 import OrderDetailPage from "./pages/OrderDetailPage"
@@ -23,6 +24,7 @@ function App() {
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/payment/vnpay-return" element={<PaymentReturnPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/admin/orders" element={<AllOrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />

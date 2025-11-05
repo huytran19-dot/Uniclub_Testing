@@ -185,7 +185,7 @@ export default function GrnNew() {
   const validate = () => {
     const newErrors = {}
     if (!form.supplierId) newErrors.supplierId = "Nhà cung cấp là bắt buộc"
-    if (!form.receivedDate) newErrors.receivedDate = "Ngày nhận là bắt buộc"
+    // receivedDate is optional - backend will use current date as default
     if (details.length === 0) {
       newErrors.details = "Phải có ít nhất 1 dòng chi tiết"
     }
@@ -194,7 +194,7 @@ export default function GrnNew() {
 
   const isFormValid = () => {
     // Check basic form fields
-    if (!form.supplierId || !form.receivedDate) return false
+    if (!form.supplierId) return false
     
     // Check details
     if (details.length === 0) return false
@@ -224,8 +224,12 @@ export default function GrnNew() {
       // Create GRN Header first
       const grnHeaderPayload = {
         supplierId: parseInt(form.supplierId),
-        receivedDate: form.receivedDate,
         note: form.note,
+      }
+
+      // Only include receivedDate if it has a value
+      if (form.receivedDate && form.receivedDate.trim() !== '') {
+        grnHeaderPayload.receivedDate = form.receivedDate
       }
 
       const grnHeader = await api.create("grn-headers", grnHeaderPayload)
@@ -247,9 +251,21 @@ export default function GrnNew() {
       setTimeout(() => navigate("/grn"), 1500)
     } catch (error) {
       console.error("Error creating GRN:", error)
+      
+      // Extract error message from different error formats
+      let errorMessage = "Có lỗi xảy ra khi tạo phiếu nhập kho"
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
       setToast({ 
         type: "error", 
-        message: error.message || "Có lỗi xảy ra khi tạo phiếu nhập kho" 
+        message: errorMessage
       })
     }
   }
@@ -279,7 +295,6 @@ export default function GrnNew() {
               value={form.receivedDate}
               onChange={(e) => setForm({ ...form, receivedDate: e.target.value })}
               error={errors.receivedDate}
-              required
             />
           </div>
 

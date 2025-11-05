@@ -35,6 +35,12 @@ public class Payment {
 
     @Column(name = "transaction_no", length = 100)
     private String transactionNo;
+    
+    @Column(name = "vnpay_bank_code", length = 20)
+    private String vnpayBankCode;
+    
+    @Column(name = "vnpay_response_code", length = 10)
+    private String vnpayResponseCode;
 
     @Column(nullable = false)
     private Integer amount;

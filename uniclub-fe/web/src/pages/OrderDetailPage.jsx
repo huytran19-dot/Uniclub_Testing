@@ -1,45 +1,98 @@
-import React, { useMemo } from "react"
+import React, { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { PageLayout } from "../components/PageLayout"
 import { Button } from "@/components/ui/button"
 import { Price } from "@/components/Price"
-import { orders, order_variants, billing_details, variants, products, sizes, colors, payment_methods } from "@/lib/mock-data"
-import { CheckCircle2, Package, Truck, MapPin, CreditCard, Calendar } from "lucide-react"
+import { parseShippingAddress } from "@/lib/address-parser"
+import { CheckCircle2, Package, Truck, MapPin, CreditCard, Calendar, Loader2 } from "lucide-react"
 
 export default function OrderDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const orderId = Number(id)
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [parsedAddress, setParsedAddress] = useState("")
+  const [isCancelling, setIsCancelling] = useState(false)
 
-  const order = useMemo(() => orders.find((o) => o.id === orderId), [orderId])
-  const orderItems = useMemo(() => order_variants.filter((ov) => ov.id_order === orderId), [orderId])
-  const billing = useMemo(() => billing_details.find((b) => b.id_order === orderId), [orderId])
-  const paymentMethod = useMemo(() => payment_methods.find((pm) => pm.id === order?.id_payment), [order])
+  useEffect(() => {
+    fetchOrderDetail()
+  }, [id])
 
-  const itemsWithDetails = useMemo(() => {
-    return orderItems.map((oi) => {
-      const variant = variants.find((v) => v.sku === oi.sku_variant)
-      const product = products.find((p) => p.id === variant?.id_product)
-      const size = sizes.find((s) => s.id === variant?.id_size)
-      const color = colors.find((c) => c.id === variant?.id_color)
-      return {
-        ...oi,
-        variant,
-        product,
-        size,
-        color,
+  // Parse address when order changes
+  useEffect(() => {
+    const parseAddress = async () => {
+      if (order?.shippingAddress) {
+        const parsed = await parseShippingAddress(order.shippingAddress)
+        setParsedAddress(parsed)
       }
-    })
-  }, [orderItems])
+    }
+    parseAddress()
+  }, [order])
 
-  if (!order) {
+  const fetchOrderDetail = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/orders/${id}`)
+      
+      if (!response.ok) {
+        throw new Error("Không thể tải thông tin đơn hàng")
+      }
+
+      const data = await response.json()
+      setOrder(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCancelOrder = async () => {
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+      return
+    }
+
+    setIsCancelling(true)
+    try {
+      const response = await fetch(`http://localhost:8080/api/orders/${id}/cancel`, {
+        method: "PUT",
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || "Không thể hủy đơn hàng")
+      }
+
+      const updatedOrder = await response.json()
+      setOrder(updatedOrder)
+      alert("Đơn hàng đã được hủy thành công")
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  if (loading) {
     return (
-      <PageLayout breadcrumbs={[{ label: "Đơn hàng", href: "/account/orders" }, { label: "Không tìm thấy" }]}>
+      <PageLayout breadcrumbs={[{ label: "Đơn hàng", href: "/orders" }, { label: "Chi tiết" }]}>
+        <div className="section">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  if (error || !order) {
+    return (
+      <PageLayout breadcrumbs={[{ label: "Đơn hàng", href: "/orders" }, { label: "Không tìm thấy" }]}>
         <div className="section">
           <div className="card p-8 text-center">
             <div className="text-lg font-medium mb-2">Đơn hàng không tồn tại</div>
-            <div className="text-muted-foreground mb-4">Vui lòng kiểm tra lại mã đơn hàng.</div>
-            <Button onClick={() => navigate("/account/orders")}>Về danh sách đơn hàng</Button>
+            <div className="text-muted-foreground mb-4">{error || "Vui lòng kiểm tra lại mã đơn hàng."}</div>
+            <Button onClick={() => navigate("/orders")}>Về danh sách đơn hàng</Button>
           </div>
         </div>
       </PageLayout>
@@ -47,11 +100,41 @@ export default function OrderDetailPage() {
   }
 
   const statusConfig = {
-    PENDING: { label: "Chờ xác nhận", color: "hsl(38 92% 50%)", bgColor: "hsl(38 92% 50% / 0.1)", icon: Package },
-    CONFIRMED: { label: "Đã xác nhận", color: "hsl(199 89% 48%)", bgColor: "hsl(199 89% 48% / 0.1)", icon: CheckCircle2 },
-    SHIPPING: { label: "Đang giao", color: "hsl(217.2 91.2% 55%)", bgColor: "hsl(217.2 91.2% 55% / 0.1)", icon: Truck },
-    DELIVERED: { label: "Đã giao", color: "hsl(142 76% 36%)", bgColor: "hsl(142 76% 36% / 0.1)", icon: CheckCircle2 },
-    CANCELLED: { label: "Đã hủy", color: "hsl(0 84.2% 60.2%)", bgColor: "hsl(0 84.2% 60.2% / 0.1)", icon: Package },
+    PENDING: { 
+      label: "Chờ xác nhận", 
+      color: "hsl(38 92% 50%)", 
+      bgColor: "hsl(38 92% 50% / 0.1)", 
+      icon: Package,
+      message: "Đơn hàng của bạn đang chờ xác nhận. Chúng tôi sẽ xử lý trong thời gian sớm nhất!"
+    },
+    CONFIRMED: { 
+      label: "Đã xác nhận", 
+      color: "hsl(199 89% 48%)", 
+      bgColor: "hsl(199 89% 48% / 0.1)", 
+      icon: CheckCircle2,
+      message: "Đơn hàng đã được xác nhận. Chúng tôi đang chuẩn bị hàng để giao cho bạn!"
+    },
+    SHIPPING: { 
+      label: "Đang giao", 
+      color: "hsl(217.2 91.2% 55%)", 
+      bgColor: "hsl(217.2 91.2% 55% / 0.1)", 
+      icon: Truck,
+      message: "Đơn hàng đang trên đường giao đến bạn. Vui lòng chú ý điện thoại!"
+    },
+    DELIVERED: { 
+      label: "Đã giao", 
+      color: "hsl(142 76% 36%)", 
+      bgColor: "hsl(142 76% 36% / 0.1)", 
+      icon: CheckCircle2,
+      message: "Đơn hàng đã được giao thành công. Cảm ơn bạn đã mua sắm!"
+    },
+    CANCELLED: { 
+      label: "Đã hủy", 
+      color: "hsl(0 84.2% 60.2%)", 
+      bgColor: "hsl(0 84.2% 60.2% / 0.1)", 
+      icon: Package,
+      message: "Đơn hàng đã bị hủy. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi."
+    },
   }
 
   const currentStatus = statusConfig[order.status] || statusConfig.PENDING
@@ -60,7 +143,7 @@ export default function OrderDetailPage() {
     <PageLayout
       title={`Đơn hàng #${order.id}`}
       breadcrumbs={[
-        { label: "Đơn hàng", href: "/account/orders" },
+        { label: "Đơn hàng", href: "/orders" },
         { label: `#${order.id}` },
       ]}
     >
@@ -81,7 +164,7 @@ export default function OrderDetailPage() {
               {currentStatus.label}
             </div>
             <div className="text-sm text-muted-foreground">
-              Đơn hàng của bạn đã được đặt thành công. Cảm ơn bạn đã mua sắm!
+              {currentStatus.message}
             </div>
           </div>
           <Button variant="outline" onClick={() => navigate("/products")}>
@@ -95,26 +178,26 @@ export default function OrderDetailPage() {
             <div className="card p-6">
               <h2 className="text-lg font-semibold mb-4">Sản phẩm đã đặt</h2>
               <div className="space-y-4">
-                {itemsWithDetails.map((item) => (
-                  <div key={item.sku_variant} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                    <Link to={`/products/${item.product?.id}`} className="flex-shrink-0">
+                {order.orderVariants?.map((item, index) => (
+                  <div key={index} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                    <Link to={`/products/${item?.productId}`} className="flex-shrink-0">
                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-surface">
                         <img
-                          src={item.variant?.images || "/placeholder.svg"}
-                          alt={item.product?.name}
+                          src={item?.images || "/placeholder.svg"}
+                          alt={item?.productName || "Sản phẩm"}
                           className="w-full h-full object-cover"
                         />
                       </div>
                     </Link>
                     <div className="flex-1 min-w-0">
                       <Link
-                        to={`/products/${item.product?.id}`}
+                        to={`/products/${item?.productId}`}
                         className="font-medium text-foreground hover:text-primary line-clamp-1"
                       >
-                        {item.product?.name || "Sản phẩm"}
+                        {item?.productName || "Sản phẩm"}
                       </Link>
                       <div className="text-sm text-muted-foreground mt-1">
-                        {item.size?.name} / {item.color?.name}
+                        {item?.sizeName} / {item?.colorName}
                       </div>
                       <div className="text-sm text-muted-foreground">Số lượng: {item.quantity}</div>
                     </div>
@@ -132,27 +215,22 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Shipping Address */}
-            {billing && (
-              <div className="card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-semibold">Địa chỉ giao hàng</h2>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="font-medium text-foreground">{billing.full_name}</div>
-                  <div className="text-muted-foreground">{billing.phone}</div>
-                  {billing.email && <div className="text-muted-foreground">{billing.email}</div>}
-                  <div className="text-muted-foreground">
-                    {billing.address}, {billing.ward}, {billing.district}, {billing.province}
-                  </div>
-                  {billing.note && (
-                    <div className="text-muted-foreground pt-2 border-t border-border">
-                      <span className="font-medium">Ghi chú:</span> {billing.note}
-                    </div>
-                  )}
-                </div>
+            <div className="card p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold">Địa chỉ giao hàng</h2>
               </div>
-            )}
+              <div className="space-y-2 text-sm">
+                <div className="font-medium text-foreground">{order.recipientName}</div>
+                <div className="text-muted-foreground">{order.recipientPhone}</div>
+                <div className="text-muted-foreground">{parsedAddress || order.shippingAddress}</div>
+                {order.note && (
+                  <div className="text-muted-foreground pt-2 border-t border-border">
+                    <span className="font-medium">Ghi chú:</span> {order.note}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Order Summary */}
@@ -163,24 +241,30 @@ export default function OrderDetailPage() {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-4 h-4" />
-                  <span>Ngày đặt: {new Date(order.created_at).toLocaleDateString("vi-VN")}</span>
+                  <span>Ngày đặt: {new Date(order.createdAt).toLocaleDateString("vi-VN")}</span>
                 </div>
-                {paymentMethod && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <CreditCard className="w-4 h-4" />
-                    <span>{paymentMethod.name}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CreditCard className="w-4 h-4" />
+                  <span>
+                    {order.paymentMethod === "VNPay" 
+                      ? "Thanh toán qua VNPay" 
+                      : "Thanh toán khi nhận hàng (COD)"}
+                  </span>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-border space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tạm tính</span>
-                  <Price value={order.total} />
+                  <Price value={order.total - order.shippingFee} />
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Phí vận chuyển</span>
-                  <span className="text-green-600">Miễn phí</span>
+                  {order.shippingFee === 0 ? (
+                    <span className="text-green-600">Miễn phí</span>
+                  ) : (
+                    <Price value={order.shippingFee} />
+                  )}
                 </div>
               </div>
 
@@ -192,9 +276,23 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={() => navigate("/orders")}>
-              Xem tất cả đơn hàng
-            </Button>
+            <div className="space-y-2">
+              {/* Show cancel button only if order is PENDING or CONFIRMED */}
+              {(order.status === "PENDING" || order.status === "CONFIRMED") && (
+                <Button 
+                  variant="destructive" 
+                  className="w-full" 
+                  onClick={handleCancelOrder}
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? "Đang hủy..." : "Hủy đơn hàng"}
+                </Button>
+              )}
+              
+              <Button variant="outline" className="w-full" onClick={() => navigate("/orders")}>
+                Xem tất cả đơn hàng
+              </Button>
+            </div>
           </div>
         </div>
       </div>

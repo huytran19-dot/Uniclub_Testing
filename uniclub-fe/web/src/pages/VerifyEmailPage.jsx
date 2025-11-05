@@ -9,7 +9,11 @@ export default function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email || '';
+  // ✅ Get email from navigation state or localStorage
+  const email = location.state?.email || localStorage.getItem('verification_email') || '';
+  
+  // ✅ Detect if user came from login (has verification_email in localStorage)
+  const fromLogin = !!localStorage.getItem('verification_email');
 
   useEffect(() => {
     if (!email) {
@@ -60,6 +64,8 @@ export default function VerifyEmailPage() {
 
       if (response.ok) {
         setSuccess(data);
+        // ✅ Clear verification email from localStorage
+        localStorage.removeItem('verification_email');
         setTimeout(() => navigate('/login'), 2000);
       } else {
         setError(data || 'Verification failed');
@@ -150,7 +156,7 @@ export default function VerifyEmailPage() {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => navigate('/register')}
+              onClick={() => navigate(fromLogin ? '/login' : '/register')}
               className="flex-1 py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Quay lại

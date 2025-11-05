@@ -34,8 +34,8 @@ public class GrnDetail {
     @JoinColumn(name = "id_grn", nullable = false)
     private GrnHeader grnHeader;
 
-    // Quan hệ N-1 với Variant
+    // Quan hệ N-1 với Variant - Fixed column name to match database schema
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_variant", referencedColumnName = "sku", nullable = false)
+    @JoinColumn(name = "id_sku", referencedColumnName = "sku", nullable = false)
     private Variant variant;
 }

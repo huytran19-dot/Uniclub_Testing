@@ -25,6 +25,12 @@ export function CartLineItem({ item, onUpdateQty, onRemove }) {
             <div className="text-sm text-muted-foreground mt-1">
               {sizeName} / {colorName}
             </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Còn lại: <span className={maxQuantity <= 5 ? 'text-amber-600 font-medium' : 'text-green-600'}>{maxQuantity}</span> sản phẩm
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Đơn giá: <Price value={unitPrice} />
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={() => onRemove(sku_variant)} className="flex-shrink-0">
             <Trash2 className="w-4 h-4" />
@@ -50,15 +56,19 @@ export function CartLineItem({ item, onUpdateQty, onRemove }) {
               onClick={() => onUpdateQty(sku_variant, quantity + 1)}
               disabled={quantity >= maxQuantity}
               className="h-9 w-9 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground"
+              title={quantity >= maxQuantity ? `Tồn kho chỉ còn ${maxQuantity}` : 'Tăng số lượng'}
             >
               <Plus className="w-4 h-4" />
             </Button>
             {quantity >= maxQuantity && (
-              <span className="text-xs text-warning ml-2">Tối đa</span>
+              <span className="text-xs text-amber-600 ml-2 font-medium">Đã đạt tối đa</span>
             )}
           </div>
-          <div className="font-semibold text-foreground">
-            <Price value={unitPrice * quantity} />
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground mb-1">Thành tiền</div>
+            <div className="font-semibold text-foreground">
+              <Price value={unitPrice * quantity} />
+            </div>
           </div>
         </div>
       </div>

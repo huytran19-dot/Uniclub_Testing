@@ -17,7 +17,7 @@ spring:
 
 # cấu hình email
 sendgrid:
-  api-key: ${SENDGRID_API_KEY:your-api-key-here}
+  api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key-here}
 app:
   mail:
     from: "no-reply@mail.tranhuy.dev"      # Phải là email hợp lệ (có @)

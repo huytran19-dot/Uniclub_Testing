@@ -1,5 +1,10 @@
 package com.uniclub.service.impl;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.uniclub.dto.request.Cart.CreateCartRequest;
 import com.uniclub.dto.request.Cart.UpdateCartRequest;
 import com.uniclub.dto.response.Cart.CartResponse;
@@ -9,11 +14,8 @@ import com.uniclub.exception.ResourceNotFoundException;
 import com.uniclub.repository.CartRepository;
 import com.uniclub.repository.UserRepository;
 import com.uniclub.service.CartService;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import jakarta.transaction.Transactional;
 
 @Service
 @Transactional
@@ -63,23 +65,29 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<CartResponse> getAllCarts() {
-        return cartRepository.findAll()
-                .stream()
+        // ✅ Dùng query với JOIN FETCH
+        List<Cart> carts = cartRepository.findAllWithUsers();
+        
+        return carts.stream()
                 .map(CartResponse::fromEntity)
                 .toList();
     }
 
     @Override
     public CartResponse getCartById(Integer cartId) {
-        Cart cart = cartRepository.findById(cartId)
+        // ✅ Dùng findByIdWithUser để eager load User
+        Cart cart = cartRepository.findByIdWithUser(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart", "id", cartId));
+        
         return CartResponse.fromEntity(cart);
     }
 
     @Override
     public CartResponse getCartByUserId(Integer userId) {
+        // ✅ findByUserId đã có JOIN FETCH rồi
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart", "userId", userId));
+        
         return CartResponse.fromEntity(cart);
     }
 
@@ -90,5 +98,14 @@ public class CartServiceImpl implements CartService {
             throw new ResourceNotFoundException("Cart", "id", cartId);
         }
         cartRepository.deleteById(cartId);
+    }
+    
+    // Clear all cart items for a user
+    @Override
+    public void clearCartByUserId(Integer userId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "userId", userId));
+        cart.getCartItems().clear();
+        cartRepository.save(cart);
     }
 }

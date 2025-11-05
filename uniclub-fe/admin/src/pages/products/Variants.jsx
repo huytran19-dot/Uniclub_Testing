@@ -7,7 +7,7 @@ import Card from "../../components/Card"
 import Badge from "../../components/Badge"
 import Breadcrumb from "../../components/Breadcrumb"
 import { api } from "../../lib/api"
-import { formatDate, formatMoney } from "../../lib/utils"
+import { formatDateTime, formatMoney } from "../../lib/utils"
 
 export default function ProductVariants() {
   const navigate = useNavigate()
@@ -56,7 +56,7 @@ export default function ProductVariants() {
         price: v.price,
         stock: v.quantity || 0,
         status: v.status === 1 ? "active" : "inactive",
-        updated_at: v.created_at,
+        updatedAt: v.createdAt,
       }))
       
       setVariants(enrichedVariants)
@@ -160,7 +160,7 @@ export default function ProductVariants() {
                           label={variant.status === "active" ? "Hoạt động" : "Ngừng"}
                         />
                       </td>
-                      <td className="px-4 py-3">{formatDate(variant.updated_at)}</td>
+                      <td className="px-4 py-3">{formatDateTime(variant.updatedAt)}</td>
                     </tr>
                   ))
                 )}

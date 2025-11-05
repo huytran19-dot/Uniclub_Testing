@@ -55,6 +55,23 @@ export default function LoginPage() {
         
         // Redirect to home
         navigate("/")
+      } else if (response.status === 403) {
+        // ✅ Unverified account - redirect to verification page
+        try {
+          const data = await response.json()
+          if (data.needsVerification) {
+            // Store email for verification page
+            localStorage.setItem("verification_email", data.email)
+            alert(data.message)
+            // Redirect to verification page
+            navigate("/verify-email")
+          } else {
+            setError(data.message || "Tài khoản chưa được xác thực")
+          }
+        } catch {
+          const errorText = await response.text()
+          setError(errorText || "Tài khoản chưa được xác thực")
+        }
       } else {
         const errorText = await response.text()
         setError(errorText || "Email hoặc mật khẩu không đúng")

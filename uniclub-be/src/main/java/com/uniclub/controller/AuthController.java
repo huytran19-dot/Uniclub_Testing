@@ -1,18 +1,26 @@
 package com.uniclub.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.uniclub.dto.request.Auth.LoginRequest;
 import com.uniclub.dto.request.User.RegisterRequest;
 import com.uniclub.dto.request.User.VerifyCodeRequest;
 import com.uniclub.dto.response.Auth.LoginResponse;
 import com.uniclub.dto.response.User.UserResponse;
+import com.uniclub.exception.UnverifiedAccountException;
 import com.uniclub.service.AuthService;
 import com.uniclub.service.UserService;
 import com.uniclub.service.VerificationService;
+
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,6 +36,15 @@ public class AuthController {
 
     @Autowired
     private VerificationService verificationService;
+
+    // ✅ Temporary endpoint to generate BCrypt hash for testing
+    @PostMapping("/generate-hash")
+    public ResponseEntity<String> generateHash(@RequestParam String password) {
+        org.springframework.security.crypto.password.PasswordEncoder encoder = 
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String hash = encoder.encode(password);
+        return ResponseEntity.ok(hash);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
@@ -64,12 +81,43 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             LoginResponse response = authService.login(loginRequest);
             return ResponseEntity.ok(response);
+        } catch (UnverifiedAccountException e) {
+            // ✅ User chưa verify → Gửi lại mã xác thực
+            try {
+                userService.resendVerificationCode(e.getEmail());
+                // Return 403 with special message indicating verification needed
+                return ResponseEntity.status(403).body(new UnverifiedAccountResponse(
+                    e.getEmail(),
+                    e.getMessage(),
+                    true  // needsVerification flag
+                ));
+            } catch (Exception resendError) {
+                return ResponseEntity.status(403).body(new UnverifiedAccountResponse(
+                    e.getEmail(),
+                    "Tài khoản chưa xác thực. Không thể gửi mã xác thực: " + resendError.getMessage(),
+                    true
+                ));
+            }
         } catch (RuntimeException e) {
-            throw new RuntimeException(e.getMessage());
+            // Return 400 with error message for other errors
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    // ✅ Response DTO for unverified account
+    private static class UnverifiedAccountResponse {
+        public String email;
+        public String message;
+        public boolean needsVerification;
+        
+        public UnverifiedAccountResponse(String email, String message, boolean needsVerification) {
+            this.email = email;
+            this.message = message;
+            this.needsVerification = needsVerification;
         }
     }
 }

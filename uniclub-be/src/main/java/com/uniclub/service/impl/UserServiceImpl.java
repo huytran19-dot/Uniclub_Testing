@@ -1,25 +1,25 @@
 package com.uniclub.service.impl;
 
-import com.uniclub.dto.request.User.CreateUserRequest;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.uniclub.dto.request.Auth.LoginRequest;
+import com.uniclub.dto.request.User.CreateUserRequest;
 import com.uniclub.dto.request.User.RegisterRequest;
 import com.uniclub.dto.request.User.UpdateUserRequest;
 import com.uniclub.dto.request.User.VerifyCodeRequest;
 import com.uniclub.dto.response.Auth.LoginResponse;
 import com.uniclub.dto.response.User.UserResponse;
-import com.uniclub.entity.User;
 import com.uniclub.entity.Role;
+import com.uniclub.entity.User;
 import com.uniclub.exception.ResourceNotFoundException;
-import com.uniclub.repository.UserRepository;
 import com.uniclub.repository.RoleRepository;
+import com.uniclub.repository.UserRepository;
 import com.uniclub.service.UserService;
 import com.uniclub.service.VerificationService;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -35,18 +35,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private VerificationService verificationService;
-
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(UserResponse::fromEntity)
-                .toList();
-    }
-
-    public UserResponse getUserById(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        return UserResponse.fromEntity(user);
-    }
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
@@ -75,16 +63,50 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        // Check if email already exists (excluding current user)
-        if (!user.getEmail().equals(request.getEmail()) && 
-            userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email đã tồn tại");
+        // Email should not be changed as it's used for login
+        // Only update email if explicitly requested and email is different
+        if (request.getEmail() != null && !user.getEmail().equals(request.getEmail())) {
+            // Check if new email already exists
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new IllegalArgumentException("Email đã tồn tại");
+            }
+            // Only admin can change email
+            // For now, we prevent email changes entirely for security
+            throw new IllegalArgumentException("Email không thể thay đổi vì được sử dụng để đăng nhập");
         }
 
         // Update fields
-        user.setEmail(request.getEmail());
         user.setFullname(request.getFullname());
-        user.setStatus(request.getStatus());
+        
+        // Update address fields if provided (not null and not empty)
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getProvinceCode() != null && !request.getProvinceCode().trim().isEmpty()) {
+            user.setProvinceCode(request.getProvinceCode());
+        }
+        if (request.getProvinceName() != null && !request.getProvinceName().trim().isEmpty()) {
+            user.setProvinceName(request.getProvinceName());
+        }
+        if (request.getDistrictCode() != null && !request.getDistrictCode().trim().isEmpty()) {
+            user.setDistrictCode(request.getDistrictCode());
+        }
+        if (request.getDistrictName() != null && !request.getDistrictName().trim().isEmpty()) {
+            user.setDistrictName(request.getDistrictName());
+        }
+        if (request.getWardCode() != null && !request.getWardCode().trim().isEmpty()) {
+            user.setWardCode(request.getWardCode());
+        }
+        if (request.getWardName() != null && !request.getWardName().trim().isEmpty()) {
+            user.setWardName(request.getWardName());
+        }
+        
+        if (request.getStatus() != null) {
+            user.setStatus(request.getStatus());
+        }
 
         // Update password only if provided
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {

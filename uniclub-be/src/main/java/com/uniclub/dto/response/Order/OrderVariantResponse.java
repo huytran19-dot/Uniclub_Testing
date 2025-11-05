@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class OrderVariantResponse {
     private Integer variantSku;
+    private Integer productId;
     private String productName;
     private String sizeName;
     private String colorName;
@@ -19,8 +20,10 @@ public class OrderVariantResponse {
 
         OrderVariantResponse res = new OrderVariantResponse();
         res.setVariantSku(variant.getSku());
-        // Lấy tên product
+        
+        // Lấy ID và tên product
         if (variant.getProduct() != null) {
+            res.setProductId(variant.getProduct().getId());
             res.setProductName(variant.getProduct().getName());
         }
 

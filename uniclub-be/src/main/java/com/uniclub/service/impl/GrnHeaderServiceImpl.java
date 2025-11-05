@@ -1,24 +1,27 @@
 package com.uniclub.service.impl;
 
-import com.uniclub.dto.request.GrnHeader.CreateGrnHeaderRequest;
-import com.uniclub.dto.request.GrnHeader.UpdateGrnHeaderRequest;
-import com.uniclub.dto.response.GrnHeader.GrnHeaderResponse;
-import com.uniclub.entity.GrnHeader;
-import com.uniclub.entity.GrnDetail;
-import com.uniclub.entity.Variant;
-import com.uniclub.entity.Supplier;
-import com.uniclub.entity.enums.GrnStatus;
-import com.uniclub.exception.ResourceNotFoundException;
-import com.uniclub.repository.GrnHeaderRepository;
-import com.uniclub.repository.GrnDetailRepository;
-import com.uniclub.repository.VariantRepository;
-import com.uniclub.repository.SupplierRepository;
-import com.uniclub.service.GrnHeaderService;
-import jakarta.transaction.Transactional;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.uniclub.dto.request.GrnHeader.CreateGrnHeaderRequest;
+import com.uniclub.dto.request.GrnHeader.UpdateGrnHeaderRequest;
+import com.uniclub.dto.response.GrnHeader.GrnHeaderResponse;
+import com.uniclub.entity.GrnDetail;
+import com.uniclub.entity.GrnHeader;
+import com.uniclub.entity.Supplier;
+import com.uniclub.entity.Variant;
+import com.uniclub.entity.enums.GrnStatus;
+import com.uniclub.exception.ResourceNotFoundException;
+import com.uniclub.repository.GrnDetailRepository;
+import com.uniclub.repository.GrnHeaderRepository;
+import com.uniclub.repository.SupplierRepository;
+import com.uniclub.repository.VariantRepository;
+import com.uniclub.service.GrnHeaderService;
+
+import jakarta.transaction.Transactional;
 
 @Service
 @Transactional
@@ -44,7 +47,8 @@ public class GrnHeaderServiceImpl implements GrnHeaderService {
         GrnHeader grnHeader = new GrnHeader();
         grnHeader.setSupplier(supplier);
         grnHeader.setNote(request.getNote());
-        grnHeader.setReceivedDate(request.getReceivedDate());
+        // Use provided date or default to current date
+        grnHeader.setReceivedDate(request.getReceivedDate() != null ? request.getReceivedDate() : LocalDate.now());
         grnHeader.setTotalCost(0); // Will be calculated when details are added
 
         GrnHeader savedGrnHeader = grnHeaderRepository.save(grnHeader);
