@@ -1,18 +1,17 @@
 @echo off
 echo ========================================
-echo STARTING REACT FRONTENDS
+echo STARTING CUSTOMER FRONTEND (WEB)
 echo ========================================
 echo.
 
-cd uniclub-fe
+cd uniclub-fe\web
 
 echo Installing dependencies...
 call pnpm install
 
 echo.
-echo Starting React development servers...
-echo - Customer Frontend: http://localhost:5173
-echo - Admin Frontend: http://localhost:5174
+echo Starting Customer development server...
+echo Customer Frontend: http://localhost:5173
 echo.
 
 call pnpm dev

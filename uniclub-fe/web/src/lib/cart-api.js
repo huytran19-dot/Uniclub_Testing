@@ -26,18 +26,34 @@ export const getCartItems = async (cartId) => {
   return response.data;
 };
 
-// Add item to cart
+// Add item to cart (hoặc tăng số lượng nếu đã tồn tại)
 export const addToCart = async (cartId, variantSku, quantity, unitPrice) => {
-  const response = await axios.post(
-    `${API_URL}/cart-items`,
-    {
-      cartId,
-      variantSku,
-      quantity,
-      unitPrice
+  try {
+    // Kiểm tra xem variant đã có trong giỏ chưa
+    const cartItems = await getCartItems(cartId);
+    const existingItem = cartItems.find(item => item.variantSku === variantSku);
+    
+    if (existingItem) {
+      // ✅ Đã có trong giỏ → Tăng số lượng
+      const newQuantity = existingItem.quantity + quantity;
+      return await updateCartItem(existingItem.id, newQuantity);
+    } else {
+      // ✅ Chưa có → Thêm mới
+      const response = await axios.post(
+        `${API_URL}/cart-items`,
+        {
+          cartId,
+          variantSku,
+          quantity,
+          unitPrice
+        }
+      );
+      return response.data;
     }
-  );
-  return response.data;
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    throw error;
+  }
 };
 
 // Update cart item quantity

@@ -35,6 +35,31 @@ public class User {
     @Column(name = "full_name", length = 255)
     private String fullname;
 
+    // Default address fields
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 255)
+    private String address;
+
+    @Column(name = "province_code", length = 10)
+    private String provinceCode;
+
+    @Column(name = "province_name", length = 100)
+    private String provinceName;
+
+    @Column(name = "district_code", length = 10)
+    private String districtCode;
+
+    @Column(name = "district_name", length = 100)
+    private String districtName;
+
+    @Column(name = "ward_code", length = 10)
+    private String wardCode;
+
+    @Column(name = "ward_name", length = 100)
+    private String wardName;
+
     // Quan hệ N-1 với Role
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_role", foreignKey = @ForeignKey(name = "FK_user_role"))

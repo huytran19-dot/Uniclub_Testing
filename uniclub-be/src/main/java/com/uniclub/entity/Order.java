@@ -3,9 +3,13 @@ package com.uniclub.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.uniclub.entity.enums.OrderStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
@@ -32,8 +36,21 @@ public class Order {
     @Column(nullable = true)
     private Integer total;
 
+    @Column(name = "shipping_fee", nullable = false)
+    private Integer shippingFee = 0;
+
     @Column(length = 255)
     private String note;
+
+    // Shipping information
+    @Column(name = "recipient_name", nullable = false, length = 100)
+    private String recipientName;
+
+    @Column(name = "recipient_phone", nullable = false, length = 20)
+    private String recipientPhone;
+
+    @Column(name = "shipping_address", nullable = false, length = 500)
+    private String shippingAddress;
 
     // Quan hệ N-1 với User
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,8 +63,9 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderVariant> orderVariants;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false)
-    private String status = "PENDING"; // PENDING, PAID, CANCELLED, SHIPPED
+    private OrderStatus status = OrderStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

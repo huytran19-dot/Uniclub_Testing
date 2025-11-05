@@ -4,7 +4,7 @@ import { PageLayout } from "../components/PageLayout"
 import { Button } from "@/components/ui/button"
 import { VariantSelector } from "@/components/VariantSelector"
 import { Price } from "@/components/Price"
-import { getUserCart, addToCart as addToCartAPI } from "@/lib/cart-api"
+import { getUserCart, addToCart as addToCartAPI, getFullCart } from "@/lib/cart-api"
 import { ProductReviews } from "@/components/product/ProductReviews"
 import { Star, Loader2 } from "lucide-react"
 
@@ -87,23 +87,25 @@ export default function ProductDetailPage() {
     fetchProductData()
   }, [productId])
 
-  useEffect(() => {
-    // Prefill first available combination
-    if (productVariants.length > 0) {
-      const available = productVariants.find((v) => v.quantity > 0) || productVariants[0]
-      setSelectedSizeId(available.sizeId)
-      setSelectedColorId(available.colorId)
-    }
-  }, [productVariants])
+  // ✅ KHÔNG tự động chọn - để user tự chọn
+  // useEffect(() => {
+  //   if (productVariants.length > 0) {
+  //     const available = productVariants.find((v) => v.quantity > 0) || productVariants[0]
+  //     setSelectedSizeId(available.sizeId)
+  //     setSelectedColorId(available.colorId)
+  //   }
+  // }, [productVariants])
 
   const disabledPairs = useMemo(() => productVariants.filter((v) => v.quantity === 0), [productVariants])
 
+  // Find the exact variant matching selected size and color
   const selectedVariant = useMemo(
-    () =>
-      productVariants.find((v) => v.sizeId === selectedSizeId && v.colorId === selectedColorId) ||
-      productVariants.find((v) => v.sizeId === selectedSizeId) ||
-      productVariants.find((v) => v.colorId === selectedColorId) ||
-      productVariants[0],
+    () => {
+      // Only return variant if BOTH size and color are selected and match
+      if (!selectedSizeId || !selectedColorId) return null
+      
+      return productVariants.find((v) => v.sizeId === selectedSizeId && v.colorId === selectedColorId) || null
+    },
     [productVariants, selectedSizeId, selectedColorId],
   )
 
@@ -117,6 +119,16 @@ export default function ProductDetailPage() {
     const colorIds = [...new Set(productVariants.map(v => v.colorId))]
     return colors.filter(c => colorIds.includes(c.id) && c.status === 1)
   }, [productVariants, colors])
+
+  // Get display image (fallback to first variant if no selection)
+  const displayImage = useMemo(() => {
+    if (selectedVariant?.images) {
+      return selectedVariant.images
+    }
+    // Fallback to first variant with image
+    const firstWithImage = productVariants.find(v => v.images)
+    return firstWithImage?.images || "/placeholder.svg"
+  }, [selectedVariant, productVariants])
 
   // Helper functions
   const getMinPrice = (variants, basePrice) => {
@@ -173,13 +185,27 @@ export default function ProductDetailPage() {
   const oos = isOutOfStock(productVariants)
 
   const onSelectVariant = ({ sizeId, colorId }) => {
-    if (sizeId != null) setSelectedSizeId(sizeId)
-    if (colorId != null) setSelectedColorId(colorId)
+    // ✅ Logic mới: Đơn giản chỉ set giá trị, không tự động chọn gì cả
+    if (sizeId !== undefined) {
+      setSelectedSizeId(sizeId)
+    }
+    
+    if (colorId !== undefined) {
+      setSelectedColorId(colorId)
+    }
   }
 
   const handleAddToCart = async () => {
     const v = selectedVariant
-    if (!v || v.quantity <= 0) return
+    if (!v) {
+      alert("Vui lòng chọn kích thước và màu sắc")
+      return
+    }
+    
+    if (v.quantity <= 0) {
+      alert("Sản phẩm này hiện đã hết hàng. Vui lòng chọn tùy chọn khác.")
+      return
+    }
 
     // Check if user is logged in
     const userStr = localStorage.getItem('uniclub_user')
@@ -196,7 +222,21 @@ export default function ProductDetailPage() {
       // Get or create cart
       const cart = await getUserCart(user.id)
       
-      // Add item to cart with quantity = 1
+      // ✅ Kiểm tra xem variant này đã có trong giỏ chưa và số lượng hiện tại
+      const { items } = await getFullCart(user.id)
+      const existingItem = items.find(item => item.sku_variant === v.sku)
+      
+      if (existingItem) {
+        // Kiểm tra nếu thêm 1 sản phẩm nữa có vượt tồn kho không
+        const newQuantity = existingItem.quantity + 1
+        if (newQuantity > v.quantity) {
+          alert(`Không thể thêm! Bạn đã có ${existingItem.quantity} sản phẩm trong giỏ. Tồn kho chỉ còn ${v.quantity}.`)
+          setAddingToCart(false)
+          return
+        }
+      }
+      
+      // Add item to cart with quantity = 1 (API sẽ tự động tăng nếu đã có)
       await addToCartAPI(cart.id, v.sku, 1, v.price || product.price)
       
       alert(`Đã thêm ${product.name} vào giỏ hàng`)
@@ -224,7 +264,7 @@ export default function ProductDetailPage() {
         <div>
           <div className="card overflow-hidden">
             <div className="aspect-square bg-surface">
-              <img src={selectedVariant?.images || "/placeholder.svg"} alt={product.name} className="w-full h-full object-cover" />
+              <img src={displayImage} alt={product.name} className="w-full h-full object-cover" />
             </div>
           </div>
           <div className="mt-3 grid grid-cols-4 gap-3">
@@ -232,11 +272,10 @@ export default function ProductDetailPage() {
               <button
                 key={v.sku}
                 onClick={() => {
-                  setSelectedSizeId(v.sizeId)
-                  setSelectedColorId(v.colorId)
+                  onSelectVariant({ sizeId: v.sizeId, colorId: v.colorId })
                 }}
-                className={`card overflow-hidden ${
-                  v.sizeId === selectedSizeId && v.colorId === selectedColorId ? "ring-2 ring-ring" : ""
+                className={`card overflow-hidden transition-all ${
+                  selectedVariant?.sku === v.sku ? "ring-2 ring-primary ring-offset-2" : "hover:ring-1 hover:ring-gray-300"
                 }`}
               >
                 <div className="aspect-square bg-surface">
@@ -265,26 +304,73 @@ export default function ProductDetailPage() {
             {selectedVariant?.price ? <Price value={selectedVariant.price} /> : <Price value={minPrice} />}
           </div>
 
+          {/* Stock Information - Chỉ hiện khi đã chọn CẢ size VÀ màu */}
+          {selectedVariant && selectedSizeId && selectedColorId && (
+            <div className={`flex items-center gap-2 p-3 rounded-lg ${
+              selectedVariant.quantity > 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+            }`}>
+              <div className="text-sm">
+                <span className="text-muted-foreground">Tồn kho: </span>
+                <span className={`font-semibold ${selectedVariant.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {selectedVariant.quantity > 0 
+                    ? `${selectedVariant.quantity} sản phẩm` 
+                    : 'Hết hàng'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Message khi chưa chọn đủ */}
+          {(!selectedSizeId || !selectedColorId) && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-sm text-blue-600">
+                ℹ️ {!selectedSizeId ? 'Vui lòng chọn kích thước' : 'Vui lòng chọn màu sắc'}
+              </div>
+            </div>
+          )}
+
           <VariantSelector
             sizes={availableSizes}
             colors={availableColors}
             selectedSizeId={selectedSizeId}
             selectedColorId={selectedColorId}
             disabledPairs={disabledPairs}
+            allVariants={productVariants}
             onSelect={onSelectVariant}
           />
 
           <div className="flex gap-3">
             <Button 
               onClick={handleAddToCart} 
-              disabled={!selectedVariant || selectedVariant.quantity <= 0 || addingToCart}
+              disabled={!selectedSizeId || !selectedColorId || !selectedVariant || selectedVariant.quantity <= 0 || addingToCart}
+              className="flex-1"
             >
-              {addingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
+              {addingToCart ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang thêm...
+                </>
+              ) : (!selectedSizeId || !selectedColorId) ? (
+                "Chọn size và màu"
+              ) : selectedVariant?.quantity <= 0 ? (
+                "Hết hàng"
+              ) : (
+                "Thêm vào giỏ"
+              )}
             </Button>
             <Button variant="outline" aschild="true">
               <Link to="/cart">Xem giỏ hàng</Link>
             </Button>
           </div>
+
+          {/* Warning message when out of stock */}
+          {selectedVariant && selectedVariant.quantity <= 0 && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">
+                ⚠️ Sản phẩm với kích thước và màu sắc này hiện đã hết hàng. Vui lòng chọn tùy chọn khác.
+              </p>
+            </div>
+          )}
 
           <div className="pt-4 border-t border-border">
             <div className="text-foreground font-medium mb-2">Mô tả</div>

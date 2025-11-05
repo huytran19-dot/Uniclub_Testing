@@ -108,6 +108,18 @@ export default function OrderDetail() {
                 <span className="text-neutral-600">Khách hàng:</span>
                 <span className="font-medium">ID: {order.user.id}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-600">Người nhận:</span>
+                <span className="font-medium">{order.recipientName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-600">SĐT:</span>
+                <span className="font-medium">{order.recipientPhone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-600">Địa chỉ:</span>
+                <span className="font-medium text-right ml-4">{order.shippingAddress}</span>
+              </div>
               <div className="flex justify-between items-center">
                 <span className="text-neutral-600">Trạng thái:</span>
                 <div className="flex items-center gap-2">
@@ -163,10 +175,10 @@ export default function OrderDetail() {
                 <tbody>
                   {items.map((item, idx) => (
                     <tr key={idx} className="border-b border-neutral-200">
-                      <td className="px-4 py-2">{item.variantSku}</td>
-                      <td className="px-4 py-2">{item.productName}</td>
-                      <td className="px-4 py-2">{item.colorName}</td>
-                      <td className="px-4 py-2">{item.sizeName}</td>
+                      <td className="px-4 py-2">{item.variant?.sku || item.variantSku}</td>
+                      <td className="px-4 py-2">{item.variant?.product?.name || item.productName}</td>
+                      <td className="px-4 py-2">{item.variant?.color?.name || item.colorName}</td>
+                      <td className="px-4 py-2">{item.variant?.size?.name || item.sizeName}</td>
                       <td className="px-4 py-2 text-right">{formatMoney(item.price)}</td>
                       <td className="px-4 py-2 text-right">{item.quantity}</td>
                       <td className="px-4 py-2 text-right font-medium">{formatMoney(item.price * item.quantity)}</td>

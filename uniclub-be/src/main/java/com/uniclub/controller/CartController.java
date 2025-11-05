@@ -1,17 +1,27 @@
 package com.uniclub.controller;
 
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.uniclub.dto.request.Cart.CreateCartRequest;
 import com.uniclub.dto.request.Cart.UpdateCartRequest;
 import com.uniclub.dto.response.Cart.CartResponse;
 import com.uniclub.service.CartService;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/carts")
@@ -61,6 +71,13 @@ public class CartController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         cartService.deleteCart(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    // CLEAR CART BY USER ID
+    @DeleteMapping("/user/{userId}/clear")
+    public ResponseEntity<Void> clearByUserId(@PathVariable Integer userId) {
+        cartService.clearCartByUserId(userId);
         return ResponseEntity.noContent().build();
     }
 }

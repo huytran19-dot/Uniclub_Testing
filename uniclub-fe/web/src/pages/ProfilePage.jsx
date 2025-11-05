@@ -3,9 +3,10 @@ import { PageLayout } from "../components/PageLayout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getCurrentUser } from "@/lib/auth"
-import { User, Mail, Calendar, Shield, Edit2, Save, X, Eye, EyeOff, Lock } from "lucide-react"
+import { User, Mail, Calendar, Shield, Edit2, Save, X, Eye, EyeOff, Lock, MapPin, Phone } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { users } from "@/lib/mock-data"
+import { AddressForm } from "../components/checkout/AddressForm"
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -14,7 +15,14 @@ export default function ProfilePage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [formData, setFormData] = useState({
     full_name: "",
-    email: "",
+    phone: "",
+    address: "",
+    province: "",
+    provinceName: "",
+    district: "",
+    districtName: "",
+    ward: "",
+    wardName: "",
   })
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -38,7 +46,14 @@ export default function ProfilePage() {
     setUser(currentUser)
     setFormData({
       full_name: currentUser.full_name || "",
-      email: currentUser.email || "",
+      phone: currentUser.phone || "",
+      address: currentUser.address || "",
+      province: currentUser.provinceCode || "",
+      provinceName: currentUser.provinceName || "",
+      district: currentUser.districtCode || "",
+      districtName: currentUser.districtName || "",
+      ward: currentUser.wardCode || "",
+      wardName: currentUser.wardName || "",
     })
   }, [navigate])
 
@@ -46,19 +61,84 @@ export default function ProfilePage() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSave = () => {
-    // Update user in localStorage
-    const updatedUser = { ...user, ...formData }
-    localStorage.setItem("uniclub_user", JSON.stringify(updatedUser))
-    setUser(updatedUser)
-    setIsEditing(false)
-    window.dispatchEvent(new Event("auth-updated"))
+  const handleSave = async () => {
+    try {
+      console.log("=== DEBUG: Current formData ===")
+      console.log("province:", formData.province)
+      console.log("provinceName:", formData.provinceName)
+      console.log("district:", formData.district)
+      console.log("districtName:", formData.districtName)
+      console.log("ward:", formData.ward)
+      console.log("wardName:", formData.wardName)
+      
+      // Prepare update data - convert empty strings to null to preserve existing values
+      const updateData = {
+        fullname: formData.full_name || null,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        provinceCode: formData.province || null,
+        provinceName: formData.provinceName || null,
+        districtCode: formData.district || null,
+        districtName: formData.districtName || null,
+        wardCode: formData.ward || null,
+        wardName: formData.wardName || null,
+      }
+
+      console.log("=== Sending update data ===", updateData)
+
+      // Call API to update user
+      const response = await fetch(`http://localhost:8080/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("Update error:", errorText)
+        throw new Error(errorText || "Không thể cập nhật thông tin")
+      }
+
+      const updatedUserData = await response.json()
+      
+      // Update localStorage with new data
+      const updatedUser = {
+        ...user,
+        full_name: updatedUserData.fullname,
+        fullName: updatedUserData.fullname,
+        phone: updatedUserData.phone,
+        address: updatedUserData.address,
+        provinceCode: updatedUserData.provinceCode,
+        provinceName: updatedUserData.provinceName,
+        districtCode: updatedUserData.districtCode,
+        districtName: updatedUserData.districtName,
+        wardCode: updatedUserData.wardCode,
+        wardName: updatedUserData.wardName,
+      }
+      
+      localStorage.setItem("uniclub_user", JSON.stringify(updatedUser))
+      setUser(updatedUser)
+      setIsEditing(false)
+      window.dispatchEvent(new Event("auth-updated"))
+      alert("Cập nhật thông tin thành công!")
+    } catch (error) {
+      alert(error.message || "Có lỗi xảy ra khi cập nhật thông tin")
+    }
   }
 
   const handleCancel = () => {
     setFormData({
       full_name: user.full_name || "",
-      email: user.email || "",
+      phone: user.phone || "",
+      address: user.address || "",
+      province: user.provinceCode || "",
+      provinceName: user.provinceName || "",
+      district: user.districtCode || "",
+      districtName: user.districtName || "",
+      ward: user.wardCode || "",
+      wardName: user.wardName || "",
     })
     setIsEditing(false)
   }
@@ -232,23 +312,65 @@ export default function ProfilePage() {
                   <Mail className="w-4 h-4" />
                   Email
                 </label>
-                {isEditing ? (
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Nhập email"
-                  />
-                ) : (
-                  <div className="text-foreground font-medium">
-                    {user.email || "Chưa cập nhật"}
-                  </div>
+                <div className="text-foreground font-medium">
+                  {user.email || "Chưa cập nhật"}
+                </div>
+                {isEditing && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Email không thể thay đổi vì được dùng để đăng nhập
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Default Address Section */}
+            <div className="mt-8 pt-8 border-t border-border">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-foreground">Thông tin giao hàng</h3>
+                {!isEditing && (user.address || user.phone) && (
+                  <p className="text-sm text-muted-foreground">
+                    Địa chỉ này sẽ được tự động điền khi thanh toán
+                  </p>
                 )}
               </div>
 
+              {isEditing ? (
+                <div className="space-y-6">
+                  {/* Address Form Component (includes phone, address, province/district/ward) */}
+                  <AddressForm formData={formData} onChange={setFormData} hidePersonalInfo={true} />
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Phone Display */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                      <Phone className="w-4 h-4" />
+                      Số điện thoại
+                    </label>
+                    <div className="text-foreground font-medium">
+                      {user.phone || "Chưa cập nhật"}
+                    </div>
+                  </div>
+
+                  {/* Address Display */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                      <MapPin className="w-4 h-4" />
+                      Địa chỉ
+                    </label>
+                    <div className="text-foreground font-medium">
+                      {user.address && user.wardName && user.districtName && user.provinceName
+                        ? `${user.address}, ${user.wardName}, ${user.districtName}, ${user.provinceName}`
+                        : "Chưa cập nhật"}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 pt-8 border-t">
               {/* Role */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
                   <Shield className="w-4 h-4" />
                   Vai trò

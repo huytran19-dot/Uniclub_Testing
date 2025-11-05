@@ -1,24 +1,43 @@
-import React, { useMemo } from "react"
-import { Link } from "react-router-dom"
+import React, { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import { PageLayout } from "../components/PageLayout"
 import { Button } from "@/components/ui/button"
 import { Price } from "@/components/Price"
-import { orders, order_variants, payment_methods } from "@/lib/mock-data"
-import { Package, ChevronRight } from "lucide-react"
+import { Package, ChevronRight, Loader2 } from "lucide-react"
 
 export default function OrdersPage() {
-  const userOrders = useMemo(() => {
-    // In real app, filter by current user ID
-    return orders.map((order) => {
-      const items = order_variants.filter((ov) => ov.id_order === order.id)
-      const payment = payment_methods.find((pm) => pm.id === order.id_payment)
-      return {
-        ...order,
-        itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-        payment,
-      }
-    })
+  const navigate = useNavigate()
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetchOrders()
   }, [])
+
+  const fetchOrders = async () => {
+    try {
+      const userStr = localStorage.getItem('uniclub_user')
+      if (!userStr) {
+        navigate("/login")
+        return
+      }
+
+      const user = JSON.parse(userStr)
+      const response = await fetch(`http://localhost:8080/api/orders/user/${user.id}`)
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách đơn hàng")
+      }
+
+      const data = await response.json()
+      setOrders(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const statusConfig = {
     PENDING: { label: "Chờ xác nhận", color: "hsl(38 92% 50%)", bgColor: "hsl(38 92% 50% / 0.1)" },
@@ -28,7 +47,33 @@ export default function OrdersPage() {
     CANCELLED: { label: "Đã hủy", color: "hsl(0 84.2% 60.2%)", bgColor: "hsl(0 84.2% 60.2% / 0.1)" },
   }
 
-  if (userOrders.length === 0) {
+  if (loading) {
+    return (
+      <PageLayout title="Đơn hàng" breadcrumbs={[{ label: "Đơn hàng" }]}>
+        <div className="section">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <PageLayout title="Đơn hàng" breadcrumbs={[{ label: "Đơn hàng" }]}>
+        <div className="section">
+          <div className="card p-12 text-center">
+            <div className="text-lg font-medium mb-2 text-red-600">Lỗi</div>
+            <div className="text-muted-foreground mb-6">{error}</div>
+            <Button onClick={fetchOrders}>Thử lại</Button>
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  if (orders.length === 0) {
     return (
       <PageLayout title="Đơn hàng" breadcrumbs={[{ label: "Đơn hàng" }]}>
         <div className="section">
@@ -49,10 +94,12 @@ export default function OrdersPage() {
     <PageLayout title="Đơn hàng của tôi" breadcrumbs={[{ label: "Đơn hàng" }]}>
       <div className="section">
         <div className="space-y-4">
-          {userOrders.map((order) => {
+          {orders.map((order) => {
             const status = statusConfig[order.status] || statusConfig.PENDING
+            const itemCount = order.orderVariants?.length || 0
+            const paymentMethodLabel = order.paymentMethod === "VNPay" ? "VNPay" : "COD"
             return (
-              <Link key={order.id} to={`/orders/${order.id}`}>
+              <Link key={order.id} to={`/orders/${order.id}`} className="block">
                 <div className="card p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
@@ -66,14 +113,14 @@ export default function OrdersPage() {
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {new Date(order.created_at).toLocaleDateString("vi-VN", {
+                        {new Date(order.createdAt).toLocaleDateString("vi-VN", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
                         })}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {order.itemCount} sản phẩm • {order.payment?.name}
+                        {itemCount} sản phẩm • {paymentMethodLabel}
                       </div>
                     </div>
                     <div className="text-right space-y-2">

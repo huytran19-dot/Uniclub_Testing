@@ -1,15 +1,17 @@
 package com.uniclub.service;
 
-import com.uniclub.dto.request.Auth.LoginRequest;
-import com.uniclub.dto.response.Auth.LoginResponse;
-import com.uniclub.entity.User;
-import com.uniclub.repository.UserRepository;
-import com.uniclub.config.JwtConfig;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import com.uniclub.config.JwtConfig;
+import com.uniclub.dto.request.Auth.LoginRequest;
+import com.uniclub.dto.response.Auth.LoginResponse;
+import com.uniclub.entity.User;
+import com.uniclub.exception.UnverifiedAccountException;
+import com.uniclub.repository.UserRepository;
 
 /**
  * Authentication Service
@@ -44,7 +46,11 @@ public class AuthService {
         // Check user status
         // 0 = unverified email, 1 = admin, 2 = verified user
         if (user.getStatus() == 0) {
-            throw new RuntimeException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.");
+            // ✅ Throw special exception with email for verification resend
+            throw new UnverifiedAccountException(
+                user.getEmail(),
+                "Tài khoản chưa được xác thực. Mã xác thực mới đã được gửi đến email của bạn."
+            );
         }
         
         // Only admin (1) and verified users (2) can login

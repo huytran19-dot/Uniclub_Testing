@@ -219,8 +219,10 @@ CREATE TABLE `payment` (
   `id_order` int DEFAULT NULL,
   `payment_method` enum('COD','VNPay') COLLATE utf8mb4_unicode_ci NOT NULL,
   `transaction_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vnpay_bank_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vnpay_response_code` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `amount` int DEFAULT NULL,
-  `payment_status` enum('FAILED','PENDING','SUCCESS') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payment_status` enum('FAILED','PENDING','SUCCESS','CANCELLED') COLLATE utf8mb4_unicode_ci NOT NULL,
   `paid_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -358,6 +360,14 @@ CREATE TABLE `user` (
   `email` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `full_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `province_code` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `province_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `district_code` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `district_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ward_code` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ward_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id_role` int DEFAULT NULL,
   `status` tinyint DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -369,8 +379,8 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`id`, `email`, `password`, `full_name`, `id_role`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'admin@uniclub.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', 'System Administrator', 1, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05'),
-(2, 'buyer@uniclub.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', 'Buyer User', 2, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05');
+(1, 'admin@uniclub.com', '$2a$10$uGCf6BtBmivlVSWjgvATS.NyYxA9/m0thuhErzAz7wt6ECezQphkS', 'System Administrator', 1, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05'),
+(2, 'buyer@uniclub.com', '$2a$10$uGCf6BtBmivlVSWjgvATS.NyYxA9/m0thuhErzAz7wt6ECezQphkS', 'Buyer User', 2, 1, '2025-10-23 13:03:05', '2025-10-23 13:03:05');
 
 -- --------------------------------------------------------
 
@@ -414,7 +424,11 @@ INSERT INTO `variant` (`sku`, `id_product`, `id_size`, `id_color`, `images`, `qu
 CREATE TABLE `orders` (
   `id` int NOT NULL,
   `total` int DEFAULT NULL,
+  `shipping_fee` int NOT NULL DEFAULT 0,
   `note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `recipient_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `recipient_phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shipping_address` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_user` int DEFAULT NULL,
   `status` enum('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') COLLATE utf8mb4_unicode_ci DEFAULT 'PENDING',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -463,6 +477,7 @@ ALTER TABLE `brand`
 --
 ALTER TABLE `cart`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `UK_cart_user` (`id_user`),
   ADD KEY `FK_cart_user` (`id_user`);
 
 --

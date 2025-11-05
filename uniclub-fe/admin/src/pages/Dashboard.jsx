@@ -43,7 +43,7 @@ export default function Dashboard() {
 
         // Calculate basic stats
         const lowStockCount = variants.filter((v) => v.quantity < 5).length
-        const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
+        const totalRevenue = orders.filter((o) => o.status === "DELIVERED").reduce((sum, o) => sum + (o.total || 0), 0)
 
         setStats({
           revenue: totalRevenue,
@@ -82,7 +82,7 @@ export default function Dashboard() {
     const revenueByMonth = {}
     
     orders.forEach(order => {
-      if (order.createdAt && order.total) {
+      if (order.createdAt && order.total && order.status === "DELIVERED") {
         const date = new Date(order.createdAt)
         const monthIndex = date.getMonth()
         const monthName = monthNames[monthIndex]
@@ -135,7 +135,7 @@ export default function Dashboard() {
 
     // Extract order variants from orders
     orders.forEach(order => {
-      if (order.orderVariants && Array.isArray(order.orderVariants)) {
+      if (order.orderVariants && Array.isArray(order.orderVariants) && order.status === "DELIVERED") {
         order.orderVariants.forEach(ov => {
           const variantSku = ov.variantSku || ov.variant?.sku
           const quantity = ov.quantity || 0
