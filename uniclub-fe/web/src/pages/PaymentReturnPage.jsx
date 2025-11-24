@@ -121,12 +121,25 @@ export default function PaymentReturnPage() {
                   </p>
                 )}
                 <div className="flex gap-3 justify-center">
-                  <Button onClick={() => navigate("/cart")}>
-                    Quay lại giỏ hàng
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate("/products")}>
-                    Tiếp tục mua sắm
-                  </Button>
+                  {paymentResult?.orderId ? (
+                    <>
+                      <Button onClick={() => navigate(`/orders/${paymentResult.orderId}`)}>
+                        Xem chi tiết đơn hàng
+                      </Button>
+                      <Button variant="outline" onClick={() => navigate("/orders")}>
+                        Danh sách đơn hàng
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button onClick={() => navigate("/cart")}>
+                        Quay lại giỏ hàng
+                      </Button>
+                      <Button variant="outline" onClick={() => navigate("/products")}>
+                        Tiếp tục mua sắm
+                      </Button>
+                    </>
+                  )}
                 </div>
               </>
             )}

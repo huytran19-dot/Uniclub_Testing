@@ -6,16 +6,16 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class VNPayConfig {
     
-    @Value("${vnpay.tmn-code:4EM6TS4E}")
+    @Value("${vnpay.tmn-code:CGEJ0TI4}")
     private String tmnCode;
     
-    @Value("${vnpay.hash-secret:2KB73UFL68FNDX95OAXLL603EUHGSCS8}")
+    @Value("${vnpay.hash-secret:GNUPBN07YMSNSDZPJ1ZLBIKXVNDSOTUI}")
     private String hashSecret;
     
     @Value("${vnpay.url:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}")
     private String vnpayUrl;
     
-    @Value("${vnpay.return-url:http://localhost:5173/payment/vnpay-return}")
+    @Value("${vnpay.return-url:http://localhost:5174/payment/vnpay-return}")
     private String returnUrl;
     
     @Value("${vnpay.ipn-url:http://localhost:8080/api/vnpay/ipn}")

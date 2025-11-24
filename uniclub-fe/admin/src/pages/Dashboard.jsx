@@ -10,8 +10,8 @@ const COLORS = ["#FBBF24", "#3B82F6", "#10B981", "#EF4444"]
 
 const STATUS_MAP = {
   PENDING: "Chờ xử lý",
-  PAID: "Đã thanh toán",
-  SHIPPED: "Đã giao",
+  CONFIRMED: "Đã xác nhận",
+  SHIPPING: "Đang giao",
   DELIVERED: "Đã giao",
   CANCELLED: "Đã hủy"
 }

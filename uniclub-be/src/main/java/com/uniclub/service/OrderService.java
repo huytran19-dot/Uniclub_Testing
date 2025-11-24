@@ -13,5 +13,6 @@ public interface OrderService {
     OrderResponse updateOrder(Integer id, CreateOrderRequest request);
     OrderResponse updateOrderStatus(Integer id, CreateOrderRequest request);
     OrderResponse cancelOrder(Integer id);
+    String retryVNPayPayment(Integer id); // Retry VNPay payment for failed order
     void deleteOrder(Integer id);
 }

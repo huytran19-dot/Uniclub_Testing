@@ -4,6 +4,17 @@ echo STARTING CUSTOMER FRONTEND (WEB)
 echo ========================================
 echo.
 
+REM Check if pnpm is installed
+where pnpm >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] pnpm is not installed!
+    echo Please install pnpm first:
+    echo   npm install -g pnpm
+    echo.
+    pause
+    exit /b 1
+)
+
 cd uniclub-fe\web
 
 echo Installing dependencies...

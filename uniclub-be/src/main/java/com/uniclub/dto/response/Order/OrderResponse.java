@@ -21,6 +21,7 @@ public class OrderResponse {
     private UserResponse user;
     private List<OrderVariantResponse> orderVariants;
     private String status;
+    private LocalDateTime paymentExpiresAt; // Payment timeout for VNPay
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -35,6 +36,7 @@ public class OrderResponse {
         res.setRecipientPhone(order.getRecipientPhone());
         res.setShippingAddress(order.getShippingAddress());
         res.setStatus(order.getStatus() != null ? order.getStatus().name() : null);
+        res.setPaymentExpiresAt(order.getPaymentExpiresAt());
         
         // Note: paymentMethod will be set separately by service layer
         res.setPaymentMethod("COD"); // Default value

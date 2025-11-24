@@ -67,6 +67,9 @@ public class Order {
     @Column(length = 50, nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Column(name = "payment_expires_at", nullable = true)
+    private LocalDateTime paymentExpiresAt;
+
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
