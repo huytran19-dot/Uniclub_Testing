@@ -93,6 +93,19 @@ public class OrderController {
         }
     }
 
+    // RETRY PAYMENT - Get new VNPay URL for failed VNPay payment
+    @PostMapping("/{id}/retry-payment")
+    public ResponseEntity<?> retryPayment(@PathVariable Integer id) {
+        try {
+            String paymentUrl = orderService.retryVNPayPayment(id);
+            return ResponseEntity.ok(paymentUrl);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Không thể tạo lại thanh toán");
+        }
+    }
+
     // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {

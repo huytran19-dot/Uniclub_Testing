@@ -224,6 +224,7 @@ CREATE TABLE `payment` (
   `amount` int DEFAULT NULL,
   `payment_status` enum('FAILED','PENDING','SUCCESS','CANCELLED') COLLATE utf8mb4_unicode_ci NOT NULL,
   `paid_at` timestamp NULL DEFAULT NULL,
+  `payment_expires_at` datetime NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -431,6 +432,7 @@ CREATE TABLE `orders` (
   `shipping_address` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_user` int DEFAULT NULL,
   `status` enum('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') COLLATE utf8mb4_unicode_ci DEFAULT 'PENDING',
+  `payment_expires_at` datetime NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

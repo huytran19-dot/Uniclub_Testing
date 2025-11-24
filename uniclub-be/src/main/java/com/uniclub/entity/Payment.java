@@ -54,6 +54,9 @@ public class Payment {
             columnDefinition = "TIMESTAMP NULL")
     private LocalDateTime paidAt;
 
+    @Column(name = "payment_expires_at", nullable = true)
+    private LocalDateTime paymentExpiresAt;
+
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;

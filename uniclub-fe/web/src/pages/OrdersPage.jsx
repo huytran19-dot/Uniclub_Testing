@@ -47,6 +47,14 @@ export default function OrdersPage() {
     CANCELLED: { label: "Đã hủy", color: "hsl(0 84.2% 60.2%)", bgColor: "hsl(0 84.2% 60.2% / 0.1)" },
   }
 
+  const getStatusConfig = (order) => {
+    // If VNPay + PENDING, show "Chờ thanh toán"
+    if (order.paymentMethod === "VNPay" && order.status === "PENDING") {
+      return { label: "Chờ thanh toán", color: "hsl(38 92% 50%)", bgColor: "hsl(38 92% 50% / 0.1)" }
+    }
+    return statusConfig[order.status] || statusConfig.PENDING
+  }
+
   if (loading) {
     return (
       <PageLayout title="Đơn hàng" breadcrumbs={[{ label: "Đơn hàng" }]}>
@@ -95,7 +103,7 @@ export default function OrdersPage() {
       <div className="section">
         <div className="space-y-4">
           {orders.map((order) => {
-            const status = statusConfig[order.status] || statusConfig.PENDING
+            const status = getStatusConfig(order)
             const itemCount = order.orderVariants?.length || 0
             const paymentMethodLabel = order.paymentMethod === "VNPay" ? "VNPay" : "COD"
             return (

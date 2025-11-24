@@ -22,6 +22,7 @@ import com.uniclub.repository.UserRepository;
 import com.uniclub.repository.VariantRepository;
 import com.uniclub.service.CartService;
 import com.uniclub.service.OrderService;
+import com.uniclub.service.VNPayService;
 
 import jakarta.transaction.Transactional;
 
@@ -43,6 +44,9 @@ public class OrderServiceImpl implements OrderService {
     
     @Autowired
     private CartService cartService;
+    
+    @Autowired
+    private VNPayService vnPayService;
 
     @Override
     public List<OrderResponse> getAllOrders() {
@@ -320,4 +324,37 @@ public class OrderServiceImpl implements OrderService {
 
         return order;
     }
+    
+    @Override
+    public String retryVNPayPayment(Integer orderId) {
+        // Get order
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        // Check if order can retry payment
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new IllegalArgumentException("Không thể thanh toán lại đơn hàng đã bị hủy");
+        }
+        
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalArgumentException("Chỉ có thể thanh toán lại đơn hàng ở trạng thái PENDING");
+        }
+        
+        // Get latest payment to verify it's VNPay
+        var latestPayment = paymentRepository.findLatestByOrderId(orderId);
+        if (latestPayment.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy thông tin thanh toán");
+        }
+        
+        // Create new payment URL (VNPayService will create new payment record with new expiration)
+        String paymentUrl = vnPayService.createPaymentUrl(
+            orderId,
+            "Thanh toan lai don hang " + orderId,
+            "127.0.0.1",
+            "vn"
+        );
+        
+        return paymentUrl;
+    }
 }
+

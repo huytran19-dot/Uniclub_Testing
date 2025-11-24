@@ -15,4 +15,4 @@ echo Backend will be available at: http://localhost:8080
 echo API endpoints: http://localhost:8080/api
 echo.
 
-call mvn spring-boot:run
+call mvn spring-boot:run -X

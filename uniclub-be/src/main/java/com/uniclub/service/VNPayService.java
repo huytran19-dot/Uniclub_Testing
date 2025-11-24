@@ -49,7 +49,15 @@ public class VNPayService {
             payment.setPaymentMethod(PaymentMethod.VNPay);
             payment.setAmount(order.getTotal());
             payment.setPaymentStatus(PaymentStatus.PENDING);
+            
+            // Set payment expires at (15 minutes from now)
+            LocalDateTime paymentExpiresAt = LocalDateTime.now().plusMinutes(15);
+            payment.setPaymentExpiresAt(paymentExpiresAt);
             paymentRepository.save(payment);
+            
+            // Set payment expires at on order as well
+            order.setPaymentExpiresAt(paymentExpiresAt);
+            orderRepository.save(order);
             
             // Build VNPay params
             Map<String, String> vnpParams = new HashMap<>();
@@ -84,7 +92,7 @@ public class VNPayService {
             // Build final URL
             String paymentUrl = vnPayConfig.getVnpayUrl() + "?" + queryString + "&vnp_SecureHash=" + secureHash;
             
-            log.info("Created VNPay payment URL for order: {}", orderId);
+            log.info("Created VNPay payment URL for order: {} with expiration at: {}", orderId, paymentExpiresAt);
             return paymentUrl;
             
         } catch (Exception e) {

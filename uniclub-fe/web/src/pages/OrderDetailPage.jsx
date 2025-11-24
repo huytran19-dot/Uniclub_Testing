@@ -4,7 +4,7 @@ import { PageLayout } from "../components/PageLayout"
 import { Button } from "@/components/ui/button"
 import { Price } from "@/components/Price"
 import { parseShippingAddress } from "@/lib/address-parser"
-import { CheckCircle2, Package, Truck, MapPin, CreditCard, Calendar, Loader2 } from "lucide-react"
+import { CheckCircle2, Package, Truck, MapPin, CreditCard, Calendar, Loader2, Clock } from "lucide-react"
 
 export default function OrderDetailPage() {
   const { id } = useParams()
@@ -14,6 +14,7 @@ export default function OrderDetailPage() {
   const [error, setError] = useState(null)
   const [parsedAddress, setParsedAddress] = useState("")
   const [isCancelling, setIsCancelling] = useState(false)
+  const [isRetryingPayment, setIsRetryingPayment] = useState(false)
 
   useEffect(() => {
     fetchOrderDetail()
@@ -70,6 +71,33 @@ export default function OrderDetailPage() {
       alert(err.message)
     } finally {
       setIsCancelling(false)
+    }
+  }
+
+  const handleRetryPayment = async () => {
+    if (!confirm("Bạn có muốn thanh toán lại đơn hàng này?")) {
+      return
+    }
+
+    setIsRetryingPayment(true)
+    try {
+      // Call retry payment endpoint
+      const response = await fetch(`http://localhost:8080/api/orders/${id}/retry-payment`, {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || "Không thể tạo link thanh toán mới")
+      }
+
+      const paymentUrl = await response.text()
+      
+      // Redirect to VNPay
+      window.location.href = paymentUrl
+    } catch (err) {
+      alert(err.message || "Có lỗi xảy ra khi tạo link thanh toán")
+      setIsRetryingPayment(false)
     }
   }
 
@@ -137,7 +165,17 @@ export default function OrderDetailPage() {
     },
   }
 
-  const currentStatus = statusConfig[order.status] || statusConfig.PENDING
+  // Check if this is a VNPay order waiting for payment
+  const isVNPayPending = order?.paymentMethod === "VNPay" && order?.status === "PENDING"
+  const currentStatus = isVNPayPending 
+    ? {
+        label: "Chờ thanh toán",
+        color: "hsl(38 92% 50%)",
+        bgColor: "hsl(38 92% 50% / 0.1)",
+        icon: Clock,
+        message: "Vui lòng hoàn tất thanh toán để xác nhận đơn hàng của bạn."
+      }
+    : statusConfig[order?.status] || statusConfig.PENDING
 
   return (
     <PageLayout
@@ -277,6 +315,17 @@ export default function OrderDetailPage() {
             </div>
 
             <div className="space-y-2">
+              {/* Show retry payment button only if VNPay + PENDING */}
+              {isVNPayPending && (
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700" 
+                  onClick={handleRetryPayment}
+                  disabled={isRetryingPayment}
+                >
+                  {isRetryingPayment ? "Đang tạo link thanh toán..." : "Thanh toán lại"}
+                </Button>
+              )}
+
               {/* Show cancel button only if order is PENDING or CONFIRMED */}
               {(order.status === "PENDING" || order.status === "CONFIRMED") && (
                 <Button 

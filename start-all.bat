@@ -4,6 +4,36 @@ echo STARTING UNICLUB APPLICATION
 echo ========================================
 echo.
 
+REM Check prerequisites
+echo Checking prerequisites...
+
+where docker >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Docker is not installed or not running!
+    echo Please install Docker Desktop from: https://www.docker.com/products/docker-desktop
+    pause
+    exit /b 1
+)
+
+where java >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Java is not installed!
+    echo Please install Java 17+ from: https://adoptium.net/
+    pause
+    exit /b 1
+)
+
+where pnpm >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] pnpm is not installed!
+    echo Please install pnpm: npm install -g pnpm
+    pause
+    exit /b 1
+)
+
+echo [OK] All prerequisites are installed!
+echo.
+
 echo Step 1: Starting MySQL Database...
 start "Database" cmd /k "cd /d %~dp0 && start-docker.bat"
 
