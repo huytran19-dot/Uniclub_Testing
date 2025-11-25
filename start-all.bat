@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo STARTING UNICLUB APPLICATION
+echo STARTING UNICLUB DEVELOPMENT MODE
 echo ========================================
 echo.
 
@@ -34,37 +34,51 @@ if %ERRORLEVEL% NEQ 0 (
 echo [OK] All prerequisites are installed!
 echo.
 
-echo Step 1: Starting MySQL Database...
-start "Database" cmd /k "cd /d %~dp0 && start-docker.bat"
+echo Step 1: Starting MySQL Database and phpMyAdmin (Docker)...
+echo Starting only database containers...
+docker-compose up -d mysql phpmyadmin
 
 echo.
-echo Waiting 10 seconds for database to initialize...
-timeout /t 10 /nobreak > nul
+echo Waiting for MySQL to be ready...
+timeout /t 5 /nobreak > nul
 
+echo Testing MySQL connection...
+:wait_mysql
+docker exec uniclub-mysql mysql -u root -phuytran123 -e "SELECT 1" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo MySQL is not ready yet, waiting...
+    timeout /t 3 /nobreak > nul
+    goto wait_mysql
+)
+
+echo [OK] MySQL is ready!
 echo.
-echo Step 2: Starting Spring Boot Backend...
+echo Step 2: Starting Spring Boot Backend (Dev Mode)...
 start "Backend" cmd /k "cd /d %~dp0 && start-backend.bat"
 
 echo.
-echo Step 3: Starting React Frontend...
+echo Step 3: Starting React Frontend (Dev Mode)...
 start "Frontend" cmd /k "cd /d %~dp0 && start-frontend.bat"
 
 echo.
 echo ========================================
-echo ALL SERVICES STARTING...
+echo DEVELOPMENT MODE STARTED
 echo ========================================
 echo.
 echo MySQL Database: localhost:3307
 echo phpMyAdmin: http://localhost:8081/
-echo Backend API: http://localhost:8080/
-echo Customer Frontend: http://localhost:5173/
-echo Admin Frontend: http://localhost:5174/
+echo Backend API: http://localhost:8080/ (Dev Mode - Hot Reload)
+echo Customer Frontend: http://localhost:5173/ (Dev Mode - Hot Reload)
+echo Admin Frontend: http://localhost:5174/ (Dev Mode - Hot Reload)
+echo.
+echo NOTE: This is DEVELOPMENT mode with hot reload.
+echo For PRODUCTION mode with Docker, run: docker-compose up -d
 echo.
 echo Please wait for all services to start...
 echo Check the opened command windows for status.
 echo.
 echo Login credentials:
 echo - Email: admin@uniclub.com
-echo - Password: 123456
+echo - Password: Admin@123
 echo.
 pause
