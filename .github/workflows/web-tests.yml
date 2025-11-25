@@ -1,0 +1,59 @@
+name: Web tests (Vitest)
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  unit-tests:
+    name: Run web package unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies (web)
+        working-directory: uniclub-fe/web
+        run: |
+          # prefer ci when lockfile is present, fall back to install otherwise
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Run unit tests (web)
+        working-directory: uniclub-fe/web
+        run: |
+          npm run test:unit
+
+  integration-tests:
+    name: Run web package integration tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies (web)
+        working-directory: uniclub-fe/web
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Run integration tests (web)
+        working-directory: uniclub-fe/web
+        run: |
+          npm run test:integration
