@@ -29,9 +29,10 @@ jobs:
             ${{ runner.os }}-m2-
 
       - name: Build and test (Maven)
+        working-directory: ./uniclub-be
         run: |
-          chmod +x ./uniclub-be/mvnw
-          ./uniclub-be/mvnw -B -DskipTests=false package
+          chmod +x mvnw
+          ./mvnw -B -DskipTests=false package
 
   frontend:
     name: Build Frontend
