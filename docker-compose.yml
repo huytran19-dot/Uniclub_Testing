@@ -73,6 +73,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    profiles:
+      - production  # Only start in production mode
 
   # Frontend (Admin + Web)
   frontend:
@@ -87,6 +89,8 @@ services:
       - backend
     networks:
       - uniclub-network
+    profiles:
+      - production  # Only start in production mode
 
 volumes:
   mysql_data:

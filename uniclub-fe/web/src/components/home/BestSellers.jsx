@@ -1,25 +1,55 @@
-import React, { useMemo } from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { products, variants, brands, reviews } from "@/lib/mock-data"
-import { calculateAverageRating, getMinPrice, isOutOfStock } from "@/lib/utils"
+import { getProducts, getVariants, getBrands } from "@/lib/api"
+import { getMinPrice, isOutOfStock } from "@/lib/utils"
 import { ProductCard } from "@/components/ProductCard"
 
 export default function BestSellers() {
-  const list = useMemo(() => {
-    const active = products.filter((p) => p.status === 1)
-    const scored = active.map((p) => {
-      const r = reviews.filter((rv) => rv.id_product === p.id && rv.status === 1)
-      const score = calculateAverageRating(r)
-      return { product: p, score, count: r.length }
-    })
-    // sort by rating then review count then newest
-    scored.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score
-      if (b.count !== a.count) return b.count - a.count
-      return new Date(b.product.created_at) - new Date(a.product.created_at)
-    })
-    return scored.slice(0, 6)
+  const [products, setProducts] = useState([])
+  const [variants, setVariants] = useState([])
+  const [brands, setBrands] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsData, variantsData, brandsData] = await Promise.all([
+          getProducts(),
+          getVariants(),
+          getBrands()
+        ])
+        
+        // Filter active products and take first 6
+        const activeProducts = productsData.filter(p => p.status === 1).slice(0, 6)
+        setProducts(activeProducts)
+        setVariants(variantsData)
+        setBrands(brandsData)
+      } catch (error) {
+        console.error("Failed to fetch data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
+
+  if (loading) {
+    return (
+      <section className="section">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground mb-4">Bán chạy</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="card animate-pulse">
+              <div className="aspect-square bg-muted rounded-lg mb-4"></div>
+              <div className="h-4 bg-muted rounded mb-2"></div>
+              <div className="h-4 bg-muted rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="section">
@@ -28,21 +58,26 @@ export default function BestSellers() {
         <Link to="/products" className="link-underline text-sm">Xem tất cả</Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {list.map(({ product }) => {
-          const productVariants = variants.filter((v) => v.id_product === product.id && v.status === 1)
-          const productReviews = reviews.filter((r) => r.id_product === product.id && r.status === 1)
-          const brand = brands.find((b) => b.id === product.id_brand)
+        {products.map((product) => {
+          const productVariants = variants.filter((v) => v.productId === product.id && v.status === 1)
+          const brand = brands.find((b) => b.id === product.brandId)
           const firstVariant = productVariants[0]
+          
+          // Images is now a direct URL string from Cloudinary
+          let imageUrl = "/placeholder.svg?height=400&width=400"
+          if (firstVariant?.images) {
+            imageUrl = firstVariant.images
+          }
 
           return (
             <ProductCard
               key={product.id}
               product={product}
               brand={brand?.name || "Không xác định"}
-              image={firstVariant?.images || "/placeholder.svg?height=400&width=400"}
-              minPrice={getMinPrice(productVariants, product.price)}
-              rating={calculateAverageRating(productReviews)}
-              reviewCount={productReviews.length}
+              image={imageUrl}
+              minPrice={getMinPrice(productVariants)}
+              rating={0}
+              reviewCount={0}
               isOutOfStock={isOutOfStock(productVariants)}
             />
           )

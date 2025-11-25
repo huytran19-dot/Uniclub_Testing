@@ -3,7 +3,7 @@
 import { ShoppingCart, Search, User, Menu } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { categories } from "@/lib/mock-data"
+import { getCategories } from "@/lib/api"
 import { getUserCart, getCartItems } from "@/lib/cart-api"
 import { getCurrentUser, logout } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,7 @@ import {
 export function Header() {
   const [cartCount, setCartCount] = useState(0)
   const [user, setUser] = useState(null)
+  const [categories, setCategories] = useState([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -42,6 +43,18 @@ export function Header() {
     fetchCartCount()
     setUser(getCurrentUser())
 
+    // Fetch categories from API
+    getCategories()
+      .then(data => {
+        // Filter active categories (status === 1)
+        const activeCategories = data.filter(c => c.status === 1)
+        setCategories(activeCategories)
+      })
+      .catch(error => {
+        console.error("Failed to fetch categories:", error)
+        setCategories([])
+      })
+
     const handleUpdate = () => {
       fetchCartCount()
       setUser(getCurrentUser())
@@ -63,8 +76,6 @@ export function Header() {
     navigate("/")
   }
 
-  const activeCategories = categories.filter((c) => c.status === 1)
-
   return (
     <header className="sticky top-0 z-50 border-b border-border shadow-sm bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70">
       <div className="container mx-auto px-4">
@@ -77,7 +88,7 @@ export function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            {activeCategories.map((category) => (
+            {categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/products?category=${category.id}`}

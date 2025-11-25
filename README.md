@@ -2,35 +2,57 @@
 
 A full-stack e-commerce platform built with Spring Boot and React, featuring admin management dashboard and customer shopping website.
 
-## 🚀 Quick Setup
+## 🚀 Quick Start
+
+### Option 1: Development Mode (với Hot Reload)
+Dành cho lúc đang code và cần thay đổi nhanh:
 
 ```bash
-# 1. Clone repository
+# Clone repository
 git clone https://github.com/huytran19-dot/Uniclub_Testing.git
 cd Uniclub_Testing
 
-# 2. Start database
-start-docker.bat
+# Chạy tất cả (MySQL Docker + Backend Dev + Frontend Dev)
+start-all.bat
+```
 
-# 3. Set environment variable (IMPORTANT!)
-set SENDGRID_API_KEY=your-sendgrid-api-key
+**Sau khi chạy:**
+- Frontend Web: http://localhost:5173 (Hot reload enabled)
+- Frontend Admin: http://localhost:5174 (Hot reload enabled)
+- Backend API: http://localhost:8080 (Hot reload enabled)
+- phpMyAdmin: http://localhost:8081
 
-# 4. Start backend
-cd uniclub-be
-mvn spring-boot:run
+### Option 2: Docker Mode (Production-like)
+Dành cho testing và demo, giống môi trường production:
 
-# 5. Start frontend (admin)
-cd uniclub-fe/admin
-pnpm install && pnpm dev
+```bash
+# Cách 1: Dùng script
+start-docker-all.bat
 
-# 6. Start frontend (web)
-cd uniclub-fe/web
-pnpm install && pnpm dev
+# Cách 2: Dùng lệnh trực tiếp
+docker-compose up -d
+```
+
+**Sau khi chạy:**
+- Frontend (Web + Admin): http://localhost
+- Admin Panel: http://localhost/admin
+- Backend API: http://localhost/api
+- phpMyAdmin: http://localhost:8081
+
+### Stop All Services
+
+```bash
+# Stop tất cả (Docker + Dev processes)
+stop-all.bat
+
+# Hoặc chỉ stop Docker
+docker-compose down
 ```
 
 ## 📖 Full Documentation
 
 See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed setup instructions, troubleshooting, and configuration.
+See **[DOCKER_SETUP_GUIDE.md](DOCKER_SETUP_GUIDE.md)** for Docker-specific documentation.
 
 ## ✨ Features
 
@@ -43,11 +65,10 @@ See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed setup instructions, troubl
 - 📧 Email Notifications (SendGrid)
 - 🚚 Shipping Fee Calculation
 
-## 🌐 Access URLs
+## 🔑 Login Credentials
 
-- **Customer Website:** http://localhost:5174
-- **Admin Dashboard:** http://localhost:5173
-- **Backend API:** http://localhost:8080
+- **Email:** admin@uniclub.com
+- **Password:** Admin@123
 - **phpMyAdmin:** http://localhost:8081
 
 ## 🔑 Default Login

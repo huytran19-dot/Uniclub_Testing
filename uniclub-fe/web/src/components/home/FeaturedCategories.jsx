@@ -1,15 +1,39 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { categories } from "@/lib/mock-data"
-
-const categoryImages = {
-  1: "/black-basic-tshirt.png",
-  2: "/red-women-hoodie.jpg",
-  3: "/black-street-cap.jpg",
-}
+import { getCategories } from "@/lib/api"
 
 export default function FeaturedCategories() {
-  const featured = categories.filter((c) => c.status === 1)
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getCategories()
+      .then(data => {
+        const activeCategories = data.filter(c => c.status === 1)
+        setCategories(activeCategories)
+      })
+      .catch(error => {
+        console.error("Failed to fetch categories:", error)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="section">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground mb-4">Danh mục nổi bật</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="card animate-pulse">
+              <div className="aspect-[16/10] bg-muted rounded-lg"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="section">
@@ -17,20 +41,18 @@ export default function FeaturedCategories() {
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">Danh mục nổi bật</h2>
         <Link to="/products" className="link-underline text-sm">Xem tất cả</Link>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {featured.map((cat) => (
-          <Link key={cat.id} to={`/products?category=${cat.id}`} className="group">
-            <div className="relative overflow-hidden rounded-2xl card shadow-soft">
-              <div className="aspect-[16/10] bg-secondary">
-                <img
-                  src={categoryImages[cat.id] || "/white-basic-tshirt.png"}
-                  alt={cat.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-t from-black/40 to-transparent">
-                <span className="text-white font-medium text-lg">{cat.name}</span>
-                <span className="text-white/90 text-sm group-hover:underline">Khám phá</span>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {categories.map((cat) => (
+          <Link 
+            key={cat.id} 
+            to={`/products?category=${cat.id}`} 
+            className="group"
+          >
+            <div className="relative overflow-hidden rounded-xl card shadow-soft hover:shadow-lg transition-all duration-300 h-32 flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10">
+              <div className="text-center p-4">
+                <span className="text-foreground font-semibold text-lg group-hover:text-primary transition-colors">
+                  {cat.name}
+                </span>
               </div>
             </div>
           </Link>
