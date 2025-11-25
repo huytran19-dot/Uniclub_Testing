@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.uniclub.dto.request.Order.CreateOrderRequest;
 import com.uniclub.dto.response.Order.OrderResponse;
@@ -85,6 +86,8 @@ public class OrderServiceImpl implements OrderService {
         if (request.getOrderVariants() == null || request.getOrderVariants().isEmpty()) {
             throw new IllegalArgumentException("Đơn hàng phải có ít nhất một sản phẩm");
         }
+
+        validateShippingInfo(request);
 
         // Check if all variants exist and have enough stock
         for (var item : request.getOrderVariants()) {
@@ -323,6 +326,18 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderVariants(variants);
 
         return order;
+    }
+
+    private void validateShippingInfo(CreateOrderRequest request) {
+        if (!StringUtils.hasText(request.getRecipientName())) {
+            throw new IllegalArgumentException("Vui lòng nhập tên người nhận");
+        }
+        if (!StringUtils.hasText(request.getRecipientPhone())) {
+            throw new IllegalArgumentException("Vui lòng nhập số điện thoại");
+        }
+        if (!StringUtils.hasText(request.getShippingAddress())) {
+            throw new IllegalArgumentException("Vui lòng nhập địa chỉ giao hàng");
+        }
     }
     
     @Override
