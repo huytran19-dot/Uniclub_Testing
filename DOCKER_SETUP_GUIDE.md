@@ -4,7 +4,7 @@
 - MySQL container chạy trên port **3307:3306**
 - Database name: `uniclub`
 - Username: `root`
-- Password: `huytran123`
+- Password: `REPLACE_ME_DB_PASSWORD` (set via environment variable or .env - do NOT commit real passwords)
 
 ## Database Schema
 Database đã được thiết lập với đầy đủ các bảng:
@@ -36,10 +36,10 @@ docker ps
 ### 3. Test kết nối database
 ```bash
 # Kiểm tra MySQL container
-docker exec uniclub-mysql mysqladmin ping -h localhost -u root -phuytran123
+docker exec uniclub-mysql mysqladmin ping -h localhost -u root -p$DB_PASSWORD
 
 # Kết nối vào MySQL
-docker exec -it uniclub-mysql mysql -u root -phuytran123
+docker exec -it uniclub-mysql mysql -u root -p$DB_PASSWORD
 ```
 
 ### 4. Chạy Spring Boot application
@@ -51,17 +51,17 @@ mvn spring-boot:run
 ### 5. Truy cập phpMyAdmin (tùy chọn)
 - URL: http://localhost:8081
 - Username: `root`
-- Password: `huytran123`
+- Password: `REPLACE_ME_DB_PASSWORD`
 
 ## Cấu hình trong application.yml
 File `application.yml` đã được cấu hình sẵn:
 ```yaml
 spring:
-  datasource:
-    url: jdbc:mysql://localhost:3307/uniclub
-    username: root
-    password: huytran123
-    driver-class-name: com.mysql.cj.jdbc.Driver
+   datasource:
+      url: jdbc:mysql://localhost:3307/uniclub
+      username: root
+      password: REPLACE_ME_DB_PASSWORD
+      driver-class-name: com.mysql.cj.jdbc.Driver
 ```
 
 ## Troubleshooting
@@ -110,10 +110,10 @@ docker-compose restart mysql
 
 ### Backup database:
 ```bash
-docker exec uniclub-mysql mysqldump -u root -phuytran123 uniclub > backup.sql
+docker exec uniclub-mysql mysqldump -u root -p$DB_PASSWORD uniclub > backup.sql
 ```
 
 ### Restore database:
 ```bash
-docker exec -i uniclub-mysql mysql -u root -phuytran123 uniclub < backup.sql
+docker exec -i uniclub-mysql mysql -u root -p$DB_PASSWORD uniclub < backup.sql
 ```

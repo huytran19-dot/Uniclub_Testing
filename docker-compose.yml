@@ -4,10 +4,11 @@ services:
     container_name: uniclub-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: huytran123
+      # NOTE: DO NOT STORE real credentials in repo. Replace with environment values or use an external secret store.
+      MYSQL_ROOT_PASSWORD: REPLACE_ME_MYSQL_ROOT_PASSWORD
       MYSQL_DATABASE: uniclub
       MYSQL_USER: uniclub_user
-      MYSQL_PASSWORD: uniclub_password
+      MYSQL_PASSWORD: REPLACE_ME_MYSQL_PASSWORD
     ports:
       - "3307:3306"
     volumes:
@@ -17,7 +18,8 @@ services:
     networks:
       - uniclub-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-phuytran123"]
+      # DO NOT embed passwords here. We set a placeholder — set MYSQL_ROOT_PASSWORD via .env or your deployment environment.
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pREPLACE_ME_DB_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,7 +34,7 @@ services:
       PMA_HOST: mysql
       PMA_PORT: 3306
       PMA_USER: root
-      PMA_PASSWORD: huytran123
+      PMA_PASSWORD: REPLACE_ME_PHPMYADMIN_PASSWORD
     ports:
       - "8081:80"
     depends_on:
@@ -53,14 +55,14 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uniclub
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=huytran123
-      - JWT_SECRET=uniclub-secret-key-for-jwt-token-generation-2024
+      - SPRING_DATASOURCE_PASSWORD=REPLACE_ME_DB_PASSWORD
+      - JWT_SECRET=REPLACE_ME_JWT_SECRET
       - JWT_EXPIRATION=86400000
-      - CLOUDINARY_CLOUD_NAME=deooamndi
-      - CLOUDINARY_API_KEY=186558834811161
-      - CLOUDINARY_API_SECRET=7iKsQDdlEz-vPTEYyuePBiET7Sw
-      - VNPAY_TMN_CODE=CGEJ0TI4
-      - VNPAY_HASH_SECRET=GNUPBN07YMSNSDZPJ1ZLBIKXVNDSOTUI
+      - CLOUDINARY_CLOUD_NAME=REPLACE_ME_CLOUDINARY_CLOUD
+      - CLOUDINARY_API_KEY=REPLACE_ME_CLOUDINARY_API_KEY
+      - CLOUDINARY_API_SECRET=REPLACE_ME_CLOUDINARY_API_SECRET
+      - VNPAY_TMN_CODE=REPLACE_ME_VNPAY_TMN_CODE
+      - VNPAY_HASH_SECRET=REPLACE_ME_VNPAY_HASH_SECRET
       - VNPAY_RETURN_URL=http://localhost/admin/payment/vnpay-return
     depends_on:
       mysql:

@@ -44,7 +44,7 @@ echo Backend Health Check: http://localhost/api/actuator/health
 echo.
 echo Login credentials:
 echo - Email: admin@uniclub.com
-echo - Password: Admin@123
+echo - Password: REPLACE_ME_ADMIN_PASSWORD (set in .env or your deployment environment)
 echo.
 echo To view logs: docker-compose logs -f
 echo To stop all: docker-compose down

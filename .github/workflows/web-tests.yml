@@ -22,16 +22,18 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies (web)
-        working-directory: uniclub-fe/web
-        run: |
-          # prefer ci when lockfile is present, fall back to install otherwise
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies (pnpm workspace)
+        working-directory: uniclub-fe
+        run: pnpm install --frozen-lockfile
 
       - name: Run unit tests (web)
         working-directory: uniclub-fe/web
-        run: |
-          npm run test:unit
+        run: pnpm --filter web run test:unit
 
   integration-tests:
     name: Run web package integration tests
@@ -48,12 +50,15 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies (web)
-        working-directory: uniclub-fe/web
-        run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies (pnpm workspace)
+        working-directory: uniclub-fe
+        run: pnpm install --frozen-lockfile
 
       - name: Run integration tests (web)
         working-directory: uniclub-fe/web
-        run: |
-          npm run test:integration
+        run: pnpm --filter web run test:integration

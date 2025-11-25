@@ -6,7 +6,7 @@ spring:
     # Use Docker service name 'mysql' instead of localhost
     url: jdbc:mysql://mysql:3306/uniclub
     username: root
-    password: huytran123
+    password: REPLACE_ME_DB_PASSWORD
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -30,15 +30,15 @@ app:
     max-attempts: 5
 
 jwt:
-  secret: uniclub-secret-key-for-jwt-token-generation-2024
+  secret: REPLACE_ME_JWT_SECRET
   expiration: 86400000  # 24 hours in milliseconds
 
 cloudinary:
-  cloud_name: deooamndi
-  api_key: 186558834811161
-  api_secret: 7iKsQDdlEz-vPTEYyuePBiET7Sw
+  cloud_name: REPLACE_ME_CLOUDINARY_CLOUD
+  api_key: REPLACE_ME_CLOUDINARY_API_KEY
+  api_secret: REPLACE_ME_CLOUDINARY_API_SECRET
 
 vnpay:
-  tmn-code: ${VNPAY_TMN_CODE:CGEJ0TI4}
-  hash-secret: ${VNPAY_HASH_SECRET:GNUPBN07YMSNSDZPJ1ZLBIKXVNDSOTUI}
+  tmn-code: ${VNPAY_TMN_CODE:REPLACE_ME_VNPAY_TMN}
+  hash-secret: ${VNPAY_HASH_SECRET:REPLACE_ME_VNPAY_HASH}
   return-url: ${VNPAY_RETURN_URL:http://localhost/admin/payment/vnpay-return}

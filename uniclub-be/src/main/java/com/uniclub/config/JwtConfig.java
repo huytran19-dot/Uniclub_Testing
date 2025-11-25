@@ -16,7 +16,7 @@ import java.util.function.Function;
 @Component
 public class JwtConfig {
 
-    @Value("${jwt.secret:uniclub-secret-key-for-jwt-token-generation-2024}")
+    @Value("${jwt.secret:REPLACE_ME_JWT_SECRET}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 hours

@@ -1419,7 +1419,7 @@ Regular User:
 
 Admin:
 - Email: admin@test.com
-- Password: Admin@123
+- Password: REPLACE_ME_ADMIN_PASSWORD
 
 VNPay Sandbox Test Cards:
 - Card Number: 9704198526191432198

@@ -13,7 +13,11 @@ timeout /t 15 /nobreak > nul
 
 echo.
 echo [3/6] Testing MySQL connection...
-docker exec uniclub-mysql mysql -u root -phuytran123 -e "SELECT 'MySQL connection successful!' as status;"
+if "%DB_PASSWORD%"=="" (
+    echo [WARN] Environment variable DB_PASSWORD not set. Setting to placeholder value - set DB_PASSWORD first if you want to use a different password.
+    set DB_PASSWORD=REPLACE_ME_DB_PASSWORD
+)
+docker exec uniclub-mysql mysql -u root -p%DB_PASSWORD% -e "SELECT 'MySQL connection successful!' as status;"
 
 if %errorlevel% neq 0 (
     echo ERROR: MySQL connection failed!
@@ -25,7 +29,7 @@ if %errorlevel% neq 0 (
 echo.
 echo [4/6] Checking if 'uniclub' database exists...
 set db_exists=0
-docker exec uniclub-mysql mysql -u root -phuytran123 -e "SHOW DATABASES LIKE 'uniclub';" > db_check.txt
+docker exec uniclub-mysql mysql -u root -p%DB_PASSWORD% -e "SHOW DATABASES LIKE 'uniclub';" > db_check.txt
 for /f %%i in ('find /v /c "" ^< db_check.txt') do if %%i GTR 1 set db_exists=1
 del db_check.txt
 
@@ -34,7 +38,7 @@ set data_imported=0
 if %db_exists% equ 0 (
     echo Database 'uniclub' not found. Creating and importing data...
     set data_imported=1
-    docker exec -i uniclub-mysql mysql -u root -phuytran123 < mysql-init/init-database.sql
+    docker exec -i uniclub-mysql mysql -u root -p%DB_PASSWORD% < mysql-init/init-database.sql
     if %errorlevel% neq 0 (
         echo ERROR: Database creation and import failed!
         pause
@@ -45,14 +49,14 @@ if %db_exists% equ 0 (
     echo Database 'uniclub' already exists.
     echo.
     echo [5/6] Checking if database is empty...
-    docker exec uniclub-mysql mysql -u root -phuytran123 -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'uniclub';" > temp_check.txt 2>nul
+    docker exec uniclub-mysql mysql -u root -p%DB_PASSWORD% -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'uniclub';" > temp_check.txt 2>nul
     for /f "skip=1" %%i in (temp_check.txt) do set table_count=%%i
     del temp_check.txt 2>nul
 
     if "%table_count%"=="0" (
         echo Database is empty, importing sample data...
         set data_imported=1
-        docker exec -i uniclub-mysql mysql -u root -phuytran123 uniclub < mysql-init/init-database.sql
+        docker exec -i uniclub-mysql mysql -u root -p%DB_PASSWORD% uniclub < mysql-init/init-database.sql
         
         if %errorlevel% neq 0 (
             echo ERROR: Database import failed!
@@ -70,7 +74,7 @@ echo.
 echo [6/6] Finalizing setup...
 echo phpMyAdmin should be available at: http://localhost:8081
 echo Username: root
-echo Password: huytran123
+echo Password: REPLACE_ME_DB_PASSWORD (set DB_PASSWORD environment variable or fill .env)
 
 echo.
 echo ========================================
@@ -82,7 +86,7 @@ echo - Host: localhost
 echo - Port: 3307
 echo - Database: uniclub
 echo - Username: root
-echo - Password: huytran123
+echo - Password: REPLACE_ME_DB_PASSWORD
 echo.
 echo phpMyAdmin: http://localhost:8081
 echo.

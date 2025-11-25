@@ -65,18 +65,12 @@ See **[DOCKER_SETUP_GUIDE.md](DOCKER_SETUP_GUIDE.md)** for Docker-specific docum
 - 📧 Email Notifications (SendGrid)
 - 🚚 Shipping Fee Calculation
 
-## 🔑 Login Credentials
+## 🔑 Login / Setup
 
-- **Email:** admin@uniclub.com
-- **Password:** Admin@123
-- **phpMyAdmin:** http://localhost:8081
+This repository previously contained example credentials — those were removed for security.
+Before running the app locally or in CI please copy `.env.example` -> `.env` and fill in real secure values (or set CI/GitHub secrets). Do NOT commit secrets into the repo.
 
-## 🔑 Default Login
-
-```
-Admin: admin@uniclub.com / huytran123
-Buyer: buyer@uniclub.com / huytran123
-```
+phpMyAdmin (local): http://localhost:8081
 
 ## 🛠️ Tech Stack
 
@@ -89,6 +83,49 @@ Buyer: buyer@uniclub.com / huytran123
 
 **Frontend:**
 - React 19.2.0
+## 🧪 Running tests & CI (local + repository)
+
+Quick notes so contributors can run the same checks locally that GitHub Actions runs in CI.
+
+Prerequisites (developer machine):
+- Java 21+ (backend build/tests)
+- Maven (or use the repository's `./mvnw` wrapper)
+- Node.js 18+ and pnpm (frontend)
+
+Install pnpm globally (if not already):
+```powershell
+npm install -g pnpm
+```
+
+Backend (run tests locally):
+```powershell
+cd uniclub-be
+./mvnw -B -DskipTests=false test
+# For coverage (same plugin used in CI):
+./mvnw -B org.jacoco:jacoco-maven-plugin:0.8.8:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.8:report
+```
+
+Frontend (pnpm workspace + Vitest):
+```powershell
+cd uniclub-fe
+pnpm install
+pnpm --filter web run test:unit
+pnpm --filter web run test:integration
+pnpm --filter web run test:ci -- --coverage  # run all tests + produce lcov
+```
+
+CI notes:
+- CI uses GitHub Actions workflows in `.github/workflows/`:
+	- `ci.yml` — runs backend tests (Java/Maven) and frontend tests (pnpm/Vitest) and uploads coverage to Codecov.
+	- `web-tests.yml` — runs frontend unit & integration suites (monorepo/pnpm friendly).
+- Add the following repository secrets (GitHub → Settings → Secrets → Actions):
+	- `CODECOV_TOKEN` — to upload coverage reports to Codecov
+	- Any deployment or registry tokens you need for CD later (GHCR_PAT, RAILWAY_API_KEY, etc.)
+
+If you want to run workflows locally consider using `act` or run the commands above manually.
+
+Security reminder: Do not commit real credentials. Use the `.env.example` as a template and add real values to your CI provider's secret store.
+
 - React Router
 - Tailwind CSS
 - Lucide Icons

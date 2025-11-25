@@ -200,13 +200,13 @@ docker-compose up --build -d
 ### Backup Database
 
 ```cmd
-docker exec uniclub-mysql mysqldump -u root -phuytran123 uniclub > backup.sql
+docker exec uniclub-mysql mysqldump -u root -p%DB_PASSWORD% uniclub > backup.sql
 ```
 
 ### Restore Database
 
 ```cmd
-docker exec -i uniclub-mysql mysql -u root -phuytran123 uniclub < backup.sql
+docker exec -i uniclub-mysql mysql -u root -p%DB_PASSWORD% uniclub < backup.sql
 ```
 
 ### Xem volumes

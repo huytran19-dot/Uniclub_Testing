@@ -94,7 +94,7 @@ start-docker-all.bat
 ## 🔑 Tài khoản đăng nhập
 
 - **Email:** admin@uniclub.com
-- **Password:** Admin@123
+- **Password:** REPLACE_ME_ADMIN_PASSWORD
 
 ---
 

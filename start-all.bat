@@ -44,7 +44,12 @@ timeout /t 5 /nobreak > nul
 
 echo Testing MySQL connection...
 :wait_mysql
-docker exec uniclub-mysql mysql -u root -phuytran123 -e "SELECT 1" >nul 2>&1
+REM Use environment variable DB_PASSWORD if set; otherwise the user must populate .env or set it first
+if "%DB_PASSWORD%"=="" (
+    echo [WARN] Environment variable DB_PASSWORD is not set. Please set it before running this script or update docker-compose.yml accordingly.
+    set DB_PASSWORD=REPLACE_ME_DB_PASSWORD
+)
+docker exec uniclub-mysql mysql -u root -p%DB_PASSWORD% -e "SELECT 1" >nul 2>&1
 if %errorlevel% neq 0 (
     echo MySQL is not ready yet, waiting...
     timeout /t 3 /nobreak > nul
@@ -79,6 +84,6 @@ echo Check the opened command windows for status.
 echo.
 echo Login credentials:
 echo - Email: admin@uniclub.com
-echo - Password: Admin@123
+echo - Password: REPLACE_ME_ADMIN_PASSWORD (DO NOT keep default passwords in repo)
 echo.
 pause

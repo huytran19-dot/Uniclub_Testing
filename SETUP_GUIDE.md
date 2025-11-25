@@ -59,7 +59,7 @@ Create environment variables or use default values in `application.yml`:
 set SENDGRID_API_KEY=your-sendgrid-api-key-here
 set DB_URL=jdbc:mysql://localhost:3307/uniclub
 set DB_USERNAME=root
-set DB_PASSWORD=huytran123
+set DB_PASSWORD=REPLACE_ME_DB_PASSWORD
 
 # Option 2: Create application-local.yml (not tracked by git)
 # Copy application.yml and rename to application-local.yml
@@ -123,7 +123,7 @@ Customer Website: http://localhost:5174
 - **Port:** 3307
 - **Database:** uniclub
 - **Username:** root
-- **Password:** huytran123
+-- **Password:** REPLACE_ME_DB_PASSWORD
 - **phpMyAdmin:** http://localhost:8081
 
 ## � API Keys & Secrets
@@ -136,7 +136,7 @@ Customer Website: http://localhost:5174
 
 ### VNPay (Payment Gateway - Sandbox)
 Already configured in `VNPayConfig.java`:
-- **TMN Code:** CGEJ0TI4
+-- **TMN Code:** REPLACE_ME_VNPAY_TMN
 - **Hash Secret:** (configured in code)
 - **Payment URL:** https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 - **Return URL:** http://localhost:5174/payment/vnpay-return
@@ -147,8 +147,8 @@ For production, register at: https://vnpay.vn/
 
 | Email | Password | Role | Purpose |
 |-------|----------|------|---------|
-| admin@uniclub.com | huytran123 | SysAdmin | Admin Dashboard |
-| buyer@uniclub.com | huytran123 | Buyer | Customer Website |
+| admin@uniclub.com | REPLACE_ME_ADMIN_PASSWORD | SysAdmin | Admin Dashboard |
+| buyer@uniclub.com | REPLACE_ME_USER_PASSWORD | Buyer | Customer Website |
 
 **Note:** Email verification is required. Check your SendGrid for OTP codes during registration.
 
@@ -316,7 +316,7 @@ Use these accounts for testing different features:
 **Admin Account:**
 ```
 Email: admin@uniclub.com
-Password: huytran123
+Password: REPLACE_ME_DB_PASSWORD
 Role: SysAdmin
 Access: Admin Dashboard + Full CRUD
 ```
@@ -324,7 +324,7 @@ Access: Admin Dashboard + Full CRUD
 **Buyer Account:**
 ```
 Email: buyer@uniclub.com
-Password: huytran123
+Password: REPLACE_ME_DB_PASSWORD
 Role: Buyer
 Access: Customer Website + Shopping Features
 ```
