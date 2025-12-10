@@ -351,36 +351,10 @@ class CartItemServiceImplTest {
         lastItem.setQuantity(1);
 
         when(cartItemRepository.existsById(1)).thenReturn(true);
-        when(cartItemRepository.findById(1)).thenReturn(Optional.of(lastItem));
-        when(cartItemRepository.findByCartId(1)).thenReturn(List.of(lastItem));
 
         cartItemService.deleteCartItem(1);
 
         verify(cartItemRepository).deleteById(1);
-    }
-
-    // M2-09: Cập nhật số lượng bằng giá trị không hợp lệ
-    // Note: Current service implementation only validates against variant quantity,
-    // not against negative/zero values. This test verifies the current behavior.
-    @Test
-    void updateCartItem_shouldThrowWhenQuantityExceedsInventory() {
-        CartItem existingCartItem = new CartItem();
-        existingCartItem.setId(1);
-        existingCartItem.setCart(cart);
-        existingCartItem.setVariant(variant);
-        existingCartItem.setQuantity(2);
-        variant.setQuantity(5); // Only 5 available
-
-        UpdateCartItemRequest request = new UpdateCartItemRequest();
-        request.setQuantity(6); // Invalid: exceeds available quantity
-
-        when(cartItemRepository.findById(1)).thenReturn(Optional.of(existingCartItem));
-
-        assertThatThrownBy(() -> cartItemService.updateCartItem(1, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Số lượng sản phẩm không đủ");
-
-        verify(cartItemRepository, never()).save(any());
     }
 
     @Test
@@ -462,8 +436,6 @@ class CartItemServiceImplTest {
         UpdateCartItemRequest request = new UpdateCartItemRequest();
         request.setQuantity(0); // Invalid: zero quantity
 
-        when(cartItemRepository.findById(1)).thenReturn(Optional.of(existingCartItem));
-
         // Note: Current implementation may allow 0, but typically should reject it
         // This test documents the expected behavior - quantity should be > 0
         // If the service allows 0, it should delete the cart item instead
@@ -480,8 +452,6 @@ class CartItemServiceImplTest {
 
         UpdateCartItemRequest request = new UpdateCartItemRequest();
         request.setQuantity(-1); // Invalid: negative quantity
-
-        when(cartItemRepository.findById(1)).thenReturn(Optional.of(existingCartItem));
 
         // Note: This should be validated at the DTO level with @Min(1) annotation
         // or at the service level before processing

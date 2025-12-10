@@ -154,7 +154,6 @@ class ProductServiceImplTest {
         product2.setName("Áo Thun");
         product2.setCategory(category);
 
-        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
         when(productRepository.findByCategory_Id(1))
                 .thenReturn(Arrays.asList(product, product2));
 
@@ -172,7 +171,6 @@ class ProductServiceImplTest {
         product2.setName("Giày Nike");
         product2.setBrand(brand);
 
-        when(brandRepository.findById(1)).thenReturn(Optional.of(brand));
         when(productRepository.findByBrand_Id(1))
                 .thenReturn(Arrays.asList(product, product2));
 
@@ -509,8 +507,6 @@ class ProductServiceImplTest {
 
     @Test
     void getProductsByCategoryId_shouldThrowWhenCategoryNotFound() {
-        when(categoryRepository.findById(999)).thenReturn(Optional.empty());
-
         // Note: Current implementation doesn't check if category exists
         // This test documents that it should ideally validate category existence
         // For now, it will return empty list if category doesn't exist
