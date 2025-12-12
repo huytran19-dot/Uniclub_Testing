@@ -116,11 +116,8 @@ export default function CheckoutPage() {
         })),
       }
 
-      console.log("Order data being sent:", orderData)
-      console.log("User ID:", user.id)
-      console.log("Payment method:", paymentMethod)
-
-      const response = await fetch("http://localhost:8080/api/orders", {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,7 +135,7 @@ export default function CheckoutPage() {
       // If VNPay payment, redirect to VNPay
       if (paymentMethod === "VNPay") {
         try {
-          const paymentResponse = await fetch("http://localhost:8080/api/vnpay/create-payment", {
+          const paymentResponse = await fetch(`${API_URL}/vnpay/create-payment`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

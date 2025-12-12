@@ -1,4 +1,9 @@
-const API_BASE_URL = "/api"
+// File: uniclub-fe/web/src/lib/api.js
+
+// Ưu tiên lấy từ biến môi trường (Vercel), nếu không có thì dùng localhost (Máy nhà)
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+// ...các hàm fetch giữ nguyên...
 
 // Categories API
 export async function getCategories() {

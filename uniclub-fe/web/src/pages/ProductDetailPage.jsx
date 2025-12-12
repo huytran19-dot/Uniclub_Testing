@@ -34,8 +34,9 @@ export default function ProductDetailPage() {
       setError(null)
 
       try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
         // Fetch product details
-        const productRes = await fetch(`http://localhost:8080/api/products/${productId}`)
+        const productRes = await fetch(`${API_URL}/products/${productId}`)
         if (!productRes.ok) {
           if (productRes.status === 404) {
             setError('Sản phẩm không tồn tại')
@@ -48,7 +49,7 @@ export default function ProductDetailPage() {
         setProduct(productData)
 
         // Fetch all variants for this product
-        const variantsRes = await fetch('http://localhost:8080/api/variants')
+        const variantsRes = await fetch(`${API_URL}/variants`)
         if (!variantsRes.ok) throw new Error('Không thể tải biến thể sản phẩm')
         const allVariants = await variantsRes.json()
         const filteredVariants = allVariants.filter(v => v.productId === parseInt(productId) && v.status === 1)
@@ -56,7 +57,7 @@ export default function ProductDetailPage() {
 
         // Fetch brand
         if (productData.brandId) {
-          const brandRes = await fetch(`http://localhost:8080/api/brands/${productData.brandId}`)
+          const brandRes = await fetch(`${API_URL}/brands/${productData.brandId}`)
           if (brandRes.ok) {
             const brandData = await brandRes.json()
             setBrand(brandData)
@@ -65,8 +66,8 @@ export default function ProductDetailPage() {
 
         // Fetch sizes and colors
         const [sizesRes, colorsRes] = await Promise.all([
-          fetch('http://localhost:8080/api/sizes'),
-          fetch('http://localhost:8080/api/colors'),
+          fetch(`${API_URL}/sizes`),
+          fetch(`${API_URL}/colors`),
         ])
 
         if (sizesRes.ok) setSizes(await sizesRes.json())

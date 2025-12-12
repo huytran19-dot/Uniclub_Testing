@@ -63,8 +63,7 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      console.log("=== DEBUG: Current formData ===")
-      console.log("province:", formData.province)
+      // Debug removed for production
       console.log("provinceName:", formData.provinceName)
       console.log("district:", formData.district)
       console.log("districtName:", formData.districtName)
@@ -87,7 +86,8 @@ export default function ProfilePage() {
       console.log("=== Sending update data ===", updateData)
 
       // Call API to update user
-      const response = await fetch(`http://localhost:8080/api/users/${user.id}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/users/${user.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

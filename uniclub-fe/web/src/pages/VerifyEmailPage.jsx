@@ -54,7 +54,8 @@ export default function VerifyEmailPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/verify-code', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/auth/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: verificationCode }),
@@ -83,7 +84,7 @@ export default function VerifyEmailPage() {
     setSuccess('');
 
     try {
-      const response = await fetch(`http://localhost:8080/api/auth/resend-code?email=${encodeURIComponent(email)}`, {
+      const response = await fetch(`${API_URL}/auth/resend-code?email=${encodeURIComponent(email)}`, {
         method: 'POST',
       });
 

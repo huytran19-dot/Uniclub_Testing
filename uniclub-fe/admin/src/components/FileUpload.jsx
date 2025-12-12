@@ -52,7 +52,8 @@ export default function FileUpload({
       formData.append('file', file)
 
       // Upload to backend
-      const response = await fetch('http://localhost:8080/api/upload/image/variant', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/upload/image/variant`, {
         method: 'POST',
         body: formData
       })

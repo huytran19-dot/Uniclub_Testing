@@ -73,7 +73,8 @@ export function Header() {
     logout()
     setUser(null)
     window.dispatchEvent(new Event("auth-updated"))
-    navigate("/")
+    // Force immediate redirect to login page
+    window.location.href = "/login"
   }
 
   return (
