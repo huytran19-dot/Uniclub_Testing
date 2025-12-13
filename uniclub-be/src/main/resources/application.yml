@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://root:zTRxYPyBHGYPeHyrghLEJXFDIRNFaLtL@centerbeam.proxy.rlwy.net:12082/uniclub}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:CSdVDHoQWnIWjdcOikQClylejvtCeOPF}
+    password: ${DB_PASSWORD:zTRxYPyBHGYPeHyrghLEJXFDIRNFaLtL}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
