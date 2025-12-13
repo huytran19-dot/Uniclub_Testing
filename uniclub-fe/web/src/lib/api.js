@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+import { API_URL } from '@/config/api'
+
+const API_BASE_URL = API_URL;
 
 // Categories API
 export async function getCategories() {
