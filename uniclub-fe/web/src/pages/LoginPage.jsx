@@ -27,7 +27,8 @@ export default function LoginPage() {
 
     try {
       // Call real backend API
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,8 +54,9 @@ export default function LoginPage() {
         localStorage.setItem("uniclub_user", JSON.stringify(authUser))
         window.dispatchEvent(new Event("auth-updated"))
         
-        // Redirect to home
-        navigate("/")
+        // Force immediate redirect using replace to avoid back button issue
+        window.location.href = "/"
+        return // Stop execution to prevent state updates
       } else if (response.status === 403) {
         // ✅ Unverified account - redirect to verification page
         try {

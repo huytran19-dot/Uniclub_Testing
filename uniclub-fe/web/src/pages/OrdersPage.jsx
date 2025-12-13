@@ -24,7 +24,8 @@ export default function OrdersPage() {
       }
 
       const user = JSON.parse(userStr)
-      const response = await fetch(`http://localhost:8080/api/orders/user/${user.id}`)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/orders/user/${user.id}`)
 
       if (!response.ok) {
         throw new Error("Không thể tải danh sách đơn hàng")

@@ -52,13 +52,14 @@ export default function ProductsPage() {
       setError(null)
       
       try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
         const [productsRes, brandsRes, categoriesRes, sizesRes, colorsRes, variantsRes] = await Promise.all([
-          fetch('http://localhost:8080/api/products'),
-          fetch('http://localhost:8080/api/brands'),
-          fetch('http://localhost:8080/api/categories'),
-          fetch('http://localhost:8080/api/sizes'),
-          fetch('http://localhost:8080/api/colors'),
-          fetch('http://localhost:8080/api/variants'),
+          fetch(`${API_URL}/products`),
+          fetch(`${API_URL}/brands`),
+          fetch(`${API_URL}/categories`),
+          fetch(`${API_URL}/sizes`),
+          fetch(`${API_URL}/colors`),
+          fetch(`${API_URL}/variants`),
         ])
 
         if (!productsRes.ok) throw new Error('Không thể tải danh sách sản phẩm')

@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+// ...các hàm fetch giữ nguyên...
 
 // Helper function to get auth token
 const getAuthToken = () => {

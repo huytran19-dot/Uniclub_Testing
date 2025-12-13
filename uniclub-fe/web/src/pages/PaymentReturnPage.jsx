@@ -21,7 +21,8 @@ export default function PaymentReturnPage() {
 
         // Call backend to validate
         const queryString = new URLSearchParams(params).toString()
-        const response = await fetch(`http://localhost:8080/api/vnpay/return?${queryString}`)
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+        const response = await fetch(`${API_URL}/vnpay/return?${queryString}`)
         
         if (!response.ok) {
           throw new Error("Không thể xác thực thanh toán")

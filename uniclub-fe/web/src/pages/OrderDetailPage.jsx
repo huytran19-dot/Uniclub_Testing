@@ -33,7 +33,8 @@ export default function OrderDetailPage() {
 
   const fetchOrderDetail = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/${id}`)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_URL}/orders/${id}`)
       
       if (!response.ok) {
         throw new Error("Không thể tải thông tin đơn hàng")
@@ -55,7 +56,7 @@ export default function OrderDetailPage() {
 
     setIsCancelling(true)
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/${id}/cancel`, {
+      const response = await fetch(`${API_URL}/orders/${id}/cancel`, {
         method: "PUT",
       })
 
@@ -82,7 +83,7 @@ export default function OrderDetailPage() {
     setIsRetryingPayment(true)
     try {
       // Call retry payment endpoint
-      const response = await fetch(`http://localhost:8080/api/orders/${id}/retry-payment`, {
+      const response = await fetch(`${API_URL}/orders/${id}/retry-payment`, {
         method: "POST",
       })
 
