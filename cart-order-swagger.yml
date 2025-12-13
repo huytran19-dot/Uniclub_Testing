@@ -1,0 +1,1667 @@
+openapi: 3.0.3
+info:
+  title: UniClub E-commerce API - Cart & Order Management
+  description: |
+    API documentation for Cart and Order management functionality in UniClub e-commerce system.
+    This includes shopping cart operations, order placement, payment processing, and VNPay integration.
+  version: 1.0.0
+  contact:
+    name: UniClub Development Team
+    email: support@uniclub.com
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.uniclub.com
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ===========================================
+  # CART MANAGEMENT ENDPOINTS
+  # ===========================================
+
+  /api/carts:
+    post:
+      tags:
+        - Cart Management
+      summary: Create a new shopping cart
+      description: Create a new shopping cart for a user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCartRequest'
+            example:
+              userId: 1
+              note: "Customer's shopping cart"
+      responses:
+        '201':
+          description: Cart created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+        - Cart Management
+      summary: Get all carts
+      description: Retrieve all shopping carts (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all carts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartResponse'
+        '401':
+          description: Unauthorized
+
+  /api/carts/{id}:
+    get:
+      tags:
+        - Cart Management
+      summary: Get cart by ID
+      description: Retrieve a specific cart by its ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart ID
+      responses:
+        '200':
+          description: Cart details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          description: Cart not found
+        '401':
+          description: Unauthorized
+
+    put:
+      tags:
+        - Cart Management
+      summary: Update cart
+      description: Update cart information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartRequest'
+      responses:
+        '200':
+          description: Cart updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          description: Cart not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Cart Management
+      summary: Delete cart
+      description: Delete a shopping cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart ID
+      responses:
+        '204':
+          description: Cart deleted successfully
+        '404':
+          description: Cart not found
+        '401':
+          description: Unauthorized
+
+  /api/carts/user/{userId}:
+    get:
+      tags:
+        - Cart Management
+      summary: Get user's cart
+      description: Get the shopping cart for a specific user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: User's cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          description: Cart not found
+        '401':
+          description: Unauthorized
+
+  /api/carts/user/{userId}/clear:
+    delete:
+      tags:
+        - Cart Management
+      summary: Clear user's cart
+      description: Remove all items from user's cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '204':
+          description: Cart cleared successfully
+        '404':
+          description: Cart not found
+        '401':
+          description: Unauthorized
+
+  # ===========================================
+  # CART ITEM MANAGEMENT ENDPOINTS
+  # ===========================================
+
+  /api/cart-items:
+    post:
+      tags:
+        - Cart Item Management
+      summary: Add item to cart
+      description: Add a product variant to the shopping cart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCartItemRequest'
+            example:
+              cartId: 1
+              variantSku: 1001
+              quantity: 2
+              unitPrice: 150000
+      responses:
+        '201':
+          description: Item added to cart successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+        - Cart Item Management
+      summary: Get all cart items
+      description: Retrieve all cart items (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all cart items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartItemResponse'
+        '401':
+          description: Unauthorized
+
+  /api/cart-items/{id}:
+    get:
+      tags:
+        - Cart Item Management
+      summary: Get cart item by ID
+      description: Retrieve a specific cart item by its ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart Item ID
+      responses:
+        '200':
+          description: Cart item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemResponse'
+        '404':
+          description: Cart item not found
+        '401':
+          description: Unauthorized
+
+    put:
+      tags:
+        - Cart Item Management
+      summary: Update cart item
+      description: Update quantity or price of a cart item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart Item ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Cart item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemResponse'
+        '404':
+          description: Cart item not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Cart Item Management
+      summary: Remove item from cart
+      description: Remove a specific item from the cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart Item ID
+      responses:
+        '204':
+          description: Item removed from cart successfully
+        '404':
+          description: Cart item not found
+        '401':
+          description: Unauthorized
+
+  /api/cart-items/cart/{cartId}:
+    get:
+      tags:
+        - Cart Item Management
+      summary: Get items in cart
+      description: Get all items in a specific cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cart ID
+      responses:
+        '200':
+          description: List of items in cart
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartItemResponse'
+        '404':
+          description: Cart not found
+        '401':
+          description: Unauthorized
+
+  # ===========================================
+  # ORDER MANAGEMENT ENDPOINTS
+  # ===========================================
+
+  /api/orders:
+    post:
+      tags:
+        - Order Management
+      summary: Create new order
+      description: Create a new order from cart items with shipping and payment information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              userId: 1
+              note: "Please deliver before 5 PM"
+              recipientName: "Nguyen Van A"
+              recipientPhone: "0123456789"
+              shippingAddress: "123 Nguyen Trai, District 1, Ho Chi Minh City"
+              paymentMethod: "COD"
+              orderVariants:
+                - variantSku: 1001
+                  quantity: 2
+                  unitPrice: 150000
+                - variantSku: 1002
+                  quantity: 1
+                  unitPrice: 200000
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+        - Order Management
+      summary: Get all orders
+      description: Retrieve all orders (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        '401':
+          description: Unauthorized
+
+  /api/orders/{id}:
+    get:
+      tags:
+        - Order Management
+      summary: Get order by ID
+      description: Retrieve a specific order by its ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+    put:
+      tags:
+        - Order Management
+      summary: Update order
+      description: Update order information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: Order updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Order Management
+      summary: Delete order
+      description: Delete an order (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '204':
+          description: Order deleted successfully
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+  /api/orders/user/{userId}:
+    get:
+      tags:
+        - Order Management
+      summary: Get user's orders
+      description: Get all orders for a specific user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: List of user's orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        '401':
+          description: Unauthorized
+
+  /api/orders/{id}/status:
+    put:
+      tags:
+        - Order Management
+      summary: Update order status
+      description: Update the status of an order (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED]
+                  example: "CONFIRMED"
+      responses:
+        '200':
+          description: Order status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid status or order cannot be updated
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+  /api/orders/{id}/cancel:
+    put:
+      tags:
+        - Order Management
+      summary: Cancel order
+      description: Cancel an order (Customer can cancel if not shipped yet)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '200':
+          description: Order cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Order cannot be cancelled
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+  /api/orders/{id}/retry-payment:
+    post:
+      tags:
+        - Order Management
+      summary: Retry VNPay payment
+      description: Generate new VNPay payment URL for failed VNPay payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '200':
+          description: New payment URL generated
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=300000&vnp_Command=pay..."
+        '400':
+          description: Cannot retry payment for this order
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+  # ===========================================
+  # ORDER VARIANT MANAGEMENT ENDPOINTS
+  # ===========================================
+
+  /api/order-variants/{orderId}:
+    post:
+      tags:
+        - Order Variant Management
+      summary: Add variant to order
+      description: Add a product variant to an existing order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderVariantRequest'
+      responses:
+        '201':
+          description: Variant added to order successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderVariantResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+
+  /api/order-variants/{orderId}/{variantSku}:
+    get:
+      tags:
+        - Order Variant Management
+      summary: Get order variant
+      description: Get a specific variant in an order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+        - name: variantSku
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Variant SKU
+      responses:
+        '200':
+          description: Order variant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderVariantResponse'
+        '404':
+          description: Order variant not found
+        '401':
+          description: Unauthorized
+
+    put:
+      tags:
+        - Order Variant Management
+      summary: Update order variant
+      description: Update quantity or price of an order variant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+        - name: variantSku
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Variant SKU
+        - name: quantity
+          in: query
+          schema:
+            type: integer
+          description: New quantity
+        - name: price
+          in: query
+          schema:
+            type: integer
+          description: New unit price
+      responses:
+        '200':
+          description: Order variant updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderVariantResponse'
+        '404':
+          description: Order variant not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Order Variant Management
+      summary: Remove variant from order
+      description: Remove a variant from an order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+        - name: variantSku
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Variant SKU
+      responses:
+        '204':
+          description: Variant removed from order successfully
+        '404':
+          description: Order variant not found
+        '401':
+          description: Unauthorized
+
+  /api/order-variants/order/{orderId}:
+    get:
+      tags:
+        - Order Variant Management
+      summary: Get all variants in order
+      description: Get all product variants in a specific order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '200':
+          description: List of variants in order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderVariantResponse'
+        '404':
+          description: Order not found
+        '401':
+          description: Unauthorized
+
+  # ===========================================
+  # PAYMENT MANAGEMENT ENDPOINTS
+  # ===========================================
+
+  /api/payments:
+    post:
+      tags:
+        - Payment Management
+      summary: Create payment
+      description: Create a new payment record
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Payment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+        - Payment Management
+      summary: Get all payments
+      description: Retrieve all payments (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentResponse'
+        '401':
+          description: Unauthorized
+
+  /api/payments/{id}:
+    get:
+      tags:
+        - Payment Management
+      summary: Get payment by ID
+      description: Retrieve a specific payment by its ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Payment ID
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          description: Payment not found
+        '401':
+          description: Unauthorized
+
+    put:
+      tags:
+        - Payment Management
+      summary: Update payment
+      description: Update payment information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Payment ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePaymentRequest'
+      responses:
+        '200':
+          description: Payment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          description: Payment not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Payment Management
+      summary: Delete payment
+      description: Delete a payment record (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Payment ID
+      responses:
+        '204':
+          description: Payment deleted successfully
+        '404':
+          description: Payment not found
+        '401':
+          description: Unauthorized
+
+  /api/payments/order/{orderId}:
+    get:
+      tags:
+        - Payment Management
+      summary: Get payments for order
+      description: Get all payments associated with a specific order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '200':
+          description: List of payments for order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentResponse'
+        '401':
+          description: Unauthorized
+
+  /api/payments/status/{status}:
+    get:
+      tags:
+        - Payment Management
+      summary: Get payments by status
+      description: Get all payments with a specific status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+          description: Payment status
+      responses:
+        '200':
+          description: List of payments with specified status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentResponse'
+        '401':
+          description: Unauthorized
+
+  /api/payments/{id}/process:
+    post:
+      tags:
+        - Payment Management
+      summary: Process payment
+      description: Process a pending payment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Payment ID
+      responses:
+        '200':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Payment cannot be processed
+        '404':
+          description: Payment not found
+        '401':
+          description: Unauthorized
+
+  # ===========================================
+  # VNPAY INTEGRATION ENDPOINTS
+  # ===========================================
+
+  /api/vnpay/create-payment:
+    post:
+      tags:
+        - VNPay Integration
+      summary: Create VNPay payment URL
+      description: Generate VNPay payment URL for online payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VNPayPaymentRequest'
+            example:
+              orderId: 123
+              orderInfo: "Payment for Order #123"
+              locale: "vn"
+      responses:
+        '200':
+          description: VNPay payment URL created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VNPayPaymentResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+
+  /api/vnpay/ipn:
+    get:
+      tags:
+        - VNPay Integration
+      summary: VNPay IPN (Instant Payment Notification)
+      description: |
+        Handle VNPay IPN callback (called by VNPay server).
+        This endpoint is used by VNPay to notify payment status changes.
+      parameters:
+        - name: vnp_Amount
+          in: query
+          schema:
+            type: string
+          description: Payment amount
+        - name: vnp_BankCode
+          in: query
+          schema:
+            type: string
+          description: Bank code
+        - name: vnp_BankTranNo
+          in: query
+          schema:
+            type: string
+          description: Bank transaction number
+        - name: vnp_CardType
+          in: query
+          schema:
+            type: string
+          description: Card type
+        - name: vnp_OrderInfo
+          in: query
+          schema:
+            type: string
+          description: Order information
+        - name: vnp_PayDate
+          in: query
+          schema:
+            type: string
+          description: Payment date
+        - name: vnp_ResponseCode
+          in: query
+          schema:
+            type: string
+          description: Response code
+        - name: vnp_TmnCode
+          in: query
+          schema:
+            type: string
+          description: Terminal code
+        - name: vnp_TransactionNo
+          in: query
+          schema:
+            type: string
+          description: Transaction number
+        - name: vnp_TxnRef
+          in: query
+          schema:
+            type: string
+          description: Transaction reference
+        - name: vnp_SecureHash
+          in: query
+          schema:
+            type: string
+          description: Secure hash for verification
+      responses:
+        '200':
+          description: IPN processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+
+  /api/vnpay/return:
+    get:
+      tags:
+        - VNPay Integration
+      summary: VNPay Return URL
+      description: |
+        Handle VNPay return after payment completion.
+        User is redirected here after completing payment on VNPay.
+      parameters:
+        - name: vnp_Amount
+          in: query
+          schema:
+            type: string
+          description: Payment amount
+        - name: vnp_BankCode
+          in: query
+          schema:
+            type: string
+          description: Bank code
+        - name: vnp_BankTranNo
+          in: query
+          schema:
+            type: string
+          description: Bank transaction number
+        - name: vnp_CardType
+          in: query
+          schema:
+            type: string
+          description: Card type
+        - name: vnp_OrderInfo
+          in: query
+          schema:
+            type: string
+          description: Order information
+        - name: vnp_PayDate
+          in: query
+          schema:
+            type: string
+          description: Payment date
+        - name: vnp_ResponseCode
+          in: query
+          schema:
+            type: string
+          description: Response code
+        - name: vnp_TmnCode
+          in: query
+          schema:
+            type: string
+          description: Terminal code
+        - name: vnp_TransactionNo
+          in: query
+          schema:
+            type: string
+          description: Transaction number
+        - name: vnp_TxnRef
+          in: query
+          schema:
+            type: string
+          description: Transaction reference
+        - name: vnp_SecureHash
+          in: query
+          schema:
+            type: string
+          description: Secure hash for verification
+      responses:
+        '200':
+          description: Payment result processed
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # ===========================================
+    # REQUEST SCHEMAS
+    # ===========================================
+
+    CreateCartRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: integer
+          description: ID of the user who owns the cart
+          example: 1
+        note:
+          type: string
+          maxLength: 255
+          description: Optional note for the cart
+          example: "Customer's shopping cart"
+
+    UpdateCartRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          maxLength: 255
+          description: Updated note for the cart
+        status:
+          type: integer
+          description: Cart status (0=inactive, 1=active)
+          example: 1
+
+    CreateCartItemRequest:
+      type: object
+      required:
+        - cartId
+        - variantSku
+        - quantity
+        - unitPrice
+      properties:
+        cartId:
+          type: integer
+          description: ID of the cart
+          example: 1
+        variantSku:
+          type: integer
+          description: SKU of the product variant
+          example: 1001
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantity of the item
+          example: 2
+        unitPrice:
+          type: integer
+          minimum: 0
+          description: Unit price in VND
+          example: 150000
+
+    UpdateCartItemRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          description: Updated quantity
+          example: 3
+        unitPrice:
+          type: integer
+          minimum: 0
+          description: Updated unit price
+          example: 160000
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - userId
+        - orderVariants
+        - recipientName
+        - recipientPhone
+        - shippingAddress
+        - paymentMethod
+      properties:
+        note:
+          type: string
+          maxLength: 255
+          description: Optional order note
+          example: "Please deliver before 5 PM"
+        userId:
+          type: integer
+          description: ID of the user placing the order
+          example: 1
+        orderVariants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateOrderVariantRequest'
+          description: List of product variants in the order
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED]
+          description: Order status (optional, defaults to PENDING)
+        recipientName:
+          type: string
+          maxLength: 100
+          description: Name of the recipient
+          example: "Nguyen Van A"
+        recipientPhone:
+          type: string
+          maxLength: 20
+          description: Phone number of the recipient
+          example: "0123456789"
+        shippingAddress:
+          type: string
+          maxLength: 500
+          description: Shipping address
+          example: "123 Nguyen Trai, District 1, Ho Chi Minh City"
+        paymentMethod:
+          type: string
+          enum: [COD, VNPAY]
+          description: Payment method
+          example: "COD"
+
+    CreateOrderVariantRequest:
+      type: object
+      required:
+        - variantSku
+        - quantity
+        - unitPrice
+      properties:
+        variantSku:
+          type: integer
+          description: SKU of the product variant
+          example: 1001
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantity ordered
+          example: 2
+        unitPrice:
+          type: integer
+          minimum: 0
+          description: Unit price at time of order
+          example: 150000
+
+    CreatePaymentRequest:
+      type: object
+      required:
+        - orderId
+        - amount
+        - paymentMethod
+      properties:
+        orderId:
+          type: integer
+          description: ID of the order being paid
+          example: 123
+        amount:
+          type: integer
+          minimum: 0
+          description: Payment amount in VND
+          example: 300000
+        paymentMethod:
+          type: string
+          enum: [COD, VNPAY]
+          description: Payment method used
+          example: "VNPAY"
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+          description: Payment status
+          example: "PENDING"
+
+    UpdatePaymentRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+          description: Updated payment status
+          example: "COMPLETED"
+        transactionId:
+          type: string
+          description: Transaction ID from payment gateway
+          example: "VNP123456789"
+
+    VNPayPaymentRequest:
+      type: object
+      required:
+        - orderId
+        - orderInfo
+      properties:
+        orderId:
+          type: integer
+          description: Order ID for payment
+          example: 123
+        orderInfo:
+          type: string
+          description: Description of the order
+          example: "Payment for Order #123"
+        locale:
+          type: string
+          enum: [vn, en]
+          default: vn
+          description: Language for VNPay interface
+          example: "vn"
+
+    # ===========================================
+    # RESPONSE SCHEMAS
+    # ===========================================
+
+    CartResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Cart ID
+          example: 1
+        totalPrice:
+          type: integer
+          description: Total price of all items in cart
+          example: 450000
+        shippingFee:
+          type: integer
+          description: Shipping fee
+          example: 30000
+        note:
+          type: string
+          description: Cart note
+          example: "Customer's shopping cart"
+        status:
+          type: integer
+          description: Cart status (0=inactive, 1=active)
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          description: Cart creation timestamp
+          example: "2024-11-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Cart last update timestamp
+          example: "2024-11-25T10:35:00Z"
+        userId:
+          type: integer
+          description: User ID who owns the cart
+          example: 1
+
+    CartItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Cart item ID
+          example: 1
+        cartId:
+          type: integer
+          description: ID of the cart this item belongs to
+          example: 1
+        variantSku:
+          type: integer
+          description: SKU of the product variant
+          example: 1001
+        quantity:
+          type: integer
+          description: Quantity in cart
+          example: 2
+        unitPrice:
+          type: integer
+          description: Unit price
+          example: 150000
+        totalPrice:
+          type: integer
+          description: Total price for this item (quantity * unitPrice)
+          example: 300000
+        createdAt:
+          type: string
+          format: date-time
+          description: Item added timestamp
+          example: "2024-11-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Item last update timestamp
+          example: "2024-11-25T10:35:00Z"
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Order ID
+          example: 123
+        total:
+          type: integer
+          description: Total order amount
+          example: 330000
+        shippingFee:
+          type: integer
+          description: Shipping fee
+          example: 30000
+        note:
+          type: string
+          description: Order note
+          example: "Please deliver before 5 PM"
+        recipientName:
+          type: string
+          description: Recipient name
+          example: "Nguyen Van A"
+        recipientPhone:
+          type: string
+          description: Recipient phone
+          example: "0123456789"
+        shippingAddress:
+          type: string
+          description: Shipping address
+          example: "123 Nguyen Trai, District 1, Ho Chi Minh City"
+        paymentMethod:
+          type: string
+          enum: [COD, VNPAY]
+          description: Payment method
+          example: "COD"
+        user:
+          $ref: '#/components/schemas/UserResponse'
+        orderVariants:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderVariantResponse'
+          description: List of items in the order
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED]
+          description: Order status
+          example: "PENDING"
+        paymentExpiresAt:
+          type: string
+          format: date-time
+          description: Payment expiration time (for VNPay orders)
+          example: "2024-11-25T11:30:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+          example: "2024-11-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Order last update timestamp
+          example: "2024-11-25T10:30:00Z"
+
+    OrderVariantResponse:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          description: Order ID
+          example: 123
+        variantSku:
+          type: integer
+          description: Product variant SKU
+          example: 1001
+        quantity:
+          type: integer
+          description: Ordered quantity
+          example: 2
+        unitPrice:
+          type: integer
+          description: Unit price at time of order
+          example: 150000
+        totalPrice:
+          type: integer
+          description: Total price for this variant
+          example: 300000
+        createdAt:
+          type: string
+          format: date-time
+          description: Variant added to order timestamp
+          example: "2024-11-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Variant last update timestamp
+          example: "2024-11-25T10:30:00Z"
+
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Payment ID
+          example: 456
+        orderId:
+          type: integer
+          description: Associated order ID
+          example: 123
+        amount:
+          type: integer
+          description: Payment amount
+          example: 330000
+        paymentMethod:
+          type: string
+          enum: [COD, VNPAY]
+          description: Payment method
+          example: "VNPAY"
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+          description: Payment status
+          example: "COMPLETED"
+        transactionId:
+          type: string
+          description: Transaction ID from payment gateway
+          example: "VNP123456789"
+        createdAt:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+          example: "2024-11-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Payment last update timestamp
+          example: "2024-11-25T10:35:00Z"
+
+    VNPayPaymentResponse:
+      type: object
+      properties:
+        paymentUrl:
+          type: string
+          description: VNPay payment URL for redirection
+          example: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=330000&vnp_Command=pay&vnp_CreateDate=20241125103000&vnp_CurrCode=VND&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=Payment+for+Order+%23123&vnp_OrderType=other&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5174%2Fpayment%2Fvnpay-return&vnp_TmnCode=CGEJ0TI4&vnp_TxnRef=123&vnp_Version=2.1.0&vnp_SecureHash=..."
+        message:
+          type: string
+          description: Response message
+          example: "Payment URL created successfully"
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User ID
+          example: 1
+        email:
+          type: string
+          format: email
+          description: User email
+          example: "user@example.com"
+        fullName:
+          type: string
+          description: User's full name
+          example: "Nguyen Van A"
+        phone:
+          type: string
+          description: User phone number
+          example: "0123456789"
