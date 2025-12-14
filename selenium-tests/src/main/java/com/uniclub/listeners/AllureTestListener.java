@@ -70,11 +70,49 @@ public class AllureTestListener implements ITestListener {
     }
     
     /**
-     * Called when a test passes - NO screenshot taken (saves disk space)
+     * Called when a test passes - Captures screenshot for documentation
      */
     @Override
     public void onTestSuccess(ITestResult result) {
-        System.out.println("✅ Test PASSED: " + result.getName() + " (no screenshot needed)");
+        System.out.println("✅ Test PASSED: " + result.getName());
+        
+        // Get the WebDriver instance from the test class
+        Object testClass = result.getInstance();
+        WebDriver driver = null;
+        
+        // Extract driver from BaseTest
+        if (testClass instanceof BaseTest) {
+            try {
+                java.lang.reflect.Field driverField = BaseTest.class.getDeclaredField("driver");
+                driverField.setAccessible(true);
+                Object driverObj = driverField.get(null);
+                if (driverObj instanceof WebDriver) {
+                    driver = (WebDriver) driverObj;
+                }
+            } catch (Exception e) {
+                System.err.println("⚠️ Failed to get driver from BaseTest: " + e.getMessage());
+            }
+        }
+        
+        // Take screenshot for successful test
+        if (driver != null) {
+            try {
+                byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+                
+                // Attach to Allure report with success indicator
+                Allure.addAttachment(
+                    "✅ Success Screenshot: " + result.getName(), 
+                    "image/png", 
+                    new ByteArrayInputStream(screenshot), 
+                    "png"
+                );
+                
+                System.out.println("📸 Success screenshot captured and attached to Allure report");
+                
+            } catch (Exception e) {
+                System.err.println("⚠️ Failed to capture screenshot: " + e.getMessage());
+            }
+        }
     }
     
     /**
