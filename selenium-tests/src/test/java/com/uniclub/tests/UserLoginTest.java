@@ -48,22 +48,16 @@ public class UserLoginTest extends BaseTest {
         // Act
         loginPage.login(email, password);
         
-        // Wait for redirect
+        // Wait for API response and redirect (increased to 8s for production)
         try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        
-        // Wait for redirect to complete (frontend may take time)
-        try {
-            Thread.sleep(2000); // Wait 2s for redirect
+            Thread.sleep(8000); // Wait 8s for API + redirect
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         
         // Assert - Should redirect to home page
         String currentUrl = driver.getCurrentUrl();
+        System.out.println("Current URL after login: " + currentUrl);
         Assert.assertFalse(currentUrl.contains("/login"), 
             "Should be redirected away from login page after successful login");
         
@@ -220,15 +214,16 @@ public class UserLoginTest extends BaseTest {
         String password = ConfigReader.getUserPassword();
         loginPage.login(email, password);
         
-        // Wait for login and redirect
+        // Wait for login and redirect (increased to 8s for production)
         try {
-            Thread.sleep(4000); // Increased to 4s for redirect
+            Thread.sleep(8000); // Wait 8s for API + redirect
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         
         // Verify login successful and redirected
         String currentUrl = driver.getCurrentUrl();
+        System.out.println("Current URL after login: " + currentUrl);
         Assert.assertFalse(currentUrl.contains("/login"), 
             "Should be logged in before testing logout");
         
