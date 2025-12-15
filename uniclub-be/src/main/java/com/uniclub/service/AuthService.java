@@ -16,10 +16,14 @@ import com.uniclub.repository.UserRepository;
 /**
  * Authentication Service
  * 
- * User Status:
- * - 0: Unverified user (registered but email not verified)
- * - 1: Admin role (full access)
- * - 2: Verified user role (normal user with verified email)
+ * User Status (trạng thái tài khoản):
+ * - 0: Unverified/Inactive (chưa xác thực email)
+ * - 1: Active/Verified (đã xác thực email - user thông thường)
+ * - 2: Banned/Disabled (bị khóa tài khoản)
+ * 
+ * User Role (vai trò - lưu ở bảng role):
+ * - 1: SysAdmin (Quản trị viên)
+ * - 2: Buyer (Người mua)
  */
 @Service
 public class AuthService {
