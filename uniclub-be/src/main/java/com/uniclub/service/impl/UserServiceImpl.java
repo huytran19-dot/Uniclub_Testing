@@ -165,12 +165,14 @@ public class UserServiceImpl implements UserService {
         // Encode password
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        // Find or create USER role
-        Role userRole = roleRepository.findById(1).orElseGet(() -> {
-            // If role doesn't exist, create it
+        // Find Buyer role (ID = 2) for new registered users
+        // ID 1 = SysAdmin (reserved for administrators)
+        // ID 2 = Buyer (regular users/customers)
+        Role userRole = roleRepository.findById(2).orElseGet(() -> {
+            // If Buyer role doesn't exist, create it
             Role newRole = new Role();
-            newRole.setName("USER");
-            newRole.setDescription("Regular user/customer role");
+            newRole.setName("Buyer");
+            newRole.setDescription("Người mua - Có thể xem và mua sản phẩm");
             newRole.setStatus((byte) 1);
             return roleRepository.save(newRole);
         });
@@ -205,8 +207,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Check if already verified (status 2 = verified user)
-        if (user.getStatus() == 2) {
+        // Check if already verified (status 1 = active/verified)
+        if (user.getStatus() == 1) {
             throw new IllegalArgumentException("Account is already verified");
         }
 
@@ -216,8 +218,8 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid or expired verification code");
         }
 
-        // Activate account as verified user (status 2)
-        user.setStatus((byte) 2);
+        // Activate account (status 1 = active/verified)
+        user.setStatus((byte) 1);
         // Save updated user
         userRepository.save(user);
 
