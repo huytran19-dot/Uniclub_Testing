@@ -138,4 +138,15 @@ public class ProductServiceImpl implements ProductService {
                 .map(ProductResponse::fromEntity)
                 .toList();
     }
+
+    @Override
+    public List<ProductResponse> searchByDescription(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return getAllProducts();
+        }
+        return productRepository.findByDescriptionContainingIgnoreCase(keyword)
+                .stream()
+                .map(ProductResponse::fromEntity)
+                .toList();
+    }
 }
