@@ -67,6 +67,7 @@ function AppRoutes() {
       <Route path="/users" element={<ProtectedRoute><Layout><UserList /></Layout></ProtectedRoute>} />
       <Route path="/users/new" element={<ProtectedRoute><Layout><UserForm /></Layout></ProtectedRoute>} />
       <Route path="/users/:id" element={<ProtectedRoute><Layout><UserForm /></Layout></ProtectedRoute>} />
+      <Route path="*" element={<ProtectedRoute><Layout><Navigate to="/dashboard" replace /></Layout></ProtectedRoute>} />
     </Routes>
   )
 }
@@ -74,7 +75,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <AppRoutes/>
     </AuthProvider>
   )
 }
