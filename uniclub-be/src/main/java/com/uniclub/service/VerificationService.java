@@ -5,4 +5,5 @@ public interface VerificationService {
     boolean verifyCode(String email, String code);
     boolean hasCode(String email);
     void removeCode(String email);
+    String getStoredCode(String email); // For testing only
 }

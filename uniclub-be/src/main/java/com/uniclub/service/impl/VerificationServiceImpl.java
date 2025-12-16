@@ -159,6 +159,28 @@ public class VerificationServiceImpl implements VerificationService {
     }
 
     /**
+     * Get stored code for an email (FOR TESTING ONLY)
+     * This should only be used in test environment
+     */
+    @Override
+    public String getStoredCode(String email) {
+        String key = email.toLowerCase();
+        VerificationData data = codeStorage.get(key);
+        
+        if (data == null) {
+            return null;
+        }
+        
+        // Check if expired
+        if (LocalDateTime.now().isAfter(data.getExpiresAt())) {
+            codeStorage.remove(key);
+            return null;
+        }
+        
+        return data.getCode();
+    }
+
+    /**
      * Inner class to store verification data
      */
     private static class VerificationData {
