@@ -127,4 +127,28 @@ public class BasePage {
             Thread.currentThread().interrupt();
         }
     }
+    
+    /**
+     * Wait for element to be clickable with custom timeout
+     */
+    protected WebElement waitForElementToBeClickable(By locator, int timeoutInSeconds) {
+        WebDriverWait customWait = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds));
+        return customWait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(locator));
+    }
+    
+    /**
+     * Wait for element to be invisible with custom timeout
+     */
+    protected boolean waitForElementToBeInvisible(By locator, int timeoutInSeconds) {
+        WebDriverWait customWait = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds));
+        return customWait.until(org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated(locator));
+    }
+    
+    /**
+     * Wait for element to be visible with custom timeout
+     */
+    protected WebElement waitForElementToBeVisible(By locator, int timeoutInSeconds) {
+        WebDriverWait customWait = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds));
+        return customWait.until(org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated(locator));
+    }
 }

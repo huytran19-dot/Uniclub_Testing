@@ -25,4 +25,11 @@
         </classes>
     </test>
     
+    <!-- Shopping Cart Tests -->
+    <test name="Shopping Cart Tests" preserve-order="true">
+        <classes>
+            <class name="com.uniclub.tests.CartTest"/>
+        </classes>
+    </test>
+    
 </suite>
