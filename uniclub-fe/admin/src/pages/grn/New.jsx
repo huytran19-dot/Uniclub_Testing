@@ -22,6 +22,10 @@ export default function GrnNew() {
   const [variants, setVariants] = useState([])
   const [errors, setErrors] = useState({})
   const [toast, setToast] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const isSubmittingRef = useRef(false)
+  const hasSubmittedRef = useRef(false)
+  const submitButtonRef = useRef(null)
   const rowRefs = useRef([])
 
   useEffect(() => {
@@ -212,14 +216,59 @@ export default function GrnNew() {
     })
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  // Create a synchronous wrapper that ensures only ONE execution
+  const handleSubmitClick = (e) => {
+    // Prevent all default behaviors and event propagation
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
+    // Check if button is already disabled
+    if (submitButtonRef.current?.disabled) {
+      console.log('Button already disabled')
+      return
+    }
+    
+    // This is SYNCHRONOUS - blocks immediately before any async code runs
+    if (hasSubmittedRef.current || isSubmittingRef.current) {
+      console.log('Blocked duplicate click')
+      return
+    }
+    
+    // Lock IMMEDIATELY in synchronous code
+    hasSubmittedRef.current = true
+    isSubmittingRef.current = true
+    setIsSubmitting(true)
+    
+    // Disable button synchronously in multiple ways
+    if (submitButtonRef.current) {
+      submitButtonRef.current.disabled = true
+      submitButtonRef.current.style.pointerEvents = 'none'
+      submitButtonRef.current.style.cursor = 'not-allowed'
+      submitButtonRef.current.setAttribute('aria-disabled', 'true')
+    }
+    
+    // Now call the async function
+    performSubmit()
+  }
+
+  const performSubmit = async () => {
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
+      // Reset on validation error ONLY
+      hasSubmittedRef.current = false
+      isSubmittingRef.current = false
+      setIsSubmitting(false)
+      if (submitButtonRef.current) {
+        submitButtonRef.current.disabled = false
+        submitButtonRef.current.style.pointerEvents = 'auto'
+        submitButtonRef.current.style.opacity = '1'
+      }
       return
     }
-
+    
     try {
       // Create GRN Header first
       const grnHeaderPayload = {
@@ -247,8 +296,9 @@ export default function GrnNew() {
         await api.create("grn-details", detail)
       }
       
-      setToast({ type: "success", message: "Tạo phiếu nhập kho thành công" })
-      setTimeout(() => navigate("/grn"), 1500)
+      // Navigate immediately to prevent spam clicking
+      navigate("/grn")
+      // Don't reset isSubmitting or show toast - just leave the page
     } catch (error) {
       console.error("Error creating GRN:", error)
       
@@ -267,6 +317,18 @@ export default function GrnNew() {
         type: "error", 
         message: errorMessage
       })
+      
+      // Reset all flags on error to allow retry
+      hasSubmittedRef.current = false
+      isSubmittingRef.current = false
+      setIsSubmitting(false)
+      
+      // Re-enable button on error
+      if (submitButtonRef.current) {
+        submitButtonRef.current.disabled = false
+        submitButtonRef.current.style.pointerEvents = 'auto'
+        submitButtonRef.current.style.opacity = '1'
+      }
     }
   }
 
@@ -275,7 +337,7 @@ export default function GrnNew() {
       <Breadcrumb items={[{ label: "Phiếu nhập", path: "/grn" }, { label: "Tạo phiếu mới" }]} />
       <h1 className="text-3xl font-bold mb-6">Tạo phiếu nhập mới</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Thông tin phiếu</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -462,11 +524,24 @@ export default function GrnNew() {
             Hủy
           </button>
           <button
-            type="submit"
-            disabled={!isFormValid()}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
+            ref={submitButtonRef}
+            type="button"
+            onClick={handleSubmitClick}
+            disabled={!isFormValid() || isSubmitting}
+            style={isSubmitting ? { pointerEvents: 'none', cursor: 'not-allowed' } : {}}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 transition-all"
           >
-            Lưu nháp
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Đang lưu...
+              </span>
+            ) : (
+              "Lưu nháp"
+            )}
           </button>
         </div>
       </form>
