@@ -4,7 +4,11 @@ import com.uniclub.base.BasePage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -58,9 +62,18 @@ public class ProductListPage extends BasePage {
      */
     public int getProductCount() {
         try {
-            List<WebElement> products = driver.findElements(productCards);
-            return products.size();
+            // Wait for page to fully load
+            waitForPageLoad();
+            
+            // Fast path: real DOM uses a link to /products/:id inside card
+            List<WebElement> fast = driver.findElements(By.cssSelector(".card.card-hover a[href*='/products/'], a[href*='/products/']"));
+            if (!fast.isEmpty()) return fast.size();
+
+            // Fallback minimal probing
+            List<WebElement> fallback = driver.findElements(By.cssSelector("[data-testid='product-card'], .product-card"));
+            return fallback.size();
         } catch (Exception e) {
+            System.out.println("Error getting product count: " + e.getMessage());
             return 0;
         }
     }
@@ -69,8 +82,78 @@ public class ProductListPage extends BasePage {
      * Click on first product
      */
     public ProductDetailPage clickFirstProduct() {
-        click(firstProduct);
-        return new ProductDetailPage(driver);
+        try {
+            waitForProductsVisible(5);
+
+            // Prefer clicking the anchor inside the card to avoid overlay
+            By firstLink = By.cssSelector(".card.card-hover a[href*='/products/'], a[href*='/products/']");
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+            WebElement el = wait.until(ExpectedConditions.elementToBeClickable(firstLink));
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+            return new ProductDetailPage(driver);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to click first product: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Click on product by index (0-based)
+     */
+    public ProductDetailPage clickProductByIndex(int index) {
+        try {
+            waitForProductsVisible(5);
+
+            List<WebElement> products = driver.findElements(By.cssSelector(".card.card-hover a[href*='/products/'], a[href*='/products/']"));
+            if (products != null && index >= 0 && index < products.size()) {
+                WebElement target = products.get(index);
+                ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
+                    "arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", target);
+                new WebDriverWait(driver, Duration.ofSeconds(3))
+                        .until(ExpectedConditions.elementToBeClickable(target));
+                ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", target);
+                return new ProductDetailPage(driver);
+            } else {
+                throw new IndexOutOfBoundsException("Product index " + index + " is out of range. Total products: " + (products != null ? products.size() : 0));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to click product at index " + index + ": " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Helper method to find products using multiple selectors
+     */
+    private List<WebElement> findProducts() {
+        // Use exact selector from frontend: ProductCard has .card.card-hover class
+        String[] possibleSelectors = {
+            ".card.card-hover",          // ProductCard main class (EXACT from frontend)
+            "a[href*='/products/']",     // Link wrapper of ProductCard
+            "[class*='product']"         // Fallback
+        };
+        
+        for (String selector : possibleSelectors) {
+            try {
+                List<WebElement> products = driver.findElements(By.cssSelector(selector));
+                if (products != null && !products.isEmpty()) {
+                    // keep logs minimal to avoid noise and slowdowns
+                    return products;
+                }
+            } catch (Exception e) {
+                // Try next selector
+            }
+        }
+        
+        System.out.println("⚠️ No products found with any selector");
+        return new ArrayList<>();
+    }
+
+    /**
+     * Wait until at least one product card is visible
+     */
+    public void waitForProductsVisible(int timeoutSeconds) {
+        By anyProduct = By.cssSelector(".card.card-hover a[href*='/products/'], a[href*='/products/'], .card.card-hover");
+        new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds))
+                .until(d -> d.findElements(anyProduct).size() > 0);
     }
     
     /**

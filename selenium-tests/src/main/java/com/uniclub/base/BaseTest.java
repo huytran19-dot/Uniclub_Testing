@@ -2,6 +2,7 @@ package com.uniclub.base;
 
 import com.uniclub.utils.ConfigReader;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.github.bonigarcia.wdm.config.DriverManagerType;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
 import org.apache.commons.io.FileUtils;
@@ -130,7 +131,20 @@ public class BaseTest {
         
         switch (browser.toLowerCase()) {
             case "chrome":
-                WebDriverManager.chromedriver().setup();
+                // Ensure temp directory exists before WebDriverManager uses it
+                ensureTempDirectoryExists("D:\\temp");
+                ensureTempDirectoryExists("D:\\temp\\webdrivermanager");
+                ensureTempDirectoryExists("D:\\temp\\maven-tests");
+                
+                // CRITICAL: Set system property for java.io.tmpdir BEFORE WebDriverManager initialization
+                // This ensures all temp operations (including Files.createTempDirectory) use D:\temp
+                System.setProperty("java.io.tmpdir", "D:\\temp\\maven-tests");
+                
+                // Configure WebDriverManager to use specific cache directory
+                WebDriverManager.chromedriver()
+                    .cachePath("D:\\temp\\webdrivermanager")
+                    .setup();
+                    
                 ChromeOptions chromeOptions = new ChromeOptions();
                 if (ConfigReader.isHeadless()) {
                     chromeOptions.addArguments("--headless");
@@ -163,10 +177,14 @@ public class BaseTest {
                 chromeOptions.addArguments("--no-default-browser-check");
                 chromeOptions.addArguments("--start-maximized");
                 
-                // ⚠️ CRITICAL: Use D drive for ALL Chrome data to prevent C drive from filling up
-                // This stores user profiles, cache, temp files on D drive instead of C:\Users\...\AppData
-                chromeOptions.addArguments("--user-data-dir=D:\\temp\\selenium-chrome-profile");
-                chromeOptions.addArguments("--disk-cache-dir=D:\\temp\\chrome-cache");
+                // ⚠️ CRITICAL: Create unique user data dir for each test session to prevent conflicts
+                // Use timestamp to ensure uniqueness across concurrent test runs
+                String timestamp = String.valueOf(System.currentTimeMillis());
+                String uniqueUserDataDir = "D:\\temp\\selenium-chrome-profile-" + timestamp;
+                String uniqueCacheDir = "D:\\temp\\chrome-cache-" + timestamp;
+                
+                chromeOptions.addArguments("--user-data-dir=" + uniqueUserDataDir);
+                chromeOptions.addArguments("--disk-cache-dir=" + uniqueCacheDir);
                 chromeOptions.addArguments("--force-device-scale-factor=1");
                 
                 // Set preferences to disable password manager
@@ -208,6 +226,22 @@ public class BaseTest {
         }
         
         return driver;
+    }
+    
+    /**
+     * Ensure temp directory exists to prevent WebDriverManager errors
+     * Creates the directory if it doesn't exist
+     */
+    private void ensureTempDirectoryExists(String dirPath) {
+        File tempDir = new File(dirPath);
+        if (!tempDir.exists()) {
+            boolean created = tempDir.mkdirs();
+            if (created) {
+                System.out.println("✓ Created temp directory: " + dirPath);
+            } else {
+                System.err.println("⚠️ Warning: Could not create temp directory: " + dirPath);
+            }
+        }
     }
     
     /**
