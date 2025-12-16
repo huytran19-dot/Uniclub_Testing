@@ -53,7 +53,7 @@ if exist "D:\temp\chrome-cache" (
 )
 
 echo.
-echo [6/6] Deleting Maven temp files...
+echo [6/8] Deleting Maven temp files...
 if exist "D:\temp\maven-tests" (
     rmdir /s /q "D:\temp\maven-tests"
     echo    - Deleted D:\temp\maven-tests/
@@ -62,11 +62,31 @@ if exist "D:\temp\maven-tests" (
 )
 
 echo.
+echo [7/8] Deleting Allure cache...
+if exist ".allure" (
+    rmdir /s /q ".allure"
+    echo    - Deleted .allure/
+) else (
+    echo    - Allure cache not found
+)
+
+echo.
+echo [8/8] Killing remaining processes...
+taskkill /F /IM chromedriver.exe /T >nul 2>&1
+taskkill /F /IM chrome.exe /T >nul 2>&1
+taskkill /F /IM allure.exe /T >nul 2>&1
+echo    - Killed chromedriver, chrome, allure processes
+
+echo.
 echo ========================================
-echo   CLEANUP COMPLETED!
+echo   ✅ CLEANUP COMPLETED!
 echo ========================================
-echo   All test files have been removed.
-echo   You can now run tests fresh.
+echo   ✓ All test files removed from project
+echo   ✓ All temp files removed from D:\temp\
+echo   ✓ All processes terminated
+echo   ✓ Disk space freed
 echo ========================================
+echo.
+echo You can now run tests fresh.
 echo.
 pause

@@ -12,18 +12,18 @@ import org.openqa.selenium.WebElement;
 public class VerifyEmailPage extends BasePage {
     
     // Locators
-    private final By pageTitle = By.xpath("//h1[contains(text(),'Xác thực email')]");
-    private final By emailMessage = By.xpath("//p[contains(text(),'Chúng tôi đã gửi')]");
-    private final By otpInput1 = By.name("otp-0");
-    private final By otpInput2 = By.name("otp-1");
-    private final By otpInput3 = By.name("otp-2");
-    private final By otpInput4 = By.name("otp-3");
-    private final By otpInput5 = By.name("otp-4");
-    private final By otpInput6 = By.name("otp-5");
-    private final By verifyButton = By.xpath("//button[contains(text(),'Xác thực')]");
-    private final By resendButton = By.xpath("//button[contains(text(),'Gửi lại')]");
-    private final By errorMessage = By.xpath("//div[contains(@class, 'error') or contains(@style, 'color: red')]");
-    private final By successMessage = By.xpath("//div[contains(@class, 'success') or contains(text(),'thành công')]");
+    private final By pageTitle = By.xpath("//h2[contains(text(),'Verify Your Email')]");
+    private final By emailMessage = By.xpath("//p[contains(text(),'We have sent a 6-digit code to')]");
+    private final By otpInput1 = By.id("code-0");
+    private final By otpInput2 = By.id("code-1");
+    private final By otpInput3 = By.id("code-2");
+    private final By otpInput4 = By.id("code-3");
+    private final By otpInput5 = By.id("code-4");
+    private final By otpInput6 = By.id("code-5");
+    private final By verifyButton = By.xpath("//button[contains(text(),'Verify Email')]");
+    private final By resendButton = By.xpath("//button[contains(text(),'Gửi lại mã')]");
+    private final By errorMessage = By.xpath("//div[contains(@class, 'bg-red-50')]//p");
+    private final By successMessage = By.xpath("//div[contains(@class, 'bg-green-50')]//p");
     
     // Constructor
     public VerifyEmailPage(WebDriver driver) {
@@ -103,6 +103,19 @@ public class VerifyEmailPage extends BasePage {
         try {
             WebElement button = driver.findElement(verifyButton);
             return button.isEnabled();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Check if OTP input fields are visible
+     */
+    public boolean areOTPInputsVisible() {
+        try {
+            // Check if first OTP input is visible (if first is visible, others should be too)
+            WebElement firstInput = driver.findElement(otpInput1);
+            return firstInput.isDisplayed();
         } catch (Exception e) {
             return false;
         }
