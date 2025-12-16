@@ -52,7 +52,7 @@ echo ⏸️  Tests will pause between steps (browser lifecycle)
 echo ========================================
 echo.
 
-call mvn clean test -Dtest=UserLoginTest
+call mvn clean test -Dtest=UserRegisterTest
 set TEST_EXIT_CODE=%ERRORLEVEL%
 
 REM ==============================

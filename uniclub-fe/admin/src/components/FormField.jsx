@@ -22,7 +22,7 @@ export default function FormField({
       {type === "select" ? (
         <select
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
           disabled={disabled}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             error ? "border-red-500" : "border-neutral-200"
@@ -38,7 +38,7 @@ export default function FormField({
       ) : type === "textarea" ? (
         <textarea
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
           placeholder={placeholder}
           rows={rows || 4}
           disabled={disabled}
@@ -52,7 +52,7 @@ export default function FormField({
         <input
           type={type}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
           placeholder={placeholder}
           disabled={disabled}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
