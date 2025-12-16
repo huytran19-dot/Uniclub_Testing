@@ -14,7 +14,7 @@ export default function UserForm() {
   const [form, setForm] = useState({
     email: '',
     password: '',
-    fullName: '',
+    fullname: '',
     roleId: '',
     status: 1
   })
@@ -31,7 +31,7 @@ export default function UserForm() {
         setForm({
           email: userData.email || '',
           password: '', // Don't load password
-          fullName: userData.fullName || '',
+          fullname: userData.fullname || '',
           roleId: userData.roleId || '',
           status: userData.status !== undefined ? userData.status : 1
         })
@@ -69,8 +69,8 @@ export default function UserForm() {
       newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
     }
 
-    if (!form.fullName.trim()) {
-      newErrors.fullName = 'Họ tên không được để trống'
+    if (!form.fullname.trim()) {
+      newErrors.fullname = 'Họ tên không được để trống'
     }
 
     if (!form.roleId) {
@@ -93,10 +93,14 @@ export default function UserForm() {
 
     try {
       const payload = {
-        email: form.email,
-        fullName: form.fullName,
+        fullname: form.fullname,
         roleId: parseInt(form.roleId),
         status: form.status
+      }
+
+      // Only include email for new users, not for updates
+      if (!id) {
+        payload.email = form.email
       }
 
       // Only include password if it's provided (for new users or password change)
@@ -147,6 +151,8 @@ export default function UserForm() {
           onChange={(value) => handleChange('email', value)}
           error={errors.email}
           required
+          disabled={!!id}
+          hint={id ? "Email không thể thay đổi vì được sử dụng để đăng nhập" : ""}
         />
 
         <FormField
@@ -161,9 +167,9 @@ export default function UserForm() {
         <FormField
           label="Họ tên"
           type="text"
-          value={form.fullName}
-          onChange={(value) => handleChange('fullName', value)}
-          error={errors.fullName}
+          value={form.fullname}
+          onChange={(value) => handleChange('fullname', value)}
+          error={errors.fullname}
           required
         />
 
