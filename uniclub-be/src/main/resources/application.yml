@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://root:zTRxYPyBHGYPeHyrghLEJXFDIRNFaLtL@centerbeam.proxy.rlwy.net:12082/uniclub}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:zTRxYPyBHGYPeHyrghLEJXFDIRNFaLtL}
+    url: jdbc:mysql://${MYSQLHOST:centerbeam.proxy.rlwy.net}:${MYSQLPORT:12082}/${MYSQLDATABASE:uniclub}
+    username: ${MYSQLUSER:root}
+    password: ${MYSQLPASSWORD:zTRxYPyBHGYPeHyrghLEJXFDIRNFaLtL}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

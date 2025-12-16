@@ -24,4 +24,6 @@ public interface ProductService {
     List<ProductResponse> getProductsByCategoryId(Integer categoryId);
 
     List<ProductResponse> searchByName(String keyword);
+    
+    List<ProductResponse> searchByDescription(String keyword);
 }

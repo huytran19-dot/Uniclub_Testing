@@ -16,6 +16,11 @@ import com.uniclub.dto.response.User.UserResponse;
 import com.uniclub.entity.Role;
 import com.uniclub.entity.User;
 import com.uniclub.exception.ResourceNotFoundException;
+import com.uniclub.repository.BillingDetailRepository;
+import com.uniclub.repository.CartItemRepository;
+import com.uniclub.repository.CartRepository;
+import com.uniclub.repository.OrderRepository;
+import com.uniclub.repository.OrderVariantRepository;
 import com.uniclub.repository.RoleRepository;
 import com.uniclub.repository.UserRepository;
 import com.uniclub.service.UserService;
@@ -35,6 +40,21 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private VerificationService verificationService;
+
+    @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderVariantRepository orderVariantRepository;
+
+    @Autowired
+    private BillingDetailRepository billingDetailRepository;
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
@@ -75,8 +95,10 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email không thể thay đổi vì được sử dụng để đăng nhập");
         }
 
-        // Update fields
-        user.setFullname(request.getFullname());
+        // Update fields only if provided
+        if (request.getFullname() != null && !request.getFullname().trim().isEmpty()) {
+            user.setFullname(request.getFullname());
+        }
         
         // Update address fields if provided (not null and not empty)
         if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
@@ -144,7 +166,51 @@ public class UserServiceImpl implements UserService {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User", "id", userId);
         }
-        userRepository.deleteById(userId);
+        
+        // ⚠️ IMPORTANT: Check if user has orders - DO NOT allow deletion
+        if (orderRepository.existsByUserId(userId)) {
+            List<com.uniclub.entity.Order> orders = orderRepository.findByUserId(userId);
+            throw new IllegalStateException(
+                "Không thể xóa người dùng này vì đã có " + orders.size() + " đơn hàng. " +
+                "Việc xóa người dùng có đơn hàng sẽ làm mất dữ liệu quan trọng về doanh thu, kế toán và lịch sử giao dịch. " +
+                "Vui lòng VÔ HIỆU HÓA tài khoản thay vì xóa để bảo toàn dữ liệu."
+            );
+        }
+        
+        try {
+            // Only delete cart data (safe to delete as it's temporary shopping data)
+            cartRepository.findByUserId(userId).ifPresent(cart -> {
+                cartItemRepository.deleteAll(cartItemRepository.findByCartId(cart.getId()));
+                cartRepository.delete(cart);
+            });
+            
+            // Note: Comment and Review tables don't have repositories yet
+            // If they exist in database with data, deletion will fail with foreign key error
+            // In that case, create repositories and delete them here, or just disallow deletion
+            
+            // Finally delete the user (only if no orders)
+            userRepository.deleteById(userId);
+            
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            e.printStackTrace();
+            String errorMsg = e.getMessage();
+            String detailMsg = "Không thể xóa người dùng này vì còn dữ liệu liên quan: ";
+            
+            if (errorMsg != null) {
+                if (errorMsg.contains("FK_comment_user") || errorMsg.contains("comment")) {
+                    detailMsg += "Người dùng này có bình luận. ";
+                }
+                if (errorMsg.contains("FK_review_user") || errorMsg.contains("review")) {
+                    detailMsg += "Người dùng này có đánh giá sản phẩm. ";
+                }
+            }
+            
+            detailMsg += "Vui lòng VÔ HIỆU HÓA tài khoản thay vì xóa.";
+            throw new IllegalStateException(detailMsg);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Không thể xóa người dùng: " + e.getMessage());
+        }
     }
 
     @Override
@@ -165,12 +231,14 @@ public class UserServiceImpl implements UserService {
         // Encode password
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        // Find or create USER role
-        Role userRole = roleRepository.findById(1).orElseGet(() -> {
-            // If role doesn't exist, create it
+        // Find Buyer role (ID = 2) for new registered users
+        // ID 1 = SysAdmin (reserved for administrators)
+        // ID 2 = Buyer (regular users/customers)
+        Role userRole = roleRepository.findById(2).orElseGet(() -> {
+            // If Buyer role doesn't exist, create it
             Role newRole = new Role();
-            newRole.setName("USER");
-            newRole.setDescription("Regular user/customer role");
+            newRole.setName("Buyer");
+            newRole.setDescription("Người mua - Có thể xem và mua sản phẩm");
             newRole.setStatus((byte) 1);
             return roleRepository.save(newRole);
         });
@@ -205,8 +273,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Check if already verified (status 2 = verified user)
-        if (user.getStatus() == 2) {
+        // Check if already verified (status 1 = active/verified)
+        if (user.getStatus() == 1) {
             throw new IllegalArgumentException("Account is already verified");
         }
 
@@ -216,8 +284,8 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid or expired verification code");
         }
 
-        // Activate account as verified user (status 2)
-        user.setStatus((byte) 2);
+        // Activate account (status 1 = active/verified)
+        user.setStatus((byte) 1);
         // Save updated user
         userRepository.save(user);
 
@@ -249,9 +317,22 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        // Check if account is verified (status = 1)
+        // Check account status
+        // Status: 0 = Unverified, 1 = Active, 2 = Disabled
+        if (user.getStatus() == 0) {
+            throw new IllegalStateException(
+                "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản của bạn."
+            );
+        }
+        
+        if (user.getStatus() == 2) {
+            throw new IllegalStateException(
+                "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết."
+            );
+        }
+        
         if (user.getStatus() != 1) {
-            throw new IllegalStateException("Account is not verified. Please check your email to verify your account.");
+            throw new IllegalStateException("Trạng thái tài khoản không hợp lệ. Vui lòng liên hệ quản trị viên.");
         }
 
         // Return user data

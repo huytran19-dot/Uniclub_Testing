@@ -10,6 +10,8 @@ export default function FormField({
   placeholder,
   options,
   rows,
+  disabled = false,
+  hint = "",
 }) {
   return (
     <div className="mb-4">
@@ -20,10 +22,11 @@ export default function FormField({
       {type === "select" ? (
         <select
           value={value}
-          onChange={onChange}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             error ? "border-red-500" : "border-neutral-200"
-          }`}
+          } ${disabled ? "bg-neutral-100 text-neutral-500 cursor-not-allowed" : ""}`}
         >
           <option value="">Chọn {label.toLowerCase()}</option>
           {options?.map((opt) => (
@@ -35,12 +38,13 @@ export default function FormField({
       ) : type === "textarea" ? (
         <textarea
           value={value}
-          onChange={onChange}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows || 4}
+          disabled={disabled}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             error ? "border-red-500" : "border-neutral-200"
-          }`}
+          } ${disabled ? "bg-neutral-100 text-neutral-500 cursor-not-allowed" : ""}`}
         />
       ) : type === "checkbox" ? (
         <input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4" />
@@ -48,13 +52,15 @@ export default function FormField({
         <input
           type={type}
           value={value}
-          onChange={onChange}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          disabled={disabled}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             error ? "border-red-500" : "border-neutral-200"
-          }`}
+          } ${disabled ? "bg-neutral-100 text-neutral-500 cursor-not-allowed" : ""}`}
         />
       )}
+      {hint && !error && <p className="text-neutral-500 text-sm mt-1 italic">{hint}</p>}
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   )
