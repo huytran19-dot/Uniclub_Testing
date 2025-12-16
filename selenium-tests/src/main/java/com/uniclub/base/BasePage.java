@@ -108,6 +108,14 @@ public class BasePage {
     }
     
     /**
+     * Wait for element to be clickable with custom timeout
+     */
+    protected WebElement waitForClickable(By locator, int timeoutSeconds) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds));
+        return wait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(locator));
+    }
+    
+    /**
      * Scroll to element
      */
     protected void scrollToElement(By locator) {

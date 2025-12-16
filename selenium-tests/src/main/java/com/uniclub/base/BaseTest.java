@@ -163,10 +163,13 @@ public class BaseTest {
                 chromeOptions.addArguments("--no-default-browser-check");
                 chromeOptions.addArguments("--start-maximized");
                 
-                // ⚠️ CRITICAL: Use D drive for ALL Chrome data to prevent C drive from filling up
-                // This stores user profiles, cache, temp files on D drive instead of C:\Users\...\AppData
-                chromeOptions.addArguments("--user-data-dir=D:\\temp\\selenium-chrome-profile");
-                chromeOptions.addArguments("--disk-cache-dir=D:\\temp\\chrome-cache");
+                // ⚠️ CRITICAL: Use UNIQUE profile per session to avoid lock conflicts
+                // Generate unique folder name using timestamp to ensure no conflicts
+                String uniqueId = String.valueOf(System.currentTimeMillis());
+                String userDataDir = "D:\\temp\\selenium-chrome-profile-" + uniqueId;
+                String cacheDir = "D:\\temp\\chrome-cache-" + uniqueId;
+                chromeOptions.addArguments("--user-data-dir=" + userDataDir);
+                chromeOptions.addArguments("--disk-cache-dir=" + cacheDir);
                 chromeOptions.addArguments("--force-device-scale-factor=1");
                 
                 // Set preferences to disable password manager
