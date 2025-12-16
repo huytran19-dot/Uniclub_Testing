@@ -90,13 +90,13 @@ export function Header() {
 
           <nav className="hidden md:flex items-center gap-6">
             {categories.map((category) => (
-              <Link
+              <button
                 key={category.id}
-                to={`/products?category=${category.id}`}
-                className="text-sm font-medium text-foreground hover:text-primary transition-colors underline-offset-4 decoration-2 decoration-transparent hover:decoration-primary"
+                onClick={() => navigate(`/products?category=${category.id}`)}
+                className="text-sm font-medium text-foreground hover:text-primary transition-colors underline-offset-4 decoration-2 decoration-transparent hover:decoration-primary bg-transparent border-none cursor-pointer"
               >
                 {category.name}
-              </Link>
+              </button>
             ))}
           </nav>
 
@@ -163,15 +163,17 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4">
             <nav className="flex flex-col gap-4">
-              {activeCategories.map((category) => (
-                <Link
+              {categories.map((category) => (
+                <button
                   key={category.id}
-                  to={`/products?category=${category.id}`}
-                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    navigate(`/products?category=${category.id}`)
+                    setMobileMenuOpen(false)
+                  }}
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors bg-transparent border-none cursor-pointer text-left"
                 >
                   {category.name}
-                </Link>
+                </button>
               ))}
             </nav>
           </div>

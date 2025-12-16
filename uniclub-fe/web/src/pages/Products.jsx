@@ -96,35 +96,44 @@ export default function ProductsPage() {
   }, [])
 
   useEffect(() => {
-    if (initializedFromURL.current) return
-
     setMounted(true)
-    initializedFromURL.current = true
 
     const categoryParam = searchParams.get("category")
     const brandParam = searchParams.get("brand")
     const searchParam = searchParams.get("search")
     const sortParam = searchParams.get("sort")
 
+    // Reset filters first
+    const newFilters = {
+      categories: [],
+      brands: [],
+      sizes: [],
+      colors: [],
+      priceRange,
+      stockOnly: false,
+    }
+
     if (categoryParam) {
-      setFilters((prev) => ({
-        ...prev,
-        categories: categoryParam.split(",").map(Number),
-      }))
+      newFilters.categories = categoryParam.split(",").map(Number)
     }
     if (brandParam) {
-      setFilters((prev) => ({
-        ...prev,
-        brands: brandParam.split(",").map(Number),
-      }))
+      newFilters.brands = brandParam.split(",").map(Number)
     }
+    
+    setFilters(newFilters)
+    
     if (searchParam) {
       setSearchQuery(searchParam)
+    } else {
+      setSearchQuery("")
     }
+    
     if (sortParam) {
       setSortBy(sortParam)
+    } else {
+      setSortBy("newest")
     }
-  }, [searchParams])
+  }, [searchParams, priceRange])
 
   const updateURL = (newFilters, search, sort) => {
     const params = new URLSearchParams()
