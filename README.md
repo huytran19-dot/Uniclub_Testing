@@ -1,108 +1,309 @@
 # 🛍️ Uniclub E-Commerce System
 
-A full-stack e-commerce platform built with Spring Boot and React, featuring admin management dashboard and customer shopping website.
+[![CI/CD](https://github.com/huytran19-dot/Uniclub_Testing/actions/workflows/cd.yml/badge.svg)](https://github.com/huytran19-dot/Uniclub_Testing/actions)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://github.com/huytran19-dot/Uniclub_Testing/pkgs/container/uniclub-frontend)
+
+Modern full-stack e-commerce platform with Spring Boot backend and React frontend, featuring comprehensive admin dashboard and customer shopping experience.
+
+## 🌐 Live Demo
+
+Experience the platform in action:
+
+- 🛍️ **Customer Website:** https://uniclub-testing.vercel.app/
+- 👨‍💼 **Admin Dashboard:** https://uniclub-testing-caeg.vercel.app/dashboard
+- 🔧 **Backend API:** https://uniclubtesting-production.up.railway.app/api
+
+### Demo Credentials
+```
+Admin: admin@uniclub.com / huytran123
+Customer: buyer@uniclub.com / huytran123
+```
+
+> **Note:** Backend is hosted on Railway's free tier, so initial requests may take a few seconds to wake up.
 
 ## 🚀 Quick Start
 
-### Option 1: Development Mode (với Hot Reload)
-Dành cho lúc đang code và cần thay đổi nhanh:
+### Development Mode (Hot Reload)
+Perfect for active development with instant code updates:
 
 ```bash
 # Clone repository
 git clone https://github.com/huytran19-dot/Uniclub_Testing.git
 cd Uniclub_Testing
 
-# Chạy tất cả (MySQL Docker + Backend Dev + Frontend Dev)
+# Start everything (MySQL Docker + Backend + Frontend)
 start-all.bat
 ```
 
-**Sau khi chạy:**
-- Frontend Web: http://localhost:5173 (Hot reload enabled)
-- Frontend Admin: http://localhost:5174 (Hot reload enabled)
-- Backend API: http://localhost:8080 (Hot reload enabled)
-- phpMyAdmin: http://localhost:8081
+**Access points:**
+- 🌐 Customer Website: http://localhost:5173
+- 👨‍💼 Admin Dashboard: http://localhost:5174
+- 🔧 Backend API: http://localhost:8080
+- 💾 phpMyAdmin: http://localhost:8081
 
-### Option 2: Docker Mode (Production-like)
-Dành cho testing và demo, giống môi trường production:
+### Production Mode (Docker)
+Production-ready deployment with Docker containers:
 
 ```bash
-# Cách 1: Dùng script
-start-docker-all.bat
-
-# Cách 2: Dùng lệnh trực tiếp
+# Start with Docker Compose
 docker-compose up -d
 ```
 
-**Sau khi chạy:**
-- Frontend (Web + Admin): http://localhost
-- Admin Panel: http://localhost/admin
-- Backend API: http://localhost/api
-- phpMyAdmin: http://localhost:8081
+**Access points:**
+- 🌐 Main Website: http://localhost
+- 👨‍💼 Admin Panel: http://localhost/admin
+- 🔧 Backend API: http://localhost/api
+- 💾 phpMyAdmin: http://localhost:8081
 
-### Stop All Services
+### Stop Services
 
 ```bash
-# Stop tất cả (Docker + Dev processes)
+# Stop all services
 stop-all.bat
 
-# Hoặc chỉ stop Docker
+# Or stop Docker only
 docker-compose down
 ```
 
-## 📖 Full Documentation
-
-See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed setup instructions, troubleshooting, and configuration.
-See **[DOCKER_SETUP_GUIDE.md](DOCKER_SETUP_GUIDE.md)** for Docker-specific documentation.
-
 ## ✨ Features
 
-- 🔐 User Authentication & Authorization (JWT + Email OTP)
-- 🛒 Shopping Cart & Checkout
-- 💳 Payment Integration (COD & VNPay)
-- 📦 Order Management & Tracking
-- 👔 Product Management with Variants
-- 📊 Admin Dashboard
-- 📧 Email Notifications (SendGrid)
-- 🚚 Shipping Fee Calculation
+### Customer Features
+- 🔐 **Authentication** - JWT-based login with email OTP verification
+- 🛒 **Shopping Cart** - Real-time cart management with quantity control
+- 💳 **Payment** - Multiple payment methods (COD & VNPay)
+- 📦 **Order Tracking** - Real-time order status updates
+- 🔍 **Product Search** - Advanced filtering by category, brand, size, color
+- 👤 **User Profile** - Account management and order history
 
-## 🔑 Login Credentials
+### Admin Features
+- 📊 **Dashboard** - Sales analytics and business insights
+- 👔 **Product Management** - CRUD with variants (colors, sizes)
+- 📦 **Order Management** - Order processing and status updates
+- 📥 **Inventory** - Goods Receipt Note (GRN) system with anti-spam protection
+- 👥 **User Management** - Customer and staff administration
+- 🏢 **Supplier Management** - Vendor relationship management
+- 📧 **Email Notifications** - Automated order confirmations (SendGrid)
 
-- **Email:** admin@uniclub.com
-- **Password:** Admin@123
-- **phpMyAdmin:** http://localhost:8081
+### Technical Features
+- 🚀 **CI/CD Pipeline** - Automated builds and deployments
+- 🐳 **Docker Support** - Containerized deployment
+- 🔒 **Security** - Spring Security + JWT authentication
+- 📱 **Responsive Design** - Mobile-friendly interface
+- ⚡ **Performance** - Optimized loading with code splitting
 
-## 🔑 Default Login
+## 🔑 Default Login Credentials
 
+### Development Environment
 ```
 Admin: admin@uniclub.com / huytran123
-Buyer: buyer@uniclub.com / huytran123
+Customer: buyer@uniclub.com / huytran123
+```
+
+### Database Access
+```
+phpMyAdmin: http://localhost:8081
+Username: root
+Password: (no password)
 ```
 
 ## 🛠️ Tech Stack
 
-**Backend:**
-- Spring Boot 3.x
-- Spring Security + JWT
-- MySQL 8.0
-- SendGrid API
-- VNPay Payment Gateway
+### Backend
+- **Framework:** Spring Boot 3.x
+- **Security:** Spring Security + JWT
+- **Database:** MySQL 8.0
+- **Email:** SendGrid API
+- **Payment:** VNPay Gateway
+- **Build:** Maven
+
+### Frontend
+- **Framework:** React 19.2.0
+- **Routing:** React Router v7
+- **Styling:** Tailwind CSS
+- **Icons:** Lucide React
+- **� Project Structure
+
+```
+uniclub/
+├── .github/
+│   └── workflows/         # CI/CD pipelines
+│       ├── ci.yml        # Continuous Integration
+│       └── cd.yml        # Continuous Deployment
+├── uniclub-be/           # Spring Boot Backend
+│   ├── src/
+│   ├── Dockerfile
+│   └── pom.xml
+├── uniclub-fe/           # React Frontend (Monorepo)
+│   ├── admin/           # Admin Dashboard (Port 5174)
+│   ├── web/             # Customer Website (Port 5173)
+│   ├── Dockerfile       # Multi-stage build
+│   └── nginx.conf       # Production config
+├── mysql-init/          # Database initialization
+│   └── init-database.sql
+├── selenium-tests/      # E2E testing
+├── docker-compose.yml   # Local development
+└── *.bat               # Windows helper scripts
+```
+
+## 📝 Prerequisites
+
+Before running the project, ensure you have:
+
+### Required
+- **Docker Desktop** - For MySQL and production deployment
+- *🐛 Common Issues & Solutions
+
+### Port Already in Use
+```bash
+# Check and kill process on port
+netstat -ano | findstr :8080
+taskkill /PID <process_id> /F
+```
+
+### Frontend Build Errors
+```bash
+# Clear cache and reinstall
+cd uniclub-fe/admin
+rm -rf node_modules .vite
+pnpm install
+```
+
+### Database Connection Issues
+- Ensure MySQL container is running: `docker ps`
+- Check connection in `application.properties`
+- Verify port 3306 is not blocked
+
+### Docker Build ARM64 Error
+- Project only supports `linux/amd64` platform
+- ARM64 builds disabled due to QEMU emulation issues
+- Works on most cloud providers (AWS, GCP, Azure)
+
+## 🧪 Testing
+
+### Automated Testing Suite
+
+The project includes comprehensive testing at multiple levels:
+
+#### Unit Tests
+```bash
+# Backend tests
+cd uniclub-be
+mvn test
+
+# Frontend tests
+cd uniclub-fe/admin
+pnpm test
+```
+
+#### End-to-End Tests (Selenium)
+We use Selenium WebDriver with TestNG for automated browser testing:
+
+```bash
+# Run all E2E tests
+cd selenium-tests
+mvn test
+
+# Run with Chrome in visible mode
+./run-visible-chrome-with-allure.bat
+
+# Generate Allure report
+mvn allure:serve
+```
+
+**Test Coverage:**
+- ✅ User Registration & Login
+- ✅ Product Search & Filtering
+- ✅ Shopping Cart Operations
+- ✅ Checkout & Payment Flow
+- ✅ Order Management
+- ✅ Admin Dashboard Functions
+
+**Features:**
+- 🔍 Page Object Model (POM) design pattern
+- 📊 Allure reporting with screenshots
+- 🧹 Automatic cleanup of test data
+- 🌐 Cross-browser testing support
+- ⚡ Parallel test execution
+
+See [selenium-tests/README.md](selenium-tests/README.md) and [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed testing documentation.
+
+## 🚀 Deployment
+
+### Production Deployments
+
+The application is deployed on multiple platforms:
 
 **Frontend:**
-- React 19.2.0
-- React Router
-- Tailwind CSS
-- Lucide Icons
+- **Customer Website:** Vercel - https://uniclub-testing.vercel.app/
+- **Admin Dashboard:** Vercel - https://uniclub-testing-caeg.vercel.app/
 
-## 📝 Important Notes
+**Backend:**
+- **API Server:** Railway - https://uniclubtesting-production.up.railway.app/api
+- **Database:** Railway MySQL instance
 
-⚠️ **Before running the project:**
-1. Install prerequisites: Docker, Java 17+, Node.js 18+, Maven, pnpm
-2. Get SendGrid API key from https://sendgrid.com/
-3. Set environment variable: `SENDGRID_API_KEY`
-4. See [SETUP_GUIDE.md](SETUP_GUIDE.md) for details
+### Docker Hub / GHCR
+Images are automatically built and pushed via GitHub Actions:
+- `ghcr.io/huytran19-dot/uniclub-backend:latest`
+- `ghcr.io/huytran19-dot/uniclub-frontend:latest`
 
-## 📦 Project Structure
+### Deploy Your Own
 
+#### Deploy to Vercel (Frontend)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/huytran19-dot/Uniclub_Testing)
+
+#### Deploy to Railway (Backend)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template)
+
+#### Manual Deployment
+```bash
+# Build and run with Docker Compose
+docker-compose -f docker-compose.production.yml up -d
+```
+
+See [CICD.md](CICD.md) for CI/CD pipeline details.
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
+
+### Code Style
+- Backend: Follow Spring Boot best practices
+- Frontend: Use ESLint and Prettier configurations
+- Commit messages: Use conventional commits format
+
+## 📄 License
+
+This project is for educational purposes only.
+
+## 👥 Team
+
+- **Frontend:** React + Tailwind CSS
+- **Backend:** Spring Boot + MySQL
+- **DevOps:** Docker + GitHub Actions
+
+---
+
+📚 **Documentation:**
+- [Setup Guide](SETUP_GUIDE.md) - Detailed installation instructions
+- [Docker Guide](DOCKER_SETUP_GUIDE.md) - Docker-specific documentation
+- [Testing Guide](TESTING_GUIDE.md) - Testing procedures
+- [CI/CD Guide](CICD.md) - Deployment pipeline
+
+🐛 **Found a bug?** [Open an issue](https://github.com/huytran19-dot/Uniclub_Testing/issues)
+
+⭐ **Like this project?** Give it a star!
+
+# Verify installations
+java -version
+node -version
+pnpm -version
+docker --version
 ```
 Uniclub_Testing/
 ├── uniclub-be/           # Spring Boot Backend
