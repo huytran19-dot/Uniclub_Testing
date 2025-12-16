@@ -3,21 +3,24 @@ package com.uniclub.pages;
 import com.uniclub.base.BasePage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.Select;
 
 /**
- * CheckoutPage - Page Object for Checkout page (User side)
+ * CheckoutPage - Page Object for Checkout page
+ * URL: http://localhost:5173/checkout
  */
 public class CheckoutPage extends BasePage {
     
-    // Locators
+    // Locators - Page identification
     private final By pageTitle = By.xpath("//h1[contains(text(),'Thanh toán')] | //*[contains(text(),'Checkout')]");
     private final By loadingSpinner = By.cssSelector(".animate-spin");
     
-    // Shipping Information Form
+    // Locators - Shipping Information Form (match AddressForm.jsx)
     private final By shippingFormSection = By.xpath("//h2[contains(text(),'Thông tin giao hàng')]");
     private final By fullNameInput = By.cssSelector("input[name='full_name'], input[placeholder*='Họ tên']");
-    private final By phoneInput = By.cssSelector("input[name='phone'], input[placeholder*='Số điện thoại']");
     private final By emailInput = By.cssSelector("input[name='email'], input[type='email']");
+    private final By phoneInput = By.cssSelector("input[name='phone'], input[placeholder*='Số điện thoại']");
     private final By addressInput = By.cssSelector("input[name='address'], textarea[name='address']");
     private final By provinceSelect = By.cssSelector("select[name='province']");
     private final By districtSelect = By.cssSelector("select[name='district']");
@@ -26,26 +29,32 @@ public class CheckoutPage extends BasePage {
     private final By useDefaultAddressCheckbox = By.cssSelector("input[type='checkbox'][name='useDefaultAddress']");
     private final By changeAddressButton = By.xpath("//button[contains(text(),'Thay đổi địa chỉ')]");
     
-    // Payment Method
+    // Locators - Payment Method
     private final By paymentMethodSection = By.xpath("//h2[contains(text(),'Phương thức thanh toán')]");
+    private final By codRadio = By.xpath("//input[@type='radio'][@value='COD']");
+    private final By vnpayRadio = By.xpath("//input[@type='radio'][@value='VNPay']");
     private final By codPaymentOption = By.xpath("//input[@type='radio'][@value='COD'] | //label[contains(text(),'COD')]");
     private final By vnpayPaymentOption = By.xpath("//input[@type='radio'][@value='VNPay'] | //label[contains(text(),'VNPay')]");
     
-    // Order Summary (right panel)
+    // Locators - Order Summary (right panel)
+    private final By orderSummary = By.xpath("//h3[contains(text(),'Đơn hàng của bạn')] | //h3[contains(text(),'Tóm tắt đơn hàng')]");
     private final By orderSummarySection = By.xpath("//h3[contains(text(),'Tóm tắt đơn hàng')] | //*[contains(text(),'Order Summary')]");
     private final By cartItemsList = By.cssSelector(".cart-item, [class*='checkout-item']");
     private final By subtotalValue = By.xpath("//span[contains(text(),'Tạm tính')]/following-sibling::*");
     private final By shippingValue = By.xpath("//span[contains(text(),'Phí vận chuyển')]/following-sibling::*");
+    private final By totalAmount = By.xpath("//*[contains(text(),'Tổng cộng')]//following-sibling::*");
     private final By totalValue = By.xpath("//span[contains(text(),'Tổng cộng')]/following-sibling::span");
     
-    // Action buttons
-    private final By placeOrderButton = By.xpath("//button[contains(text(),'Đặt hàng')] | //button[contains(text(),'Place Order')]");
+    // Locators - Action Buttons
+    private final By placeOrderButton = By.xpath("//button[@type='submit'] | //button[contains(text(),'Đặt hàng')] | //button[contains(text(),'Place Order')]");
+    private final By backToCartButton = By.xpath("//a[contains(@href,'/cart')] | //a[contains(text(),'Giỏ hàng')]");
     private final By backToCartLink = By.xpath("//a[@href='/cart'] | //a[contains(text(),'Giỏ hàng')]");
     
-    // Messages
+    // Locators - Messages
     private final By emptyCartMessage = By.xpath("//*[contains(text(),'Giỏ hàng trống')]");
-    private final By errorMessage = By.cssSelector(".error-message, [class*='error']");
+    private final By errorMessage = By.xpath("//div[contains(@class, 'bg-red')] | .error-message, [class*='error']");
     private final By successMessage = By.cssSelector(".success-message, [class*='success']");
+    private final By validationError = By.xpath("//input:invalid");
     
     /**
      * Constructor
@@ -69,7 +78,7 @@ public class CheckoutPage extends BasePage {
         try {
             waitForPageLoad();
             String currentUrl = getCurrentUrl();
-            return currentUrl.contains("/checkout");
+            return currentUrl.contains("/checkout") || isDisplayed(pageTitle);
         } catch (Exception e) {
             return false;
         }
@@ -84,6 +93,20 @@ public class CheckoutPage extends BasePage {
         } catch (Exception e) {
             // Ignore
         }
+    }
+    
+    /**
+     * Wait for checkout page to load (legacy method)
+     */
+    public void waitForPageToLoad() {
+        waitForCheckoutPageLoad();
+    }
+    
+    /**
+     * Check if showing empty cart message
+     */
+    public boolean isEmptyCartMessageDisplayed() {
+        return isDisplayed(emptyCartMessage);
     }
     
     /**
@@ -105,6 +128,42 @@ public class CheckoutPage extends BasePage {
             return isDisplayed(shippingFormSection);
         } catch (Exception e) {
             return false;
+        }
+    }
+    
+    /**
+     * Fill billing details - basic text fields only
+     * Note: province/district/ward may be pre-populated from user profile
+     */
+    public void fillBillingDetails(String fullName, String email, String phone, String address) {
+        waitForPageToLoad();
+        if (fullName != null && !fullName.isEmpty()) {
+            try {
+                type(fullNameInput, fullName);
+            } catch (Exception e) {
+                System.out.println("⚠️ Could not fill fullName - may be pre-populated");
+            }
+        }
+        if (email != null && !email.isEmpty()) {
+            try {
+                type(emailInput, email);
+            } catch (Exception e) {
+                System.out.println("⚠️ Could not fill email - may be pre-populated");
+            }
+        }
+        if (phone != null && !phone.isEmpty()) {
+            try {
+                type(phoneInput, phone);
+            } catch (Exception e) {
+                System.out.println("⚠️ Could not fill phone - may be pre-populated");
+            }
+        }
+        if (address != null && !address.isEmpty()) {
+            try {
+                type(addressInput, address);
+            } catch (Exception e) {
+                System.out.println("⚠️ Could not fill address - may be pre-populated");
+            }
         }
     }
     
@@ -132,38 +191,184 @@ public class CheckoutPage extends BasePage {
     }
     
     /**
-     * Select province
+     * Select province from dropdown (using Select)
      */
-    public void selectProvince(String province) {
+    public void selectProvince(String provinceName) {
         try {
-            driver.findElement(provinceSelect).sendKeys(province);
-            Thread.sleep(1000); // Wait for district to load
+            WebElement selectElement = driver.findElement(provinceSelect);
+            Select select = new Select(selectElement);
+            select.selectByVisibleText(provinceName);
+            Thread.sleep(1000); // Wait for districts to load
         } catch (Exception e) {
-            System.out.println("Failed to select province: " + e.getMessage());
+            // Try alternative method using sendKeys
+            try {
+                driver.findElement(provinceSelect).sendKeys(provinceName);
+                Thread.sleep(1000);
+            } catch (Exception ex) {
+                System.out.println("⚠️ Could not select province: " + e.getMessage());
+            }
         }
     }
     
     /**
-     * Select district
+     * Select district from dropdown (using Select)
      */
-    public void selectDistrict(String district) {
+    public void selectDistrict(String districtName) {
         try {
-            driver.findElement(districtSelect).sendKeys(district);
-            Thread.sleep(1000); // Wait for ward to load
+            WebElement selectElement = driver.findElement(districtSelect);
+            Select select = new Select(selectElement);
+            select.selectByVisibleText(districtName);
+            Thread.sleep(1000); // Wait for wards to load
         } catch (Exception e) {
-            System.out.println("Failed to select district: " + e.getMessage());
+            // Try alternative method using sendKeys
+            try {
+                driver.findElement(districtSelect).sendKeys(districtName);
+                Thread.sleep(1000);
+            } catch (Exception ex) {
+                System.out.println("⚠️ Could not select district: " + e.getMessage());
+            }
         }
     }
     
     /**
-     * Select ward
+     * Select ward from dropdown (using Select)
      */
-    public void selectWard(String ward) {
+    public void selectWard(String wardName) {
         try {
-            driver.findElement(wardSelect).sendKeys(ward);
+            WebElement selectElement = driver.findElement(wardSelect);
+            Select select = new Select(selectElement);
+            select.selectByVisibleText(wardName);
             Thread.sleep(500);
         } catch (Exception e) {
-            System.out.println("Failed to select ward: " + e.getMessage());
+            // Try alternative method using sendKeys
+            try {
+                driver.findElement(wardSelect).sendKeys(wardName);
+                Thread.sleep(500);
+            } catch (Exception ex) {
+                System.out.println("⚠️ Could not select ward: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Select first available province (index 1 - skip placeholder)
+     * @return true if selection successful
+     */
+    public boolean selectFirstAvailableProvince() {
+        try {
+            WebElement selectElement = driver.findElement(provinceSelect);
+            Select select = new Select(selectElement);
+            
+            // Wait for options to load (provinces are loaded async from API)
+            for (int i = 0; i < 10; i++) {
+                if (select.getOptions().size() > 1) break;
+                Thread.sleep(500);
+            }
+            
+            java.util.List<WebElement> options = select.getOptions();
+            if (options.size() > 1) {
+                // Select index 1 (skip "Chọn tỉnh/thành phố" placeholder at index 0)
+                select.selectByIndex(1);
+                String selectedText = select.getFirstSelectedOption().getText();
+                System.out.println("✅ Selected province: " + selectedText);
+                Thread.sleep(1500); // Wait for districts to load
+                return true;
+            } else {
+                System.out.println("⚠️ No provinces available to select");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not select province: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Select first available district
+     * @return true if selection successful
+     */
+    public boolean selectFirstAvailableDistrict() {
+        try {
+            WebElement selectElement = driver.findElement(districtSelect);
+            
+            // Wait for element to be enabled (dependent on province selection)
+            for (int i = 0; i < 10; i++) {
+                if (selectElement.isEnabled()) break;
+                Thread.sleep(500);
+                selectElement = driver.findElement(districtSelect);
+            }
+            
+            if (!selectElement.isEnabled()) {
+                System.out.println("⚠️ District select is disabled");
+                return false;
+            }
+            
+            Select select = new Select(selectElement);
+            
+            // Wait for options to load
+            for (int i = 0; i < 10; i++) {
+                if (select.getOptions().size() > 1) break;
+                Thread.sleep(500);
+            }
+            
+            java.util.List<WebElement> options = select.getOptions();
+            if (options.size() > 1) {
+                select.selectByIndex(1);
+                String selectedText = select.getFirstSelectedOption().getText();
+                System.out.println("✅ Selected district: " + selectedText);
+                Thread.sleep(1500); // Wait for wards to load
+                return true;
+            } else {
+                System.out.println("⚠️ No districts available to select");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not select district: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Select first available ward
+     * @return true if selection successful
+     */
+    public boolean selectFirstAvailableWard() {
+        try {
+            WebElement selectElement = driver.findElement(wardSelect);
+            
+            // Wait for element to be enabled (dependent on district selection)
+            for (int i = 0; i < 10; i++) {
+                if (selectElement.isEnabled()) break;
+                Thread.sleep(500);
+                selectElement = driver.findElement(wardSelect);
+            }
+            
+            if (!selectElement.isEnabled()) {
+                System.out.println("⚠️ Ward select is disabled");
+                return false;
+            }
+            
+            Select select = new Select(selectElement);
+            
+            // Wait for options to load
+            for (int i = 0; i < 10; i++) {
+                if (select.getOptions().size() > 1) break;
+                Thread.sleep(500);
+            }
+            
+            java.util.List<WebElement> options = select.getOptions();
+            if (options.size() > 1) {
+                select.selectByIndex(1);
+                String selectedText = select.getFirstSelectedOption().getText();
+                System.out.println("✅ Selected ward: " + selectedText);
+                return true;
+            } else {
+                System.out.println("⚠️ No wards available to select");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not select ward: " + e.getMessage());
+            return false;
         }
     }
     
@@ -183,6 +388,60 @@ public class CheckoutPage extends BasePage {
     }
     
     /**
+     * Fill all required address fields (unconditionally)
+     * This ensures all required fields have values for form submission
+     */
+    public void fillAllRequiredFields(String phone, String address) {
+        waitForPageToLoad();
+        
+        // Always fill phone if provided
+        try {
+            WebElement phoneField = driver.findElement(phoneInput);
+            String currentPhone = phoneField.getAttribute("value");
+            if (currentPhone == null || currentPhone.isEmpty()) {
+                phoneField.clear();
+                phoneField.sendKeys(phone);
+                System.out.println("✅ Filled phone: " + phone);
+            } else {
+                System.out.println("ℹ️ Phone already has value: " + currentPhone);
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not fill phone: " + e.getMessage());
+        }
+        
+        // Always fill address if provided
+        try {
+            WebElement addressField = driver.findElement(addressInput);
+            String currentAddress = addressField.getAttribute("value");
+            if (currentAddress == null || currentAddress.isEmpty()) {
+                addressField.clear();
+                addressField.sendKeys(address);
+                System.out.println("✅ Filled address: " + address);
+            } else {
+                System.out.println("ℹ️ Address already has value: " + currentAddress);
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not fill address: " + e.getMessage());
+        }
+        
+        // Check and select province/district/ward if not already selected
+        try {
+            WebElement provinceElement = driver.findElement(provinceSelect);
+            String currentProvince = provinceElement.getAttribute("value");
+            if (currentProvince == null || currentProvince.isEmpty()) {
+                System.out.println("📍 Selecting address dropdowns...");
+                selectFirstAvailableProvince();
+                selectFirstAvailableDistrict();
+                selectFirstAvailableWard();
+            } else {
+                System.out.println("ℹ️ Province already selected: " + currentProvince);
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not check/select address dropdowns: " + e.getMessage());
+        }
+    }
+    
+    /**
      * Add order note
      */
     public void addNote(String note) {
@@ -194,19 +453,32 @@ public class CheckoutPage extends BasePage {
     }
     
     /**
-     * Select payment method
+     * Check if form is pre-populated (user has default address)
+     */
+    public boolean isFormPrePopulated() {
+        try {
+            WebElement fullName = driver.findElement(fullNameInput);
+            return fullName.getAttribute("value") != null && !fullName.getAttribute("value").isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Select payment method (COD or VNPay)
      */
     public void selectPaymentMethod(String method) {
         try {
-            if (method.equalsIgnoreCase("COD")) {
-                click(codPaymentOption);
-            } else if (method.equalsIgnoreCase("VNPay")) {
-                click(vnpayPaymentOption);
+            if ("COD".equalsIgnoreCase(method)) {
+                click(codRadio);
+                System.out.println("✓ Selected payment method: COD");
+            } else if ("VnPay".equalsIgnoreCase(method) || "VNPay".equalsIgnoreCase(method)) {
+                click(vnpayRadio);
+                System.out.println("✓ Selected payment method: VNPay");
             }
             Thread.sleep(500);
-            System.out.println("✓ Selected payment method: " + method);
         } catch (Exception e) {
-            System.out.println("✗ Failed to select payment method: " + e.getMessage());
+            System.out.println("⚠️ Payment method " + method + " may already be selected or failed: " + e.getMessage());
         }
     }
     
@@ -215,9 +487,9 @@ public class CheckoutPage extends BasePage {
      */
     public String getSelectedPaymentMethod() {
         try {
-            if (driver.findElement(codPaymentOption).isSelected()) {
+            if (driver.findElement(codRadio).isSelected()) {
                 return "COD";
-            } else if (driver.findElement(vnpayPaymentOption).isSelected()) {
+            } else if (driver.findElement(vnpayRadio).isSelected()) {
                 return "VNPay";
             }
         } catch (Exception e) {
@@ -242,7 +514,7 @@ public class CheckoutPage extends BasePage {
      */
     public boolean isOrderSummaryDisplayed() {
         try {
-            return isDisplayed(orderSummarySection);
+            return isDisplayed(orderSummarySection) || isDisplayed(orderSummary);
         } catch (Exception e) {
             return false;
         }
@@ -280,7 +552,12 @@ public class CheckoutPage extends BasePage {
             waitForCheckoutPageLoad();
             return getText(totalValue);
         } catch (Exception e) {
-            return "";
+            // Try alternative locator
+            try {
+                return getText(totalAmount);
+            } catch (Exception ex) {
+                return "";
+            }
         }
     }
     
@@ -314,15 +591,87 @@ public class CheckoutPage extends BasePage {
     }
     
     /**
-     * Click place order button
+     * Click place order button (regular click)
      */
     public void clickPlaceOrder() {
         try {
+            scrollToElement(placeOrderButton);
             click(placeOrderButton);
             Thread.sleep(2000); // Wait for order processing
             System.out.println("✓ Clicked Place Order button");
         } catch (Exception e) {
             System.out.println("✗ Failed to click Place Order button: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Click place order using JavaScript (bypasses potential overlay issues)
+     */
+    public void clickPlaceOrderJS() {
+        try {
+            WebElement button = driver.findElement(placeOrderButton);
+            scrollToElement(placeOrderButton);
+            Thread.sleep(500);
+            ((org.openqa.selenium.JavascriptExecutor) driver)
+                .executeScript("arguments[0].click();", button);
+            System.out.println("✅ Clicked place order button using JavaScript");
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not click using JS, trying regular click: " + e.getMessage());
+            click(placeOrderButton);
+        }
+    }
+    
+    /**
+     * Debug: Log form field values
+     */
+    public void logFormState() {
+        try {
+            WebElement fullName = driver.findElement(fullNameInput);
+            WebElement phone = driver.findElement(phoneInput);
+            WebElement address = driver.findElement(addressInput);
+            WebElement province = driver.findElement(provinceSelect);
+            WebElement district = driver.findElement(districtSelect);
+            WebElement ward = driver.findElement(wardSelect);
+            
+            System.out.println("📋 Form state:");
+            System.out.println("   - Full name: '" + fullName.getAttribute("value") + "'");
+            System.out.println("   - Phone: '" + phone.getAttribute("value") + "'");
+            System.out.println("   - Address: '" + address.getAttribute("value") + "'");
+            System.out.println("   - Province: '" + province.getAttribute("value") + "' (disabled=" + !province.isEnabled() + ")");
+            System.out.println("   - District: '" + district.getAttribute("value") + "' (disabled=" + !district.isEnabled() + ")");
+            System.out.println("   - Ward: '" + ward.getAttribute("value") + "' (disabled=" + !ward.isEnabled() + ")");
+        } catch (Exception e) {
+            System.out.println("⚠️ Could not log form state: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Click place order and handle success alert
+     * Returns true if order was successful (alert appeared)
+     */
+    public boolean clickPlaceOrderAndHandleAlert() {
+        // Log form state for debugging
+        logFormState();
+        
+        // Scroll and use JavaScript click for reliability
+        scrollToElement(placeOrderButton);
+        clickPlaceOrderJS();
+        
+        // Wait for possible alert
+        try {
+            Thread.sleep(3000);
+            org.openqa.selenium.Alert alert = driver.switchTo().alert();
+            String alertText = alert.getText();
+            System.out.println("📢 Alert received: " + alertText);
+            alert.accept();
+            Thread.sleep(1000); // Wait for redirect
+            return alertText.contains("thành công") || alertText.contains("success");
+        } catch (org.openqa.selenium.NoAlertPresentException e) {
+            System.out.println("⚠️ No alert appeared after clicking place order");
+            return false;
+        } catch (Exception e) {
+            System.out.println("⚠️ Error handling alert: " + e.getMessage());
+            return false;
         }
     }
     
@@ -337,6 +686,65 @@ public class CheckoutPage extends BasePage {
         } catch (Exception e) {
             System.out.println("Failed to click back to cart link");
             return null;
+        }
+    }
+    
+    /**
+     * Complete checkout - uses pre-populated data if available, only fills missing fields
+     * Returns true if order was successful
+     */
+    public boolean completeCheckout(String paymentMethod) {
+        // Just select payment method and submit (form should be pre-populated)
+        selectPaymentMethod(paymentMethod);
+        return clickPlaceOrderAndHandleAlert();
+    }
+    
+    /**
+     * Complete checkout with custom billing info
+     */
+    public void completeCheckoutWithDetails(String fullName, String email, String phone,
+                                            String address, String paymentMethod) {
+        fillBillingDetails(fullName, email, phone, address);
+        selectPaymentMethod(paymentMethod);
+        clickPlaceOrder();
+    }
+    
+    /**
+     * Complete checkout flow with full information
+     * @param fullName Customer full name
+     * @param phone Phone number
+     * @param email Email address
+     * @param province Province/City
+     * @param district District
+     * @param ward Ward
+     * @param address Detailed address
+     * @param paymentMethod Payment method (COD or VNPay)
+     * @param note Optional order note
+     */
+    public void completeCheckout(String fullName, String phone, String email, 
+                                 String province, String district, String ward, 
+                                 String address, String paymentMethod, String note) {
+        try {
+            // Step 1: Fill shipping info
+            fillShippingInfo(fullName, phone, email, null);
+            
+            // Step 2: Fill address
+            fillCompleteAddress(province, district, ward, address);
+            
+            // Step 3: Add note if provided
+            if (note != null && !note.isEmpty()) {
+                addNote(note);
+            }
+            
+            // Step 4: Select payment method
+            selectPaymentMethod(paymentMethod);
+            
+            // Step 5: Click place order
+            clickPlaceOrder();
+            
+            System.out.println("✓ Completed checkout process");
+        } catch (Exception e) {
+            System.out.println("✗ Failed to complete checkout: " + e.getMessage());
         }
     }
     
@@ -385,41 +793,20 @@ public class CheckoutPage extends BasePage {
     }
     
     /**
-     * Complete checkout flow with full information
-     * @param fullName Customer full name
-     * @param phone Phone number
-     * @param email Email address
-     * @param province Province/City
-     * @param district District
-     * @param ward Ward
-     * @param address Detailed address
-     * @param paymentMethod Payment method (COD or VNPay)
-     * @param note Optional order note
+     * Check if validation error is displayed
      */
-    public void completeCheckout(String fullName, String phone, String email, 
-                                 String province, String district, String ward, 
-                                 String address, String paymentMethod, String note) {
+    public boolean hasValidationError() {
+        return isDisplayed(validationError);
+    }
+    
+    /**
+     * Get validation error text
+     */
+    public String getValidationError() {
         try {
-            // Step 1: Fill shipping info
-            fillShippingInfo(fullName, phone, email, null);
-            
-            // Step 2: Fill address
-            fillCompleteAddress(province, district, ward, address);
-            
-            // Step 3: Add note if provided
-            if (note != null && !note.isEmpty()) {
-                addNote(note);
-            }
-            
-            // Step 4: Select payment method
-            selectPaymentMethod(paymentMethod);
-            
-            // Step 5: Click place order
-            clickPlaceOrder();
-            
-            System.out.println("✓ Completed checkout process");
+            return getText(validationError);
         } catch (Exception e) {
-            System.out.println("✗ Failed to complete checkout: " + e.getMessage());
+            return "";
         }
     }
     

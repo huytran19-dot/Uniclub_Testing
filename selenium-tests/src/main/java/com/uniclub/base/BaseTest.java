@@ -177,14 +177,13 @@ public class BaseTest {
                 chromeOptions.addArguments("--no-default-browser-check");
                 chromeOptions.addArguments("--start-maximized");
                 
-                // ⚠️ CRITICAL: Create unique user data dir for each test session to prevent conflicts
-                // Use timestamp to ensure uniqueness across concurrent test runs
-                String timestamp = String.valueOf(System.currentTimeMillis());
-                String uniqueUserDataDir = "D:\\temp\\selenium-chrome-profile-" + timestamp;
-                String uniqueCacheDir = "D:\\temp\\chrome-cache-" + timestamp;
-                
-                chromeOptions.addArguments("--user-data-dir=" + uniqueUserDataDir);
-                chromeOptions.addArguments("--disk-cache-dir=" + uniqueCacheDir);
+                // ⚠️ CRITICAL: Use UNIQUE profile per session to avoid lock conflicts
+                // Generate unique folder name using timestamp to ensure no conflicts
+                String uniqueId = String.valueOf(System.currentTimeMillis());
+                String userDataDir = "D:\\temp\\selenium-chrome-profile-" + uniqueId;
+                String cacheDir = "D:\\temp\\chrome-cache-" + uniqueId;
+                chromeOptions.addArguments("--user-data-dir=" + userDataDir);
+                chromeOptions.addArguments("--disk-cache-dir=" + cacheDir);
                 chromeOptions.addArguments("--force-device-scale-factor=1");
                 
                 // Set preferences to disable password manager

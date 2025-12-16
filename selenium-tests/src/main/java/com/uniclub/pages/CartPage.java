@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * CartPage - Page Object for Shopping Cart page (User side)
+ * URL: http://localhost:5173/cart
  */
 public class CartPage extends BasePage {
     
@@ -19,13 +20,11 @@ public class CartPage extends BasePage {
     private final By loadingSpinner = By.cssSelector(".animate-spin");
     
     // Empty cart state
-    // Fallback icon in empty state (ShoppingBag icon)
     private final By emptyCartIcon = By.xpath("//*[name()='svg' and contains(@class,'w-16') and contains(@class,'h-16') and contains(@class,'text-muted-foreground')]");
     private final By emptyCartMessage = By.xpath("//*[contains(text(),'Giỏ hàng trống')]");
     private final By exploreProductsButton = By.xpath("//button[contains(text(),'Khám phá sản phẩm')]");
     
     // Cart items
-    // More specific: line items inside left column
     private final By cartItems = By.xpath("//div[contains(@class,'lg:col-span-2')]//div[contains(@class,'card') and contains(@class,'p-4') and contains(@class,'flex')]");
     private final By cartItemContainer = By.xpath("//div[contains(@class,'lg:col-span-2')]");
     
@@ -38,7 +37,6 @@ public class CartPage extends BasePage {
     
     // Quantity controls (relative to cart item)
     private final By quantityDisplay = By.cssSelector("span.text-sm.font-semibold, span.font-semibold");
-    // Within a line item, the quantity control container then button[1]=minus, button[2]=plus
     private final By qtyContainer = By.xpath(".//div[contains(@class,'flex') and contains(@class,'items-center') and contains(@class,'gap-1')]");
     private final By removeButton = By.xpath(".//button[contains(@class,'flex-shrink-0')]");
     
@@ -90,20 +88,16 @@ public class CartPage extends BasePage {
      */
     public void waitForCartPageLoad() {
         try {
-            // First wait for basic page load
             waitForPageLoad();
             
-            // Try to wait for loading spinner to disappear (if it exists)
             try {
                 List<WebElement> spinners = driver.findElements(loadingSpinner);
                 if (!spinners.isEmpty() && spinners.get(0).isDisplayed()) {
-                    waitForElementToBeInvisible(loadingSpinner, 2); // Reduced from 3 to 2 seconds
+                    waitForElementToBeInvisible(loadingSpinner, 2);
                 }
             } catch (Exception e) {
                 // Spinner not found or already gone - that's fine
             }
-            
-            // Removed fixed stabilization sleep to reduce delay
             
         } catch (Exception e) {
             System.out.println("Cart page load wait completed with exception: " + e.getMessage());
@@ -114,29 +108,26 @@ public class CartPage extends BasePage {
      * Check if cart is empty (without waiting again)
      */
     public boolean isCartEmpty() {
-        // Temporarily disable implicit wait to avoid long blocks when elements are absent
         int originalImplicit = ConfigReader.getImplicitWait();
         try {
             driver.manage().timeouts().implicitlyWait(Duration.ZERO);
 
-            // Fast, non-waiting checks using direct DOM lookups
             List<WebElement> emptyMsgs = driver.findElements(emptyCartMessage);
             for (WebElement el : emptyMsgs) {
                 try {
                     if (el.isDisplayed()) return true;
-                } catch (Exception ignore) { /* ignore stale/hidden */ }
+                } catch (Exception ignore) { }
             }
             List<WebElement> emptyIcons = driver.findElements(emptyCartIcon);
             for (WebElement el : emptyIcons) {
                 try {
                     if (el.isDisplayed()) return true;
-                } catch (Exception ignore) { /* ignore stale/hidden */ }
+                } catch (Exception ignore) { }
             }
             return false;
         } catch (Exception e) {
             return false;
         } finally {
-            // Restore implicit wait
             try { driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(originalImplicit)); } catch (Exception ignore) {}
         }
     }
@@ -146,11 +137,9 @@ public class CartPage extends BasePage {
      */
     public String getEmptyCartMessage() {
         try {
-            // Wait for empty cart message to be visible
             WebElement messageElement = waitForElementToBeVisible(emptyCartMessage, 5);
             return messageElement.getText();
         } catch (Exception e) {
-            // If not found, try alternative approach
             try {
                 return getText(emptyCartMessage);
             } catch (Exception ex) {
@@ -175,7 +164,6 @@ public class CartPage extends BasePage {
      * Get number of items in cart (without redundant waiting)
      */
     public int getCartItemCount() {
-        // Perform a zero-implicit-wait count to avoid blocking on empty state
         int originalImplicit = ConfigReader.getImplicitWait();
         try {
             driver.manage().timeouts().implicitlyWait(Duration.ZERO);
@@ -193,7 +181,6 @@ public class CartPage extends BasePage {
      */
     public WebElement getCartItemByName(String productName) {
         try {
-            // DON'T wait again - assume page is already loaded
             List<WebElement> items = driver.findElements(cartItems);
             for (WebElement item : items) {
                 String name = item.findElement(itemName).getText();
@@ -303,8 +290,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Get product stock info (exactly matches frontend CartLineItem.jsx)
-     * DOM: <div class="text-xs text-muted-foreground mt-1"> Còn lại: <span>MAX</span> sản phẩm </div>
+     * Get product stock info
      */
     public String getProductStockInfo(String productName) {
         try {
@@ -323,8 +309,7 @@ public class CartPage extends BasePage {
     }
 
     /**
-     * Get displayed max quantity number (parsed integer) from stock info row
-     * Example UI: "Còn lại: <span>21</span> sản phẩm" -> returns 21
+     * Get displayed max quantity number from stock info
      */
     public int getDisplayedMaxQuantity(String productName) {
         try {
@@ -339,17 +324,15 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Increase product quantity (OPTIMIZED - no wait, assumes page loaded)
+     * Increase product quantity
      */
     public void increaseQuantity(String productName) {
         try {
             WebElement item = getCartItemByName(productName);
             if (item != null) {
                 int before = readQuantityFromItem(item);
-                // Click the second button inside quantity container (plus)
                 WebElement container = item.findElement(qtyContainer);
                 WebElement plusBtn = container.findElements(By.xpath(".//button")).get(1);
-                // If disabled, return early to avoid unnecessary waits
                 try {
                     String disabledAttr = plusBtn.getDomAttribute("disabled");
                     if (disabledAttr != null) {
@@ -366,14 +349,13 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Decrease product quantity (OPTIMIZED - no wait, assumes page loaded)
+     * Decrease product quantity
      */
     public void decreaseQuantity(String productName) {
         try {
             WebElement item = getCartItemByName(productName);
             if (item != null) {
                 int before = readQuantityFromItem(item);
-                // Click the first button inside quantity container (minus)
                 WebElement container = item.findElement(qtyContainer);
                 WebElement minusBtn = container.findElements(By.xpath(".//button")).get(0);
                 minusBtn.click();
@@ -386,7 +368,7 @@ public class CartPage extends BasePage {
     }
 
     /**
-     * Check if the plus (increase) button is disabled for a given line item
+     * Check if increase button is disabled
      */
     public boolean isIncreaseDisabled(String productName) {
         try {
@@ -402,25 +384,18 @@ public class CartPage extends BasePage {
     }
     
     /**
-            if (item == null) return "";
-            // First try the known locator
-            List<WebElement> els = item.findElements(itemStockInfo);
-            for (WebElement el : els) {
-                String t = el.getText();
-                if (t != null && !t.isEmpty()) return t;
-            }
-            // Fallback: any text indicating stock
-            List<WebElement> hints = item.findElements(By.xpath(".//*[contains(text(),'Còn') or contains(text(),'Tồn') or contains(text(),'Stock') or contains(text(),'còn') or contains(text(),'tồn')]"));
-            for (WebElement h : hints) {
-                String t = h.getText();
-                if (t != null && !t.isEmpty()) return t;
-            }
-                // Increase
+     * Update product quantity to specific value
+     */
+    public void updateQuantity(String productName, int targetQuantity) {
+        try {
+            int currentQty = getProductQuantity(productName);
+            int diff = targetQuantity - currentQty;
+            
+            if (diff > 0) {
                 for (int i = 0; i < diff; i++) {
                     increaseQuantity(productName);
                 }
             } else if (diff < 0) {
-                // Decrease
                 for (int i = 0; i < Math.abs(diff); i++) {
                     decreaseQuantity(productName);
                 }
@@ -431,7 +406,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Remove product from cart (OPTIMIZED - no wait, assumes page loaded)
+     * Remove product from cart
      */
     public void removeProduct(String productName) {
         try {
@@ -449,12 +424,11 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Get cart subtotal (Tạm tính)
+     * Get cart subtotal
      */
     public String getSubtotal() {
         try {
             if (getCartItemCountWithoutWait() == 0) return "0₫";
-            // Use a short, targeted wait to avoid long global explicit waits
             return waitForElementToBeVisible(subtotalValue, 3).getText();
         } catch (Exception e) {
             return "";
@@ -462,14 +436,14 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Get shipping fee (Phí vận chuyển)
+     * Get shipping fee
      */
     public String getShippingFee() {
         try {
             if (getCartItemCountWithoutWait() == 0) return "0₫";
             String value = waitForElementToBeVisible(shippingValue, 3).getText();
             if (value == null || value.isEmpty()) return "";
-            if (value.contains("Miễn phí")) return "0₫"; // normalize for parsing
+            if (value.contains("Miễn phí")) return "0₫";
             return value;
         } catch (Exception e) {
             return "";
@@ -489,7 +463,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Get total price (Tổng cộng)
+     * Get total price
      */
     public String getTotalPrice() {
         try {
@@ -506,6 +480,17 @@ public class CartPage extends BasePage {
     public boolean isCheckoutButtonDisplayed() {
         try {
             return isDisplayed(checkoutButton);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Check if checkout button is enabled
+     */
+    public boolean isCheckoutButtonEnabled() {
+        try {
+            return isEnabled(checkoutButton);
         } catch (Exception e) {
             return false;
         }
@@ -550,14 +535,13 @@ public class CartPage extends BasePage {
      */
     public List<String> getAllProductNames() {
         try {
-            // Assume page already loaded by caller to avoid duplicate waits
             List<WebElement> items = driver.findElements(cartItems);
             java.util.List<String> names = new java.util.ArrayList<>();
             for (WebElement item : items) {
                 try {
                     String name = item.findElement(itemName).getText();
                     if (name != null && !name.isEmpty()) names.add(name);
-                } catch (Exception ignore) { /* skip element */ }
+                } catch (Exception ignore) { }
             }
             return names;
         } catch (Exception e) {
@@ -566,18 +550,12 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Clear all items from cart
-     */
-    /**
-     * Clears all items from the cart (OPTIMIZED - wait only ONCE!)
-     * Uses WebDriverWait for dynamic waiting - much faster than fixed Thread.sleep()
+     * Clear all items from cart (OPTIMIZED)
      */
     public void clearCart() {
         try {
-            // ✅ Wait for page load ONLY ONCE at the beginning!
             waitForCartPageLoad();
             
-            // Get initial count (NO MORE WAITING inside these calls!)
             int itemCount = getCartItemCountWithoutWait();
             
             if (itemCount == 0) {
@@ -601,7 +579,6 @@ public class CartPage extends BasePage {
                 System.out.println("Removing item " + (++removedCount) + "/" + currentCount + ": " + productToRemove);
                 removeProduct(productToRemove);
                 
-                // Wait for item count to decrease (check DOM directly, NO page load wait!)
                 try {
                     localWait.until(drv -> {
                         int newCount = getCartItemCountWithoutWait();
@@ -611,11 +588,9 @@ public class CartPage extends BasePage {
                     System.out.println("⚠️ Timeout waiting for cart update, continuing...");
                 }
                 
-                // Refresh item count (NO waiting!)
                 itemCount = getCartItemCountWithoutWait();
             }
             
-            // Final verification that cart is empty (NO waiting!)
             try {
                 localWait.until(drv -> isCartEmptyWithoutWait());
                 System.out.println("✅ Cart cleared successfully - " + removedCount + " items removed");
@@ -629,7 +604,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Get cart item count WITHOUT waiting (assumes page already loaded)
+     * Get cart item count WITHOUT waiting
      */
     private int getCartItemCountWithoutWait() {
         int originalImplicit = ConfigReader.getImplicitWait();
@@ -645,7 +620,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Check if cart is empty WITHOUT waiting (assumes page already loaded)
+     * Check if cart is empty WITHOUT waiting
      */
     private boolean isCartEmptyWithoutWait() {
         int originalImplicit = ConfigReader.getImplicitWait();
@@ -666,7 +641,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Get all product names WITHOUT waiting (assumes page already loaded)
+     * Get all product names WITHOUT waiting
      */
     private List<String> getAllProductNamesWithoutWait() {
         int originalImplicit = ConfigReader.getImplicitWait();
@@ -689,7 +664,7 @@ public class CartPage extends BasePage {
     }
     
     /**
-     * Extract numeric value from price string (e.g., "100.000₫" -> 100000)
+     * Extract numeric value from price string
      */
     public int extractPrice(String priceText) {
         try {
@@ -714,6 +689,40 @@ public class CartPage extends BasePage {
         } catch (Exception e) {
             System.out.println("Failed to verify cart calculations");
             return false;
+        }
+    }
+    
+    /**
+     * Wait for cart to load (legacy method for compatibility)
+     */
+    public void waitForCartToLoad() {
+        waitForCartPageLoad();
+    }
+    
+    /**
+     * Click continue shopping (if button exists)
+     */
+    public void clickContinueShopping() {
+        try {
+            By continueButton = By.xpath("//a[contains(@href,'/products')] | //button[contains(text(),'Tiếp tục mua sắm')]");
+            click(continueButton);
+            waitForPageLoad();
+        } catch (Exception e) {
+            System.out.println("Continue shopping button not found");
+        }
+    }
+    
+    /**
+     * Remove first item from cart (legacy method)
+     */
+    public void removeFirstItem() {
+        try {
+            List<String> names = getAllProductNames();
+            if (!names.isEmpty()) {
+                removeProduct(names.get(0));
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to remove first item");
         }
     }
 }
